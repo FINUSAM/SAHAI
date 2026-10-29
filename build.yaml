@@ -1,0 +1,11 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Settings for `dart run drift_dev make-migrations`, which exports
+          # each schema version and generates migration tests (PRD 13).
+          databases:
+            sahai: lib/data/database.dart
+          schema_dir: drift_schemas/
+          test_dir: test/drift/
