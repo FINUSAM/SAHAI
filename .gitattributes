@@ -1,0 +1,29 @@
+# Normalize line endings: store text as LF in the repository.
+* text=auto eol=lf
+
+# Windows scripts need CRLF to run correctly.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binary files: never diff or change line endings.
+*.xlsx     binary
+*.xls      binary
+*.docx     binary
+*.pdf      binary
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.webp     binary
+*.ico      binary
+*.ttf      binary
+*.otf      binary
+*.woff     binary
+*.woff2    binary
+*.jar      binary
+*.jks      binary
+*.keystore binary
+*.apk      binary
+*.aab      binary
+*.zip      binary

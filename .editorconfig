@@ -1,0 +1,30 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Dart: 2 spaces, matching dart format. Line length is left to dart format.
+[*.dart]
+indent_size = 2
+
+# Android / Gradle / Kotlin / Java use 4 spaces by convention.
+[*.{gradle,kts,kt,java}]
+indent_size = 4
+
+[*.xml]
+indent_size = 4
+
+# Markdown uses trailing double spaces as line breaks.
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
+
+[Makefile]
+indent_style = tab
