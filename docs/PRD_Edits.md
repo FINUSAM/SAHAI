@@ -140,3 +140,24 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - Dates and times are formatted for the phone's locale settings (e.g. 12- or 24-hour clock).
 
 **Affects:** none.
+
+---
+
+## E-007: Locked tasks can't be marked done in the Explorer
+
+- **PRD section:** 4 (Task), 8.4 (Explorer)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-10-30 (approved with the M1 wireframes)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- In the Explorer, a locked task (a task after the current task) shows a lock icon instead of a checkmark, and has no "Mark done" action.
+- It can be marked done once it unlocks, that is, once it becomes the current task.
+- Its subtasks can still be added, edited, reordered and moved while it's locked.
+
+**Reason**
+
+- Tasks are sequential (PRD 4). Completing a later task before the current one would break the one-step-at-a-time order.
+
+**Affects:** AT-007 (unchanged), plus a new automated test: a locked task offers no checkmark or Mark done action until the task before it is done.

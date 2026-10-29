@@ -15,6 +15,8 @@ followed by v1.0.0 for the public release.
   cascade delete, log summaries table, bills on the Set-Aside page, English-only).
 - Technical plan (`docs/tech-plan/README.md`) and acceptance test matrix.
 - Decision records 0001–0005 (accepted 2026-10-30).
+- Approved M1 Explorer wireframes in `docs/design/m1-explorer/`, and PRD edit E-007 (locked tasks
+  can't be marked done in the Explorer).
 - Development machine setup steps in `README.md`.
 - Repository foundations: `CLAUDE.md` working rules, `README.md`, `CONTRIBUTING.md`
   (git workflow and definition of done), and this changelog.
