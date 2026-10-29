@@ -4,8 +4,9 @@ This guide covers how work moves from an idea to a release. Claude Code sessions
 
 ## Before you start
 
-- Read the relevant section of the [PRD](docs/PRD.md) and its acceptance tests in [`docs/tests/`](docs/tests/).
-- The PRD belongs to the owner. **Never edit it.** If it's unclear, incomplete or conflicts with the code, ask, or open an issue using the **PRD question** template (label `prd-question`). Don't guess.
+- Read the relevant section of the [PRD](docs/PRD.md), any entries for it in [`docs/PRD_Edits.md`](docs/PRD_Edits.md), and its acceptance tests in [`docs/tests/`](docs/tests/).
+- `PRD_Edits.md` lists changes the owner has approved that aren't in the PRD text yet. Read the two together; where they differ, `PRD_Edits.md` wins.
+- The PRD belongs to the owner. **Never edit it.** If it's unclear, incomplete or conflicts with the code, ask, or open an issue using the **PRD question** template (label `prd-question`). Don't guess. Once the owner answers, the answer is added to `PRD_Edits.md`.
 - Check [`docs/plans/`](docs/plans/) for a saved checklist if you're continuing someone else's work.
 
 ## Never break these

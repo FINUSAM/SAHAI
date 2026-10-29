@@ -21,6 +21,7 @@ Read at the start of every Claude Code session in this repo. These rules apply t
 | What | Where |
 |---|---|
 | Product requirements (PRD) | `docs/PRD.md`, owned by the owner. **Never edit it.** |
+| Approved PRD changes not yet in the PRD | `docs/PRD_Edits.md`. Read together with the PRD; it wins where they differ |
 | Acceptance tests (AT-001 onward, each tagged with milestone and PRD section) | `docs/tests/Sahai_Acceptance_Tests_v1.xlsx` |
 | Technical plan | `docs/tech-plan/` |
 | Saved checklists for multi-session work | `docs/plans/` |
@@ -45,8 +46,9 @@ Milestones: M1 Foundations, M2 Core loop, M3 Set aside, M4 Recurring items, M5 G
 - Say honestly when something wasn't tested, doesn't work, or is a guess.
 
 ### Follow the PRD
-- Before any change, read the relevant PRD section and its acceptance tests.
+- Before any change, read the relevant PRD section, any entries for it in `docs/PRD_Edits.md`, and its acceptance tests. Where `PRD_Edits.md` differs from the PRD, `PRD_Edits.md` wins.
 - Never edit the PRD. If it's unclear, incomplete, or conflicts with the code, stop and ask, or open an issue labelled `prd-question`. Don't guess.
+- Add an entry to `PRD_Edits.md` only for a change the owner has explicitly approved (for example, their answer to a PRD question). Never delete entries.
 
 ### Tests come with every change
 - Every feature or fix includes automated tests: unit tests for logic, widget tests for screens, integration tests for key flows.

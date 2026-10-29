@@ -36,6 +36,7 @@ v1 is built in 8 milestones, each released as a tagged version:
 | Document | Location |
 |---|---|
 | Product requirements (PRD) | [`docs/PRD.md`](docs/PRD.md) |
+| Approved PRD changes (read with the PRD) | [`docs/PRD_Edits.md`](docs/PRD_Edits.md) |
 | Acceptance tests | [`docs/tests/`](docs/tests/) |
 | Technical plan | [`docs/tech-plan/`](docs/tech-plan/) |
 | Design and wireframes | [`docs/design/`](docs/design/) |
