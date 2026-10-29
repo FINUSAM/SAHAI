@@ -34,7 +34,7 @@
 10. [x] Actions (one transaction + log event each): create, edit, reorder, move, cascade delete with Undo, mark done / reopen (basic)
 11. [x] Unit tests named by AT ID (plus E-003, E-007); all green locally and in CI
 12. [x] Update `README.md` and `CHANGELOG.md`; commit, push, open PR 1 with `gh`
-13. [ ] After CI has run once: make CI a required check on `dev` and `main` (owner approved 2026-10-30)
+13. [x] After CI has run once: make CI a required check on `dev` and `main` (owner approved 2026-10-30)
 
 **PR 2: Explorer** (`feat/m1-explorer`, after PR 1 merges)
 
@@ -52,6 +52,7 @@
 ## Changes to the plan
 
 - 2026-10-30: Step 13 added when branch protection was set up (approved by FINUSAM).
+- 2026-10-30: First CI run failed because the `DateTime.now()` check matched a comment; the check now skips comment lines (approved by FINUSAM).
 
 ## Notes for whoever picks this up
 
@@ -60,3 +61,4 @@
 - The AT coverage script counts an acceptance test as covered once any test names it. AT-002, 003, 006, 007, 008 still need widget tests and AT-001, 004, 005 integration tests in PR 2.
 - No migration tests are generated yet: drift creates them once schema v2 exists. The upgrade path itself is tested with a bumped-version database (AT-012).
 - Release APK built locally on 2026-10-30: 46 MB, and its only permission is Android's internal DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION.
+- First green CI run on PR #7 (2026-10-30): 42 tests passed, release APK 48.5 MB, no network permissions. CI is now a required check on `dev` and `main` (not strict: a branch doesn't have to be up to date with `dev` before merging).
