@@ -17,7 +17,7 @@
 7. [x] Look up each proposed package on pub.dev (version, license, maintenance)
 8. [x] Write `docs/tech-plan/README.md`, referencing E-001 and E-002 and listing open PRD questions
 9. [x] Write `docs/tech-plan/test-matrix.md`: all 124 acceptance tests mapped to a test level
-10. [ ] Write decision records `0001` to `0005` (all **Proposed**) and update the decisions index
+10. [x] Write decision records `0001` to `0005` (all **Proposed**) and update the decisions index
 11. [ ] Update `docs/tests/README.md`, `README.md` "Getting started" and `CHANGELOG.md`
 12. [ ] Push after each commit and give the owner the PR link into `dev`
 13. [ ] Report against this checklist
