@@ -1,6 +1,6 @@
 # Technical plan
 
-- **Status:** In progress
+- **Status:** Done (awaiting PR merge into `dev` and owner review)
 - **Approved by:** FINUSAM on 2026-10-30
 - **Branch / PR:** `docs/tech-plan` → `dev`
 - **PRD sections:** all (the plan covers v1 as a whole)
@@ -18,9 +18,9 @@
 8. [x] Write `docs/tech-plan/README.md`, referencing E-001 and E-002 and listing open PRD questions
 9. [x] Write `docs/tech-plan/test-matrix.md`: all 124 acceptance tests mapped to a test level
 10. [x] Write decision records `0001` to `0005` (all **Proposed**) and update the decisions index
-11. [ ] Update `docs/tests/README.md`, `README.md` "Getting started" and `CHANGELOG.md`
-12. [ ] Push after each commit and give the owner the PR link into `dev`
-13. [ ] Report against this checklist
+11. [x] Update `docs/tests/README.md`, `README.md` "Getting started" and `CHANGELOG.md`
+12. [x] Push after each commit and give the owner the PR link into `dev`
+13. [x] Report against this checklist
 
 ## Changes to the plan
 
@@ -31,3 +31,5 @@
 
 - Step 1: git reported no local changes, so no stash was created. The working folder was already clean.
 - Owner answers recorded as PRD edits: E-001 (`completion_undone` event), E-002 (`surfaced` uses the wake time).
+- `sqlite3_flutter_libs` turned out to be end-of-life; drift now gets SQLite from `sqlite3` 3.x. The plan reflects this.
+- Open for the owner: questions Q1–Q4 in the tech plan (§15), accepting decision records 0001–0005, and M1 wireframes (PRD 16 gate).
