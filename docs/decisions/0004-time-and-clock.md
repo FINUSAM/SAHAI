@@ -1,8 +1,8 @@
 # 0004: Injected clock, UTC storage and one logical-day function
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-30
-- **Decided by:** FINUSAM (pending)
+- **Decided by:** FINUSAM, 2026-10-30
 - **Related:** M1–M4, M7; PRD 3, 7, 13; [tech plan §4.3](../tech-plan/README.md#43-time)
 
 ## Context

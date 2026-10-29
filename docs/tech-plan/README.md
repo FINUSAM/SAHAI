@@ -1,12 +1,12 @@
 # Sahai v1: Technical plan
 
-- **Status:** Draft for owner review
+- **Status:** Approved by the owner (2026-10-30). Decision records 0001–0005 accepted.
 - **Written:** 2026-10-30
 - **Covers:** v1 (Android), milestones M1 to M8
 - **Sources:** [`docs/PRD.md`](../PRD.md), [`docs/PRD_Edits.md`](../PRD_Edits.md), [`docs/tests/Sahai_Acceptance_Tests_v1.xlsx`](../tests/) (AT-001 to AT-124)
 - **Related:** [test matrix](test-matrix.md), decision records [0001](../decisions/0001-architecture-and-engine.md) to [0005](../decisions/0005-notifications.md)
 
-This plan says **how** v1 will be built. The PRD says **what** it does, and where the two seem to disagree, the PRD (with `PRD_Edits.md`) wins. Nothing here is built yet. Every package listed is a **proposal** until the owner accepts its decision record, and each package is added only in the milestone that needs it.
+This plan says **how** v1 will be built. The PRD says **what** it does, and where the two seem to disagree, the PRD (with `PRD_Edits.md`) wins. Nothing here is built yet. Packages covered by the accepted decision records 0001–0005 are approved. The others in §12 (`uuid`, `intl`, `flutter_lints`, and the M6 packages) are approved when they're proposed in their milestone's checklist. Each package is added only in the milestone that needs it.
 
 ---
 
@@ -290,9 +290,9 @@ Notes:
 
 ---
 
-## 12. Dependencies (proposed)
+## 12. Dependencies
 
-Current versions were checked on pub.dev on 2026-10-30. Each package is added only in the milestone shown, after its decision record is accepted, with its exact version pinned in `pubspec.yaml` (no `^` ranges). `pubspec.lock` is committed.
+Current versions were checked on pub.dev on 2026-10-30. Each package is added only in the milestone shown, after approval (see the note at the top), with its exact version pinned. Versions are re-checked when added, and the newest stable release is pinned in `pubspec.yaml` (no `^` ranges). `pubspec.lock` is committed.
 
 | Package | Version | License | Publisher | Last release | Purpose | From |
 |---|---|---|---|---|---|---|

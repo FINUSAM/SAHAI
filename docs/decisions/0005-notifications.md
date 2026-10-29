@@ -1,8 +1,8 @@
 # 0005: Plan notifications ahead with the engine, using flutter_local_notifications
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-30
-- **Decided by:** FINUSAM (pending)
+- **Decided by:** FINUSAM, 2026-10-30
 - **Related:** M3, M4; PRD 7; AT-050 to AT-058, AT-078, AT-079; [tech plan §7](../tech-plan/README.md#7-notifications-prd-7-m3-and-m4)
 
 ## Context

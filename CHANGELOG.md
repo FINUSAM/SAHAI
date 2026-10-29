@@ -14,7 +14,7 @@ followed by v1.0.0 for the public release.
 - `docs/PRD_Edits.md` for owner-approved PRD changes: E-001 to E-006 (undo logging, surfaced time,
   cascade delete, log summaries table, bills on the Set-Aside page, English-only).
 - Technical plan (`docs/tech-plan/README.md`) and acceptance test matrix.
-- Proposed decision records 0001–0005.
+- Decision records 0001–0005 (accepted 2026-10-30).
 - Development machine setup steps in `README.md`.
 - Repository foundations: `CLAUDE.md` working rules, `README.md`, `CONTRIBUTING.md`
   (git workflow and definition of done), and this changelog.
