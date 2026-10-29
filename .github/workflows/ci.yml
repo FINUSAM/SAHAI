@@ -48,9 +48,10 @@ jobs:
         run: flutter analyze
 
       # Time must come from the injected clock (decision record 0004).
+      # Comment lines are skipped so docs can name the rule.
       - name: No DateTime.now() in lib
         run: |
-          if grep -rn "DateTime.now()" lib --include=*.dart; then
+          if grep -rn "DateTime.now()" lib --include=*.dart | grep -vE '^[^:]+:[0-9]+:\s*//'; then
             echo "Use the injected Clock instead of DateTime.now()."
             exit 1
           fi
