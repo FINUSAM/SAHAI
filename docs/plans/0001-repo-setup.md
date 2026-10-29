@@ -1,6 +1,6 @@
 # Repository setup
 
-- **Status:** In progress
+- **Status:** Done (awaiting PR merge into `dev`)
 - **Approved by:** FINUSAM on 2026-10-30
 - **Branch / PR:** `chore/repo-setup` → `dev`
 - **PRD sections:** n/a (repo foundations only)
@@ -12,9 +12,9 @@
 2. [x] Commit A `chore: add repository housekeeping files`: `.gitignore`, `.gitattributes`, `.editorconfig`, `LICENSE`. Push.
 3. [x] Commit B `docs: add CLAUDE.md, README, CONTRIBUTING and CHANGELOG` (feature → `dev` → `main` workflow). Push.
 4. [x] Commit C `docs: add docs folder structure`: PRD placeholder, tests, plans (incl. this file), design, decisions + template, tech-plan. Push.
-5. [ ] Commit D `chore: add GitHub PR and issue templates and CODEOWNERS`. Push.
-6. [ ] Give the owner the link to open the PR `chore/repo-setup` → `dev`
-7. [ ] Report against this checklist
+5. [x] Commit D `chore: add GitHub PR and issue templates and CODEOWNERS`. Push.
+6. [x] Give the owner the link to open the PR `chore/repo-setup` → `dev`
+7. [x] Report against this checklist
 
 ## Changes to the plan
 
