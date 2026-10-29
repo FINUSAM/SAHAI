@@ -36,6 +36,7 @@ v1 is built in 8 milestones, each released as a tagged version:
 | Document | Location |
 |---|---|
 | Product requirements (PRD) | [`docs/PRD.md`](docs/PRD.md) |
+| Approved PRD changes (read with the PRD) | [`docs/PRD_Edits.md`](docs/PRD_Edits.md) |
 | Acceptance tests | [`docs/tests/`](docs/tests/) |
 | Technical plan | [`docs/tech-plan/`](docs/tech-plan/) |
 | Design and wireframes | [`docs/design/`](docs/design/) |
@@ -47,7 +48,16 @@ v1 is built in 8 milestones, each released as a tagged version:
 
 ## Getting started
 
-Setup instructions (Flutter version, tools, how to build and run tests) will be added with the technical plan.
+There's no Flutter project yet; it's created in M1. To get a development machine ready (details in the [technical plan](docs/tech-plan/README.md#2-toolchain)):
+
+1. Install **Flutter 3.47.3** (stable channel), which includes Dart 3.13.3.
+2. Install **Android Studio**. In its SDK Manager, add **Android SDK Platform 36** and the build tools.
+3. Use **JDK 17 or newer**. Android Studio's bundled JDK works; point Flutter at it with `flutter config --jdk-dir <path>` if needed.
+4. If Flutter can't find the Android SDK, run `flutter config --android-sdk <path>`.
+5. Run `flutter doctor` and fix anything it reports for Android.
+6. For testing on a phone: Android 8.0 or newer, with USB debugging on.
+
+Build and test commands will be added here when the Flutter project is created in M1.
 
 ## License
 

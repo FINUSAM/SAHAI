@@ -18,4 +18,8 @@ A decision record captures a significant technical decision: what was decided, w
 
 | # | Title | Status |
 |---|---|---|
-| _None yet_ | | |
+| [0001](0001-architecture-and-engine.md) | Layered architecture with a pure Dart visibility engine | Proposed |
+| [0002](0002-database-drift-sqlite.md) | drift on SQLite for storage and migrations | Proposed |
+| [0003](0003-state-management-and-navigation.md) | Riverpod for state, go_router for navigation | Proposed |
+| [0004](0004-time-and-clock.md) | Injected clock, UTC storage and one logical-day function | Proposed |
+| [0005](0005-notifications.md) | Plan notifications ahead with the engine, using flutter_local_notifications | Proposed |
