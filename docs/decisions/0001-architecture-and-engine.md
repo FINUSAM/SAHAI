@@ -1,8 +1,8 @@
 # 0001: Layered architecture with a pure Dart visibility engine
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-30
-- **Decided by:** FINUSAM (pending)
+- **Decided by:** FINUSAM, 2026-10-30
 - **Related:** M1, M2; PRD 6, 7, 13; [tech plan §3–4](../tech-plan/README.md#3-architecture)
 
 ## Context

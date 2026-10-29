@@ -1,8 +1,8 @@
 # 0002: drift on SQLite for storage and migrations
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-30
-- **Decided by:** FINUSAM (pending)
+- **Decided by:** FINUSAM, 2026-10-30
 - **Related:** M1; PRD 3, 10, 13; [tech plan §5](../tech-plan/README.md#5-data)
 
 ## Context

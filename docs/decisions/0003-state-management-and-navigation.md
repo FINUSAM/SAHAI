@@ -1,8 +1,8 @@
 # 0003: Riverpod for state, go_router for navigation
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-30
-- **Decided by:** FINUSAM (pending)
+- **Decided by:** FINUSAM, 2026-10-30
 - **Related:** M1; PRD 7, 8; [tech plan §6](../tech-plan/README.md#6-state-and-navigation)
 
 ## Context
