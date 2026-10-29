@@ -90,7 +90,7 @@ tool/             scripts (AT coverage report, benchmark data generator)
 
 ### 4.1 Tree snapshot
 
-The app keeps an in-memory copy of all non-deleted nodes (plus deleted roots, so undo works), loaded once at start and updated after each write. With 10,000 items this is a few MB.
+The app keeps an in-memory copy of all non-deleted nodes, loaded once at start and updated after each write. Undo of a delete puts the restored rows back into it. With 10,000 items this is a few MB.
 
 ### 4.2 Visibility (PRD 6)
 
@@ -116,6 +116,7 @@ The cost is O(n log n), because sibling lists are sorted. The engine also return
 - **Schedule.** Stored as JSON in `recurrence`: frequency (daily, weekly, monthly or yearly), interval, weekdays or day-of-month, and repeat-from (due date or completion date).
 - **Next due date.** A pure function. A missing month day falls on the last day (AT-073). Repeating from the due date is based on the *missed* due date, not the payment day (AT-067, AT-068). Repeating from completion is based on the completion's logical date (AT-069).
 - **Show time.** `due_on − lead_days` at the day-start hour, computed in the current time zone each time rather than stored. A user's own set-aside of an occurrence is stored in `snooze_until` as normal, and the item is awake only when both have passed (AT-072).
+- **On the Set-Aside page** ([E-005](../PRD_Edits.md#e-005-recurring-items-waiting-for-their-show-date-are-listed-on-the-set-aside-page)). Waiting recurring items are listed at their effective wake time: the later of the show time and any `snooze_until`. **Wake now** and **Change time** on one store the chosen time in `snooze_until` and set `snooze_overrides_show = true`, so that time replaces the computed show time for this occurrence only. Completing or skipping the occurrence clears both, so the due date and schedule are never touched.
 - **Completion.** Write a `completed` event that includes the due date (AT-082), advance `due_on`, keep status TODO (AT-077), and clear `snooze_until`. All of this happens in one transaction, with an undo token that restores the old `due_on` (AT-070, E-001).
 - **Due labels.** "Due Nov 5", "Due today", "N days overdue", measured in logical days (AT-062, AT-063).
 
@@ -146,14 +147,19 @@ See [decision 0002](../decisions/0002-database-drift-sqlite.md).
 
 | Table | Notes |
 |---|---|
-| `nodes` | All six node types in one table, as in PRD 10. `id` is a UUID v4 string. `status` is null for domains and streams. `due_on` is `TEXT YYYY-MM-DD`; `recurrence` is JSON text. Indexes: `(parent_id, status, is_deleted)` and `(snooze_until)`. |
+| `nodes` | All six node types in one table, as in PRD 10. `id` is a UUID v4 string. `status` is null for domains and streams. `due_on` is `TEXT YYYY-MM-DD`; `recurrence` is JSON text. Two additions: `deleted_by_event` ([E-003](../PRD_Edits.md#e-003-deleting-a-node-soft-deletes-everything-under-it-and-undo-restores-exactly-that)) and `snooze_overrides_show` (§4.4, E-005). Indexes: `(parent_id, status, is_deleted)` and `(snooze_until)`. |
 | `context_groups` | As PRD 10. |
 | `summary_slots` | As PRD 10. Primary key `owner_id`. |
 | `events` | As PRD 9. Append-only: rows are never updated or deleted, except by retention compaction (M7). |
 | `captures` | As PRD 10. |
 | `settings` | A single row, with typed columns per setting plus `updated_at`. |
+| `event_daily_summaries` | Seventh table ([E-004](../PRD_Edits.md#e-004-compacted-activity-log-summaries-live-in-their-own-table)): `day`, `domain_id`, `group_id`, `event_type`, `count`. Filled by log compaction (M7). |
 
 Every table has `created_at`/`updated_at` in UTC ms and `is_deleted`. Every write sets `updated_at` (AT-010).
+
+### Delete and Undo ([E-003](../PRD_Edits.md#e-003-deleting-a-node-soft-deletes-everything-under-it-and-undo-restores-exactly-that))
+
+Deleting a node flags it and every node under it with `is_deleted = true` and `deleted_by_event = <the delete's event_id>`, in one transaction. Undo clears only the rows carrying that event ID, so anything deleted separately earlier stays deleted (AT-008, AT-009).
 
 ### Transactions and undo
 
@@ -346,21 +352,18 @@ Before each milestone: wireframes approved (PRD 16), the developer's estimate, a
 
 ## 15. Open questions for the owner
 
-These need an answer before the milestone shown. I haven't guessed. Once answered, each answer goes into `PRD_Edits.md`.
-
-| # | Question | Why it matters | Suggestion | Needed by |
-|---|---|---|---|---|
-| Q1 | When a project is deleted, should only the project's row get `is_deleted = true`, or its tasks' rows too? AT-009 says "their rows still exist with is_deleted = true". | Flagging only the deleted node is simplest and makes Undo exact. Flagging every row needs a way to tell "deleted with the parent" from "deleted on its own earlier", so Undo doesn't bring back older deletions. | Flag every row (matching AT-009), and store which delete action flagged it so Undo reverses only that action. This adds one column, `deleted_by_event`, to `nodes`. | M1 |
-| Q2 | Where do compacted daily summaries of old log events live? PRD 10 lists six tables; PRD 9 asks for daily summaries. | A seventh table is a schema change to the PRD's model. | Add an `event_daily_summaries` table in M7. | M7 |
-| Q3 | Should recurring items that are waiting for their show date appear on the Set-Aside page? PRD 7 calls them "set aside automatically"; PRD 8.3 lists items "set aside directly". | Listing them would put every bill on the Set-Aside page all month. | Don't list them; the Explorer shows each one's next due date. They do appear if the user sets an occurrence aside themselves. | M4 |
-| Q4 | Is v1 English-only? | Affects how text is stored in the code. | English only, with all text kept in one place so translation is easy later. | M1 |
+None at the moment. New questions are raised with the owner (or as `prd-question` issues), never guessed, and each answer is added to `PRD_Edits.md`.
 
 ### Already answered
 
-| Edit | Answer |
-|---|---|
-| [E-001](../PRD_Edits.md#e-001-undo-of-a-completion-is-logged-as-completion_undone) | Undo of a completion logs `completion_undone`; the restored card gets no new `surfaced` event |
-| [E-002](../PRD_Edits.md#e-002-a-surfaced-event-uses-the-wake-time) | `surfaced` uses the moment the item became visible, even if the app was closed |
+| Question | Edit | Answer |
+|---|---|---|
+| What does Undo of a completion log? | [E-001](../PRD_Edits.md#e-001-undo-of-a-completion-is-logged-as-completion_undone) | `completion_undone`; the restored card gets no new `surfaced` event |
+| What time does a `surfaced` event use if the app was closed? | [E-002](../PRD_Edits.md#e-002-a-surfaced-event-uses-the-wake-time) | The moment the item became visible |
+| Q1: Does deleting a node also flag the rows under it? | [E-003](../PRD_Edits.md#e-003-deleting-a-node-soft-deletes-everything-under-it-and-undo-restores-exactly-that) | Yes, everything under it. Undo restores exactly what that delete removed (`deleted_by_event`) |
+| Q2: Where do compacted log summaries live? | [E-004](../PRD_Edits.md#e-004-compacted-activity-log-summaries-live-in-their-own-table) | A seventh table, `event_daily_summaries` |
+| Q3: Are bills waiting for their show date on the Set-Aside page? | [E-005](../PRD_Edits.md#e-005-recurring-items-waiting-for-their-show-date-are-listed-on-the-set-aside-page) | Yes, listed at their show time, with Wake now and Change time for this occurrence only |
+| Q4: Is v1 English-only? | [E-006](../PRD_Edits.md#e-006-v1-is-english-only) | Yes, with all text kept in one place for later translation |
 
 ### Assumptions (tell me if any are wrong)
 

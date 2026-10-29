@@ -57,3 +57,86 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - Time-of-day patterns and the time from surfaced to done would be wrong if they used the time the app happened to be opened.
 
 **Affects:** AT-031 (unchanged), plus a new automated test: an item that wakes while the app is closed gets a `surfaced` event at its wake time.
+
+---
+
+## E-003: Deleting a node soft-deletes everything under it, and Undo restores exactly that
+
+- **PRD section:** 5 (Deleted), 7 (Delete), 10 (Data Model)
+- **Type:** Clarification, with a data model addition
+- **Decided by:** FINUSAM, 2026-10-30
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- Deleting any node sets `is_deleted = true` on that node **and on every node under it**: a domain's streams, stream items, projects, tasks and subtasks; a project's tasks and subtasks; and so on.
+- `nodes` gains one column, `deleted_by_event`, holding the `event_id` of the `deleted` event that flagged the row.
+- Undo (and the `restored` event) clears `is_deleted` only on rows flagged by that same delete. Anything the user had deleted separately before stays deleted.
+
+**Reason**
+
+- Matches AT-009 ("their rows still exist with is_deleted = true") and makes each row's state clear on its own, which helps Phase 3 sync.
+- Recording which delete flagged each row keeps Undo exact (AT-008).
+
+**Affects:** AT-008, AT-009, plus a new automated test: Undo of a project delete doesn't bring back a task that was deleted earlier on its own.
+
+---
+
+## E-004: Compacted activity log summaries live in their own table
+
+- **PRD section:** 9 (Retention), 10 (Data Model)
+- **Type:** Addition (seventh table)
+- **Decided by:** FINUSAM, 2026-10-30 (delegated to the technical plan)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- Add a table `event_daily_summaries`: `id`, `day` (local calendar date), `domain_id`, `group_id`, `event_type`, `count`, `created_at`, `updated_at`.
+- When raw events pass 12 months, compaction adds their counts to this table and removes the raw rows, in one transaction.
+
+**Reason**
+
+- Keeps `events` strictly one row per real action, so its meaning never changes.
+- Summaries have a different shape from events and are easier to query in their own table.
+
+**Affects:** AT-113.
+
+---
+
+## E-005: Recurring items waiting for their show date are listed on the Set-Aside page
+
+- **PRD section:** 7 (Recurring items), 8.3 (Set-Aside Page)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-10-30
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- A recurring item waiting for its next show date counts as set aside for the Set-Aside page. It's listed with the other items, soonest first, with title, path, wake time (its show time) and time remaining.
+- **Wake now** brings it onto the Summary immediately with its real due label (e.g. "Due Dec 5"). The due date and schedule don't change.
+- **Change time** moves only this occurrence's show time, earlier or later. The due date and the schedule after it don't change.
+- If the user has also set the occurrence aside, it's listed once, at whichever time is later, because that's when it actually returns.
+- If its stream or domain is set aside, it's listed under that ancestor rather than on its own (as in PRD 8.3 and AT-047).
+
+**Reason**
+
+- The Set-Aside page shows everything that's away and when it comes back, including bills between cycles.
+
+**Affects:** AT-046, AT-047, plus a new automated test: a paid bill is listed on the Set-Aside page until its show date, and Wake now shows it with its real due label.
+
+---
+
+## E-006: v1 is English-only
+
+- **PRD section:** 8 (Screens), 13 (Non-functional)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-10-30
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- v1's interface is in English only.
+- All user-facing text is kept in one place in the code, so translations can be added later without rewriting screens.
+- Dates and times are formatted for the phone's locale settings (e.g. 12- or 24-hour clock).
+
+**Affects:** none.

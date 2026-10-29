@@ -11,7 +11,8 @@ followed by v1.0.0 for the public release.
 
 ### Added
 - PRD (`docs/PRD.md`) and acceptance test sheet (`docs/tests/Sahai_Acceptance_Tests_v1.xlsx`).
-- `docs/PRD_Edits.md` for owner-approved PRD changes, with E-001 and E-002.
+- `docs/PRD_Edits.md` for owner-approved PRD changes: E-001 to E-006 (undo logging, surfaced time,
+  cascade delete, log summaries table, bills on the Set-Aside page, English-only).
 - Technical plan (`docs/tech-plan/README.md`) and acceptance test matrix.
 - Proposed decision records 0001–0005.
 - Development machine setup steps in `README.md`.

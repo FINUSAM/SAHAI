@@ -21,15 +21,23 @@
 11. [x] Update `docs/tests/README.md`, `README.md` "Getting started" and `CHANGELOG.md`
 12. [x] Push after each commit and give the owner the PR link into `dev`
 13. [x] Report against this checklist
+14. [x] Add E-003 to E-006 (owner answers to Q1–Q4) to `docs/PRD_Edits.md`
+15. [x] Update the tech plan: §5 (`deleted_by_event`, cascade delete and undo, seventh table), §4.4 (Set-Aside listing for recurring items), §15 (Q1–Q4 answered)
+16. [x] Update test matrix notes (AT-008, AT-009, AT-046, AT-047, AT-113) and add E-003, E-004, E-005 tests
+17. [x] Update `CHANGELOG.md` and this plan
+18. [x] Commit and push to the open PR branch
+19. [x] Report back
 
 ## Changes to the plan
 
 - 2026-10-30: Committing the PRD and test sheet was dropped. The owner pushed them to `dev` (PR #2).
 - 2026-10-30: Added `docs/PRD_Edits.md` and the matching rule change, at the owner's request.
+- 2026-10-30: Added steps 14–19 to record the owner's answers to Q1–Q4 as E-003 to E-006 (approved by FINUSAM).
 
 ## Notes for whoever picks this up
 
 - Step 1: git reported no local changes, so no stash was created. The working folder was already clean.
 - Owner answers recorded as PRD edits: E-001 (`completion_undone` event), E-002 (`surfaced` uses the wake time).
 - `sqlite3_flutter_libs` turned out to be end-of-life; drift now gets SQLite from `sqlite3` 3.x. The plan reflects this.
-- Open for the owner: questions Q1–Q4 in the tech plan (§15), accepting decision records 0001–0005, and M1 wireframes (PRD 16 gate).
+- Q1–Q4 answered (E-003 to E-006). Still open for the owner: accepting decision records 0001–0005, and M1 wireframes (PRD 16 gate).
+- E-005 needed one more `nodes` column, `snooze_overrides_show`, so Wake now / Change time can replace a bill's computed show time for one occurrence. It's recorded in the tech plan §4.4 and §5, not in PRD_Edits, because it's an implementation detail.
