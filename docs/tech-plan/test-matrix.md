@@ -28,6 +28,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | E-003 | M1 | U | Undo of a project delete restores only rows flagged by that delete; a task deleted earlier on its own stays deleted |
 | E-004 | M7 | U | Compaction moves events older than 12 months into `event_daily_summaries` with correct counts, in one transaction |
 | E-005 | M4 | U, W | A paid bill is listed on the Set-Aside page until its show date; Wake now shows it with its real due label and leaves the schedule unchanged |
+| E-007 | M1 | U, W | A locked task offers no checkmark or Mark done action until the task before it is done |
 
 
 ## M1 Foundations
@@ -40,7 +41,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | AT-004 | Reorder sequential tasks | 8.4 | Must | Founder | U, I | Reorder action; order survives restart |
 | AT-005 | Reorder subtasks and stream items | 8.4 | Must | Founder | U, I | Soft order for subtasks and stream items; survives restart |
 | AT-006 | Move an item to another parent | 8.4 | Should | Founder | U, W | Move action validates parent type |
-| AT-007 | Locked tasks are marked | 4, 8.4 | Must | Founder | U, W | Lock rule in engine; lock marker in Explorer |
+| AT-007 | Locked tasks are marked | 4, 8.4 | Must | Founder | U, W | Lock rule in engine; lock replaces the checkmark (E-007) |
 | AT-008 | Delete with Undo | 7 | Must | Founder | U, W | Cascade delete + undo token (E-003); snackbar Undo |
 | AT-009 | Deleted items vanish but stay in the database | 5, 7 | Must | Developer | U | Every row under it flagged is_deleted (E-003); hidden everywhere |
 | AT-010 | Sync-ready fields are set | 3, 10 | Must | Developer | U | UUID format; updated_at UTC and changes on edit |
