@@ -6,14 +6,14 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**Pre-development.** This repository has its foundations set up (rules, docs structure and GitHub templates), but there is no app code yet.
+**M1 Foundations in progress.** The Flutter project, database, tree rules and CI are in place; the Explorer screens come next.
 
 | | |
 |---|---|
 | Platform | Android (iOS later) |
 | Framework | Flutter |
 | Application ID | `com.finusam.sahai` |
-| Current milestone | M1 Foundations (not started) |
+| Current milestone | M1 Foundations (in progress) |
 
 ## Roadmap
 
@@ -48,7 +48,7 @@ v1 is built in 8 milestones, each released as a tagged version:
 
 ## Getting started
 
-There's no Flutter project yet; it's created in M1. To get a development machine ready (details in the [technical plan](docs/tech-plan/README.md#2-toolchain)):
+To get a development machine ready (details in the [technical plan](docs/tech-plan/README.md#2-toolchain)):
 
 1. Install **Flutter 3.47.3** (stable channel), which includes Dart 3.13.3.
 2. Install **Android Studio**. In its SDK Manager, add **Android SDK Platform 36** and the build tools.
@@ -57,7 +57,38 @@ There's no Flutter project yet; it's created in M1. To get a development machine
 5. Run `flutter doctor` and fix anything it reports for Android.
 6. For testing on a phone: Android 8.0 or newer, with USB debugging on.
 
-Build and test commands will be added here when the Flutter project is created in M1.
+### Everyday commands
+
+Run these from the repo root.
+
+| Task | Command |
+|---|---|
+| Get packages | `flutter pub get` |
+| Regenerate database code after changing `lib/data/tables.dart` or `database.dart` | `dart run build_runner build` |
+| Format | `dart format lib test tool` |
+| Analyze | `flutter analyze` |
+| Run all tests | `flutter test` |
+| Acceptance test coverage | `dart run tool/at_coverage.dart M1` |
+| Run on a connected phone | `flutter run` |
+| Release APK (debug-signed until M8) | `flutter build apk --release` |
+
+### Changing the database
+
+1. Change the tables, then raise `schemaVersion` in `lib/data/database.dart`.
+2. Run `dart run drift_dev make-migrations`. It exports the new schema to `drift_schemas/` and generates migration tests.
+3. Write the migration step. It runs after `backupBeforeMigration` and must never drop data (PRD 13).
+
+### Project layout
+
+| Folder | Holds |
+|---|---|
+| `lib/engine/` | Pure Dart rules: node types, tree, current task and locks |
+| `lib/data/` | drift tables, database, migrations |
+| `lib/actions/` | The only code that writes: each action is one transaction plus its log event |
+| `lib/shared/` | Clock and id helpers |
+| `test/` | Unit and widget tests, named by acceptance test ID |
+| `tool/` | Test matrix generator and AT coverage report |
+| `drift_schemas/` | Exported database schema for each version |
 
 ## License
 

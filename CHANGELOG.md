@@ -10,6 +10,11 @@ followed by v1.0.0 for the public release.
 ## [Unreleased]
 
 ### Added
+- M1 foundation: Flutter Android project (`com.finusam.sahai`, Android 8.0+, target API 36)
+  with pinned packages; database schema v1 with a pre-migration backup; tree rules for
+  node types and locked tasks; node actions (create, edit, reorder, move, delete with
+  undo, mark done, reopen) that each write one activity log event; CI with a check that
+  the release APK has no network permissions; test matrix and AT coverage tools.
 - PRD (`docs/PRD.md`) and acceptance test sheet (`docs/tests/Sahai_Acceptance_Tests_v1.xlsx`).
 - `docs/PRD_Edits.md` for owner-approved PRD changes: E-001 to E-006 (undo logging, surfaced time,
   cascade delete, log summaries table, bills on the Set-Aside page, English-only).

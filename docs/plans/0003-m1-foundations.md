@@ -24,16 +24,16 @@
 
 **PR 1: Foundation** (`feat/m1-foundation`)
 
-3. [ ] Create the Flutter project (`com.finusam.sahai`, Android only, minSdk 26, target/compile 36, version 0.1.0+1, Flutter 3.47.3 pinned)
-4. [ ] Add packages at exact versions (re-checked on pub.dev)
-5. [ ] Release manifest guard removing `INTERNET` and `ACCESS_NETWORK_STATE`
-6. [ ] CI workflow: format, analyze, test, release APK build, network-permission check, `DateTime.now()` check
-7. [ ] `tool/`: test-matrix generator and AT coverage script
-8. [ ] Database schema v1 (six PRD tables + `deleted_by_event`, `snooze_overrides_show`), indexes, WAL, schema snapshot, migration test harness, pre-migration copy
-9. [ ] Engine: tree model, valid-children rule, current-task and lock rule, injected clock
-10. [ ] Actions (one transaction + log event each): create, edit, reorder, move, cascade delete with Undo, mark done / reopen (basic)
-11. [ ] Unit tests named by AT ID (plus E-003, E-007); all green locally and in CI
-12. [ ] Update `README.md` and `CHANGELOG.md`; commit, push, open PR 1 with `gh`
+3. [x] Create the Flutter project (`com.finusam.sahai`, Android only, minSdk 26, target/compile 36, version 0.1.0+1, Flutter 3.47.3 pinned)
+4. [x] Add packages at exact versions (re-checked on pub.dev)
+5. [x] Release manifest guard removing `INTERNET` and `ACCESS_NETWORK_STATE`
+6. [x] CI workflow: format, analyze, test, release APK build, network-permission check, `DateTime.now()` check
+7. [x] `tool/`: test-matrix generator and AT coverage script
+8. [x] Database schema v1 (six PRD tables + `deleted_by_event`, `snooze_overrides_show`), indexes, WAL, schema snapshot, migration test harness, pre-migration copy
+9. [x] Engine: tree model, valid-children rule, current-task and lock rule, injected clock
+10. [x] Actions (one transaction + log event each): create, edit, reorder, move, cascade delete with Undo, mark done / reopen (basic)
+11. [x] Unit tests named by AT ID (plus E-003, E-007); all green locally and in CI
+12. [x] Update `README.md` and `CHANGELOG.md`; commit, push, open PR 1 with `gh`
 13. [ ] After CI has run once: make CI a required check on `dev` and `main` (owner approved 2026-10-30)
 
 **PR 2: Explorer** (`feat/m1-explorer`, after PR 1 merges)
@@ -56,3 +56,7 @@
 ## Notes for whoever picks this up
 
 - `gh` is installed at `C:\Program Files\GitHub CLI\gh.exe` and signed in as FINUSAM.
+- Mark done is refused for a node with TODO children, so a DONE parent never holds a TODO child (PRD 7). Subtasks of a locked task can still be marked done; the PRD doesn't say otherwise.
+- The AT coverage script counts an acceptance test as covered once any test names it. AT-002, 003, 006, 007, 008 still need widget tests and AT-001, 004, 005 integration tests in PR 2.
+- No migration tests are generated yet: drift creates them once schema v2 exists. The upgrade path itself is tested with a bumped-version database (AT-012).
+- Release APK built locally on 2026-10-30: 46 MB, and its only permission is Android's internal DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION.
