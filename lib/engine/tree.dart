@@ -7,6 +7,7 @@ class TreeNode {
     required this.parentId,
     required this.type,
     required this.title,
+    this.notes = '',
     required this.status,
     required this.sortOrder,
     this.groupId,
@@ -16,6 +17,7 @@ class TreeNode {
   final String? parentId;
   final NodeType type;
   final String title;
+  final String notes;
 
   /// Null for domains and streams.
   final NodeStatus? status;

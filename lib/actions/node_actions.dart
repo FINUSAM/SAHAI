@@ -50,12 +50,13 @@ class NodeActions {
   final IdGenerator _newId;
 
   /// The non-deleted tree.
-  Future<Tree> loadTree() async {
-    final rows = await (_db.select(
-      _db.nodes,
-    )..where((n) => n.isDeleted.equals(false))).get();
-    return Tree(rows.map(_toTreeNode));
-  }
+  Future<Tree> loadTree() async =>
+      Tree((await _liveNodes().get()).map(_toTreeNode));
+
+  /// The non-deleted tree, emitted again after every change, so screens
+  /// stay up to date without refreshing by hand.
+  Stream<Tree> watchTree() =>
+      _liveNodes().watch().map((rows) => Tree(rows.map(_toTreeNode)));
 
   /// Creates a node at the end of its parent's children (AT-001, AT-002).
   Future<String> create({
@@ -101,6 +102,9 @@ class NodeActions {
         domainId: type == NodeType.domain ? id : tree.domainOf(parentId!)?.id,
         groupId: parentId == null ? null : tree.effectiveGroupOf(parentId),
       );
+      if (parentId != null && type.hasStatus) {
+        await _reopenDoneChain(tree, parentId, cause: 'created', childId: id);
+      }
       return id;
     });
   }
@@ -146,7 +150,8 @@ class NodeActions {
   Future<void> moveDown(String id) => _shift(id, 1);
 
   /// Moves a node, and everything under it, to the end of [newParentId]'s
-  /// children (AT-006). Only a parent of the right type is accepted.
+  /// children (AT-006). Only a parent of the right type is accepted. Moving
+  /// a TODO node under a DONE one reopens it and its DONE ancestors (E-008).
   Future<void> move(String id, String newParentId) => _db.transaction(() async {
     final tree = await loadTree();
     final node = tree[id];
@@ -165,6 +170,32 @@ class NodeActions {
         updatedAt: Value(utcMillis(_clock)),
       ),
     );
+    if (node.isTodo) {
+      await _reopenDoneChain(tree, newParentId, cause: 'moved', childId: id);
+    }
+  });
+
+  /// Saves a whole new order for [parentId]'s children (null for domains) in
+  /// one step, so the Reorder screen saves all of it or none (AT-004,
+  /// AT-005). [orderedIds] must be exactly the current children.
+  Future<void> setChildOrder(
+    String? parentId,
+    List<String> orderedIds,
+  ) => _db.transaction(() async {
+    final tree = await loadTree();
+    final siblings = parentId == null ? tree.roots : tree.childrenOf(parentId);
+    final current = siblings.map((s) => s.id).toSet();
+    if (orderedIds.length != current.length ||
+        !current.containsAll(orderedIds)) {
+      throw const ActionRejected(RejectReason.notFound);
+    }
+    final orderOf = {for (final s in siblings) s.id: s.sortOrder};
+    final now = utcMillis(_clock);
+    for (var i = 0; i < orderedIds.length; i++) {
+      if (orderOf[orderedIds[i]] == i) continue;
+      await (_db.update(_db.nodes)..where((n) => n.id.equals(orderedIds[i])))
+          .write(NodesCompanion(sortOrder: Value(i), updatedAt: Value(now)));
+    }
   });
 
   /// Soft-deletes a node and everything under it, and returns the `deleted`
@@ -288,6 +319,43 @@ class NodeActions {
     );
   });
 
+  /// Reopens [nodeId] and its DONE ancestors, because a TODO child was just
+  /// added or moved under it (E-008). Does nothing if none are DONE.
+  Future<void> _reopenDoneChain(
+    Tree tree,
+    String nodeId, {
+    required String cause,
+    required String childId,
+  }) async {
+    final chain = [tree[nodeId]!, ...tree.ancestorsOf(nodeId)];
+    final done = chain.where((n) => n.isDone).toList();
+    if (done.isEmpty) return;
+    await (_db.update(
+      _db.nodes,
+    )..where((n) => n.id.isIn(done.map((d) => d.id)))).write(
+      NodesCompanion(
+        status: Value(NodeStatus.todo.dbName),
+        completedAt: const Value(null),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    await _log(
+      EventTypes.reopened,
+      nodeId: done.first.id,
+      nodeType: done.first.type,
+      domainId: tree.domainOf(done.first.id)?.id,
+      groupId: tree.effectiveGroupOf(done.first.id),
+      payload: {
+        'reopened_ancestors': done.skip(1).map((d) => d.id).toList(),
+        'cause': cause,
+        'child_id': childId,
+      },
+    );
+  }
+
+  SimpleSelectStatement<$NodesTable, NodeRow> _liveNodes() =>
+      _db.select(_db.nodes)..where((n) => n.isDeleted.equals(false));
+
   Future<void> _shift(String id, int by) async {
     final tree = await loadTree();
     final node = tree[id];
@@ -355,6 +423,7 @@ class NodeActions {
     parentId: row.parentId,
     type: NodeType.fromDbName(row.type),
     title: row.title,
+    notes: row.notes,
     status: NodeStatus.fromDbName(row.status),
     sortOrder: row.sortOrder,
     groupId: row.groupId,
