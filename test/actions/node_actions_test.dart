@@ -587,4 +587,148 @@ void main() {
       expect(jsonDecode(log[2].payload), {'undoes_event_id': deleteEvent});
     },
   );
+
+  group('AT-004 save a whole new order at once', () {
+    late String p;
+    late List<String> tasks;
+
+    setUp(() async {
+      final d = await actions.create(type: NodeType.domain, title: 'D');
+      p = await actions.create(type: NodeType.project, parentId: d, title: 'P');
+      tasks = [
+        for (final title in ['Task 1', 'Task 2', 'Task 3'])
+          await actions.create(type: NodeType.task, parentId: p, title: title),
+      ];
+    });
+
+    test('children take exactly the given order', () async {
+      await actions.setChildOrder(p, [tasks[2], tasks[0], tasks[1]]);
+      expect(await titlesUnder(p), ['Task 3', 'Task 1', 'Task 2']);
+    });
+
+    test('domains can be reordered too', () async {
+      final d2 = await actions.create(type: NodeType.domain, title: 'D2');
+      final d1 = (await actions.loadTree()).roots.first.id;
+      await actions.setChildOrder(null, [d2, d1]);
+      expect((await actions.loadTree()).roots.map((n) => n.title), ['D2', 'D']);
+    });
+
+    test('a list that is not exactly the children is refused', () async {
+      expect(
+        actions.setChildOrder(p, [tasks[0], tasks[1]]),
+        rejectedWith(RejectReason.notFound),
+      );
+      expect(
+        actions.setChildOrder(p, [tasks[0], tasks[1], 'id-unknown']),
+        rejectedWith(RejectReason.notFound),
+      );
+      expect(await titlesUnder(p), ['Task 1', 'Task 2', 'Task 3']);
+    });
+  });
+
+  test('watchTree emits the tree again after a change', () async {
+    final trees = actions.watchTree();
+    final d = await actions.create(type: NodeType.domain, title: 'D');
+    expect(trees, emitsThrough(predicate((t) => (t as dynamic).contains(d))));
+    await actions.edit(d, notes: 'Some notes');
+    expect((await actions.watchTree().first)[d]!.notes, 'Some notes');
+  });
+
+  group('E-008 adding or moving work into a DONE item reopens it', () {
+    late String d;
+    late String p;
+    late String t1;
+    late String t2;
+
+    setUp(() async {
+      d = await actions.create(type: NodeType.domain, title: 'D');
+      p = await actions.create(type: NodeType.project, parentId: d, title: 'P');
+      t1 = await actions.create(type: NodeType.task, parentId: p, title: 'T1');
+      t2 = await actions.create(type: NodeType.task, parentId: p, title: 'T2');
+      await actions.markDone(t1);
+      await actions.markDone(t2);
+      await actions.markDone(p);
+    });
+
+    test(
+      'adding a subtask to a DONE task reopens the task and project',
+      () async {
+        final s = await actions.create(
+          type: NodeType.subtask,
+          parentId: t1,
+          title: 'S',
+        );
+        final tree = await actions.loadTree();
+        expect(tree[t1]!.isTodo, isTrue);
+        expect(tree[p]!.isTodo, isTrue);
+        expect(tree[t2]!.isDone, isTrue, reason: 'later tasks keep progress');
+        expect((await row(t1)).completedAt, isNull);
+        expect(tree.currentTaskOf(p)?.id, t1);
+
+        final log = await events();
+        final reopened = log.singleWhere(
+          (e) => e.eventType == 'reopened' && e.nodeId == t1,
+        );
+        expect(jsonDecode(reopened.payload), {
+          'reopened_ancestors': [p],
+          'cause': 'created',
+          'child_id': s,
+        });
+      },
+    );
+
+    test('moving a TODO subtask under a DONE task reopens it', () async {
+      final p2 = await actions.create(
+        type: NodeType.project,
+        parentId: d,
+        title: 'P2',
+      );
+      final t3 = await actions.create(
+        type: NodeType.task,
+        parentId: p2,
+        title: 'T3',
+      );
+      final s = await actions.create(
+        type: NodeType.subtask,
+        parentId: t3,
+        title: 'S',
+      );
+      await actions.move(s, t2);
+      final tree = await actions.loadTree();
+      expect(tree[t2]!.isTodo, isTrue);
+      expect(tree[p]!.isTodo, isTrue);
+      expect(tree[t1]!.isDone, isTrue);
+      final reopened = (await events()).singleWhere(
+        (e) => e.eventType == 'reopened' && e.nodeId == t2,
+      );
+      expect(jsonDecode(reopened.payload)['cause'], 'moved');
+    });
+
+    test('moving a DONE item changes no statuses', () async {
+      final p2 = await actions.create(
+        type: NodeType.project,
+        parentId: d,
+        title: 'P2',
+      );
+      final t3 = await actions.create(
+        type: NodeType.task,
+        parentId: p2,
+        title: 'T3',
+      );
+      await actions.markDone(t3);
+      final before = (await events()).length;
+      await actions.move(t3, p);
+      final tree = await actions.loadTree();
+      expect(tree[p]!.isDone, isTrue);
+      expect(tree[t3]!.isDone, isTrue);
+      expect((await events()).length, before);
+    });
+
+    test('adding under a TODO parent logs no reopen', () async {
+      await actions.reopen(t2);
+      final before = (await events()).length;
+      await actions.create(type: NodeType.subtask, parentId: t2, title: 'S');
+      expect((await events()).length, before + 1);
+    });
+  });
 }

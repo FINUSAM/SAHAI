@@ -1,18 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'app/app.dart';
 
 void main() {
-  runApp(const SahaiApp());
-}
-
-/// Placeholder until the Explorer arrives in the second M1 pull request.
-class SahaiApp extends StatelessWidget {
-  const SahaiApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Sahai',
-      home: Scaffold(body: Center(child: Text('Sahai'))),
-    );
-  }
+  runApp(const ProviderScope(child: SahaiApp()));
 }

@@ -3,7 +3,7 @@
 - **Status:** In progress
 - **Approved by:** FINUSAM on 2026-10-30
 - **Branches / PRs:** PR 1 `feat/m1-foundation` → `dev`; PR 2 `feat/m1-explorer` → `dev`
-- **PRD sections:** 3, 4, 8.4, 10 (plus E-003, E-006, E-007)
+- **PRD sections:** 3, 4, 8.4, 10 (plus E-003, E-006, E-007, E-008)
 - **Acceptance tests:** AT-001 to AT-012
 - **Wireframes:** [`docs/design/m1-explorer/`](../design/m1-explorer/)
 - **Test devices:** OnePlus Nord 5 (OxygenOS 16 / Android 16), a Samsung phone (model TBD)
@@ -38,12 +38,12 @@
 
 **PR 2: Explorer** (`feat/m1-explorer`, after PR 1 merges)
 
-14. [ ] App shell: bottom tabs and Settings gear; other tabs show placeholders
-15. [ ] Explorer screens per frames 2–9
-16. [ ] Accessibility basics: labels, 48 dp targets, up/down alternative to drag
-17. [ ] Widget tests (AT-002, AT-003, AT-006, AT-007, AT-008) and integration tests (AT-001, AT-004, AT-005)
+14. [x] App shell: bottom tabs and Settings gear; other tabs show placeholders
+15. [x] Explorer screens per frames 2–9
+16. [x] Accessibility basics: labels, 48 dp targets, up/down alternative to drag
+17. [x] Widget tests (AT-002, AT-003, AT-006, AT-007, AT-008) and integration tests (AT-001, AT-004, AT-005)
 18. [ ] Release build on the owner's phone and a real-device checklist (AT-011, AT-012, build your real tree)
-19. [ ] Update `README.md`, `CHANGELOG.md` (0.1.0), matrix and this plan; open PR 2 with `gh`
+19. [x] Update `README.md`, `CHANGELOG.md` (0.1.0), matrix and this plan; open PR 2 with `gh`
 
 **Release** (owner)
 
@@ -52,13 +52,19 @@
 ## Changes to the plan
 
 - 2026-10-30: Step 13 added when branch protection was set up (approved by FINUSAM).
+- 2026-10-30: E-008 added before PR 2 (owner chose option b: adding or moving TODO work into a DONE item reopens it).
+- 2026-10-30: AT-001, AT-004 and AT-005 restart flows also run as widget tests (closing and reopening a database file), so CI checks them; `integration_test/` reruns all the widget tests on a phone. Adds the Flutter SDK `integration_test` package (approved with item 17).
 - 2026-10-30: First CI run failed because the `DateTime.now()` check matched a comment; the check now skips comment lines (approved by FINUSAM).
 
 ## Notes for whoever picks this up
 
 - `gh` is installed at `C:\Program Files\GitHub CLI\gh.exe` and signed in as FINUSAM.
 - Mark done is refused for a node with TODO children, so a DONE parent never holds a TODO child (PRD 7). Subtasks of a locked task can still be marked done; the PRD doesn't say otherwise.
-- The AT coverage script counts an acceptance test as covered once any test names it. AT-002, 003, 006, 007, 008 still need widget tests and AT-001, 004, 005 integration tests in PR 2.
+- The AT coverage script counts an acceptance test as covered once any test names it. Since PR 2, AT-002, 003, 006, 007 and 008 have widget tests, and AT-001, 004 and 005 have widget tests that restart on a database file, which `integration_test/` also runs on a phone.
 - No migration tests are generated yet: drift creates them once schema v2 exists. The upgrade path itself is tested with a bumped-version database (AT-012).
 - Release APK built locally on 2026-10-30: 46 MB, and its only permission is Android's internal DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION.
 - First green CI run on PR #7 (2026-10-30): 42 tests passed, release APK 48.5 MB, no network permissions. CI is now a required check on `dev` and `main` (not strict: a branch doesn't have to be up to date with `dev` before merging).
+- PR 2 choices the wireframes leave open: the app opens on the Explorer until the Summary exists (M2); the tree starts collapsed after a restart; a new item opens with an "Add …" line; the Reorder screen saves on Done and Close discards; Mark done has no Undo snackbar in M1 (Undo after completing comes in M2).
+- PRD 9 lists a `reordered` event, described with "position and group", which matches the Summary ordering of M5. Reordering in the Explorer doesn't log it yet. To confirm with the owner before M5.
+- No phone was connected while building PR 2, so `flutter test integration_test` and the real-device checks (item 18) are for the owner.
+- PR 2 is #8. First CI run green (2026-10-30): 79 tests passed, release APK 58.9 MB, no network permissions.

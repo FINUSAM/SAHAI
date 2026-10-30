@@ -41,5 +41,12 @@ class TestApp {
   late final SahaiDatabase db;
   late final NodeActions actions;
 
-  Future<void> close() => db.close();
+  var _closed = false;
+
+  /// Closes the database. Safe to call more than once.
+  Future<void> close() async {
+    if (_closed) return;
+    _closed = true;
+    await db.close();
+  }
 }
