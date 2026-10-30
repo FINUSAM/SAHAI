@@ -59,7 +59,7 @@ Milestones: M1 Foundations, M2 Core loop, M3 Set aside, M4 Recurring items, M5 G
 
 ### Code quality
 - Official Dart and Flutter style. `flutter analyze` and `dart format` must be clean, with no new warnings.
-- Small, focused changes: one feature or fix per PR.
+- Focused PRs: a milestone is delivered in at most 3 PRs, each leaving `dev` working with CI green. A bug fix outside a milestone is its own PR.
 - Comments explain *why*, not *what*. No `TODO` without a linked issue (`// TODO(#12): ...`).
 
 ### Security and privacy
@@ -75,3 +75,4 @@ Milestones: M1 Foundations, M2 Core loop, M3 Set aside, M4 Recurring items, M5 G
 
 ### Git
 - **Never commit directly to `main` or `dev`.** Work on a short-lived branch from `dev` (`feat/m2-summary-engine`, `fix/at-034-wake-order`, `chore/...`, `docs/...`), use Conventional Commits, and open a PR into `dev`. Only the owner merges `dev` into `main` for a release. Full workflow in `CONTRIBUTING.md`.
+- `main` and `dev` are protected on GitHub (PR required, no force push or deletion, rules apply to admins). Claude creates PRs with `gh` but **never merges, approves or closes them**, and never changes repo settings without approval.

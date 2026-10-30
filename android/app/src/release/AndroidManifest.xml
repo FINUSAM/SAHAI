@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- v1 must never reach the network (PRD 3, 13). These rules strip the
+         permissions from the merged release manifest even if a plugin declares
+         them. Debug and profile builds keep INTERNET for hot reload. CI checks
+         the built APK as well. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+</manifest>
