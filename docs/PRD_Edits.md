@@ -161,3 +161,25 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - Tasks are sequential (PRD 4). Completing a later task before the current one would break the one-step-at-a-time order.
 
 **Affects:** AT-007 (unchanged), plus a new automated test: a locked task offers no checkmark or Mark done action until the task before it is done.
+
+---
+
+## E-008: Adding or moving work into a DONE item reopens it
+
+- **PRD section:** 7 (Reopen), 8.4 (Explorer)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-10-30 (answer to a question raised while building the M1 Explorer)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- Adding a TODO item under a DONE item reopens that item and every DONE ancestor above it, as Reopen does. For example, adding a subtask to a DONE task reopens the task, and its project too if that was DONE.
+- Moving a TODO item under a DONE item does the same. Moving a DONE item changes no statuses.
+- As with Reopen, reopening an earlier task makes it the current task again, and later tasks re-lock but keep their own progress.
+- The change is one transaction: the `created` event (for an add) and a `reopened` event on the nearest reopened item, whose payload lists the other reopened ancestors and what caused it.
+
+**Reason**
+
+- PRD 7 says a DONE parent never holds a TODO child. Reopening keeps that true without making the user reopen things by hand first.
+
+**Affects:** new automated tests, `E-008 …`. No acceptance test changes.

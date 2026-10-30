@@ -25,6 +25,7 @@ docs/... chore/... ─────┘
 
 - **`main`** is always releasable. It changes only when the owner merges `dev` into it for a release. No direct pushes.
 - **`dev`** is the integration branch. All work arrives through pull requests. No direct pushes.
+- **Both are protected on GitHub:** changes only through a PR, no force pushes, no deletion, and the rules apply to admins too. Approvals are set to 0 because the owner's merge is the review (GitHub doesn't let an account approve its own PR). CI must pass before merging once CI exists.
 - **Work branches** are short-lived, created from the latest `dev`, and deleted after merging:
 
 | Prefix | Use for | Example |
@@ -36,7 +37,7 @@ docs/... chore/... ─────┘
 | `chore/` | Tooling, config, housekeeping | `chore/repo-setup` |
 | `docs/` | Documentation only | `docs/tech-plan` |
 
-Keep branches small: one feature or fix per PR.
+Keep PRs focused: a milestone is delivered in **at most 3 PRs**, each leaving `dev` working with CI green. A bug fix outside a milestone is its own PR.
 
 ## Commits
 
