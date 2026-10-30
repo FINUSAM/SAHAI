@@ -7,9 +7,15 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 Each v1 milestone is released as a minor version (M1 = v0.1.0 through M8 = v0.8.0),
 followed by v1.0.0 for the public release.
 
-## [Unreleased]
+## [0.1.0] - Unreleased (M1 Foundations; dated when the owner tags the release)
 
 ### Added
+- M1 Explorer: bottom tabs (Summary, Set-Aside and Capture show what is coming), a Settings
+  gear, and the Explorer tree from the approved wireframes: add only valid child types, create
+  and edit with notes, mark done and reopen, a lock on locked tasks, reorder with drag or arrows,
+  move to another parent, and delete with a 5-second Undo. Works with TalkBack and large text.
+- PRD edit E-008: adding or moving TODO work into a DONE item reopens it.
+- Widget tests for the Explorer, and `integration_test/` to run them on a phone.
 - M1 foundation: Flutter Android project (`com.finusam.sahai`, Android 8.0+, target API 36)
   with pinned packages; database schema v1 with a pre-migration backup; tree rules for
   node types and locked tasks; node actions (create, edit, reorder, move, delete with

@@ -6,14 +6,14 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**M1 Foundations in progress.** The Flutter project, database, tree rules and CI are in place; the Explorer screens come next.
+**M1 Foundations ready for testing on a phone.** The Explorer works: build your tree of domains, projects, tasks, subtasks, streams and stream items, and reorder, move, complete, reopen and delete them. The other tabs arrive in later milestones.
 
 | | |
 |---|---|
 | Platform | Android (iOS later) |
 | Framework | Flutter |
 | Application ID | `com.finusam.sahai` |
-| Current milestone | M1 Foundations (in progress) |
+| Current milestone | M1 Foundations (v0.1.0, on-device testing) |
 
 ## Roadmap
 
@@ -65,9 +65,10 @@ Run these from the repo root.
 |---|---|
 | Get packages | `flutter pub get` |
 | Regenerate database code after changing `lib/data/tables.dart` or `database.dart` | `dart run build_runner build` |
-| Format | `dart format lib test tool` |
+| Format | `dart format lib test tool integration_test` |
 | Analyze | `flutter analyze` |
 | Run all tests | `flutter test` |
+| Run the tests on a connected phone (uses throwaway databases, never your real data) | `flutter test integration_test` |
 | Acceptance test coverage | `dart run tool/at_coverage.dart M1` |
 | Run on a connected phone | `flutter run` |
 | Release APK (debug-signed until M8) | `flutter build apk --release` |
@@ -85,8 +86,11 @@ Run these from the repo root.
 | `lib/engine/` | Pure Dart rules: node types, tree, current task and locks |
 | `lib/data/` | drift tables, database, migrations |
 | `lib/actions/` | The only code that writes: each action is one transaction plus its log event |
-| `lib/shared/` | Clock and id helpers |
+| `lib/app/` | App widget, providers (database, clock, actions), routes and theme |
+| `lib/features/` | Screens: the Explorer, and placeholders for later tabs |
+| `lib/shared/` | Clock and id helpers, and every piece of user-facing text (`strings.dart`) |
 | `test/` | Unit and widget tests, named by acceptance test ID |
+| `integration_test/` | Runs the widget tests on a phone |
 | `tool/` | Test matrix generator and AT coverage report |
 | `drift_schemas/` | Exported database schema for each version |
 
