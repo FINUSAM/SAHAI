@@ -43,7 +43,7 @@
 16. [x] Accessibility basics: labels, 48 dp targets, up/down alternative to drag
 17. [x] Widget tests (AT-002, AT-003, AT-006, AT-007, AT-008) and integration tests (AT-001, AT-004, AT-005)
 18. [ ] Release build on the owner's phone and a real-device checklist (AT-011, AT-012, build your real tree)
-19. [ ] Update `README.md`, `CHANGELOG.md` (0.1.0), matrix and this plan; open PR 2 with `gh`
+19. [x] Update `README.md`, `CHANGELOG.md` (0.1.0), matrix and this plan; open PR 2 with `gh`
 
 **Release** (owner)
 
@@ -67,3 +67,4 @@
 - PR 2 choices the wireframes leave open: the app opens on the Explorer until the Summary exists (M2); the tree starts collapsed after a restart; a new item opens with an "Add …" line; the Reorder screen saves on Done and Close discards; Mark done has no Undo snackbar in M1 (Undo after completing comes in M2).
 - PRD 9 lists a `reordered` event, described with "position and group", which matches the Summary ordering of M5. Reordering in the Explorer doesn't log it yet. To confirm with the owner before M5.
 - No phone was connected while building PR 2, so `flutter test integration_test` and the real-device checks (item 18) are for the owner.
+- PR 2 is #8. First CI run green (2026-10-30): 79 tests passed, release APK 58.9 MB, no network permissions.
