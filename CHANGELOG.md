@@ -9,6 +9,9 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+### Added
+- Approved M2 Summary wireframes in `docs/design/m2-summary/` (10 frames) and the choices made with them.
+
 ### Changed
 - Auto Backup will include the database's `-wal` file as well as the main file, so a backup is
   complete even if the app was killed before checkpointing (tech plan §5, §8; decision 0002).
