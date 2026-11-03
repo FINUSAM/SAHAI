@@ -7,7 +7,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 Each v1 milestone is released as a minor version (M1 = v0.1.0 through M8 = v0.8.0),
 followed by v1.0.0 for the public release.
 
-## [0.1.0] - Unreleased (M1 Foundations; dated when the owner tags the release)
+## [0.1.0] - 2026-10-30 (M1 Foundations)
 
 ### Added
 - M1 Explorer: bottom tabs (Summary, Set-Aside and Capture show what is coming), a Settings
