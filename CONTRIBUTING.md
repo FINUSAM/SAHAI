@@ -26,7 +26,7 @@ docs/... chore/... ─────┘
 - **`main`** is always releasable. It changes only when the owner merges `dev` into it for a release. No direct pushes.
 - **`dev`** is the integration branch. All work arrives through pull requests. No direct pushes.
 - **Both are protected on GitHub:** changes only through a PR, no force pushes, no deletion, and the rules apply to admins too. Approvals are set to 0 because the owner's merge is the review (GitHub doesn't let an account approve its own PR). CI must pass before merging once CI exists.
-- **Work branches** are short-lived, created from the latest `dev`, and deleted after merging:
+- **Work branches** are short-lived, created from the latest `dev`, and deleted after merging. GitHub deletes the branch on GitHub automatically when its PR is merged (the repo's "Automatically delete head branches" setting); protected branches such as `dev` are never deleted this way:
 
 | Prefix | Use for | Example |
 |---|---|---|
@@ -57,7 +57,7 @@ docs: add decision record for database choice
 - Open PRs **into `dev`**. Fill in the [PR template](.github/pull_request_template.md).
 - Every PR names its **milestone**, the **PRD sections** and the **acceptance test IDs** it covers.
 - Merge with **squash merge**. The PR title becomes the commit message, so it must follow Conventional Commits.
-- Delete the branch after merging.
+- After merging, GitHub deletes the branch on GitHub. Delete your local copy yourself: `git switch dev`, `git pull`, `git branch -d <branch>` (use `-D` for a squash-merged branch, because git can't tell its commits are in `dev`), then `git fetch --prune` to clear references to deleted branches.
 
 ## Definition of done
 
