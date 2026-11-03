@@ -35,3 +35,4 @@ Settings: WAL journal mode with a full checkpoint when the app goes to the backg
 - Code generation adds a build step (`dart run build_runner build`) and generated files to keep in sync.
 - To verify in M1: that `sqlite3` 3.x builds cleanly on the development machine, and that it adds no Android permissions.
 - The drift author maintains `drift`, `drift_flutter` and `sqlite3`, which concentrates risk in one maintainer. The packages are widely used and the data stays in standard SQLite, so a switch later would be possible.
+- **2026-11-04 (FINUSAM):** Auto Backup includes the `-wal` file as well as the main database file. Android can stop the app without the background callback running, so the main file alone may be missing recent changes. The background checkpoint stays as a second layer. Tech plan §5 and §8 updated.
