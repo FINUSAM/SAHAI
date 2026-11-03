@@ -183,3 +183,44 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - PRD 7 says a DONE parent never holds a TODO child. Reopening keeps that true without making the user reopen things by hand first.
 
 **Affects:** new automated tests, `E-008 …`. No acceptance test changes.
+
+---
+
+## E-009: The v1 home-screen widget opens a lightweight text-capture dialog
+
+- **PRD section:** 8.5 (Capture, entry points outside the app)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-11-04
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- The v1 home-screen widget is a button. Tapping it opens a small capture screen over whatever the user is doing: a text box and Save, nothing else. Saving closes it without opening the full app.
+- Text shared from another app (the share target) still lands in Capture as PRD 8.5 describes.
+
+**Reason**
+
+- Android app widgets can't contain an editable text field, so typing can't happen inside the widget itself. A tap-to-type dialog is the closest Android allows and still meets "quick entry" and "capture works from anywhere" (PRD 16, M6).
+
+**Affects:** AT-099 (the widget check includes the dialog).
+
+---
+
+## E-010: In Phase 2 the widget records voice, and captures carry AI proposals
+
+- **PRD section:** 8.5 (Capture, v2), 11 (Phase 2 features)
+- **Type:** Addition (Phase 2 only)
+- **Decided by:** FINUSAM, 2026-11-04
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- In Phase 2 the home-screen widget is a single record button: one tap starts recording, the next tap stops it. The user can record several clips without opening the app.
+- In the app, the Capture section lists each clip with its transcription and the AI's proposed items (PRD 11, "AI parsing"). Each proposal offers **Accept**, **Fix** (the AI revises it from the user's correction), **Edit** (the user changes it by hand) and **Discard**.
+- This stays in Phase 2. v1 capture remains the plain-text scratchpad of PRD 8.5, with the widget of E-009.
+
+**Reason**
+
+- Records the intended Phase 2 widget and review flow now, so the v1 Capture section and the `captures` table are designed to grow into it without rework.
+
+**Affects:** none in v1. Phase 2 acceptance tests are written when Phase 2 is planned.

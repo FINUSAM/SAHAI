@@ -7,7 +7,15 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 Each v1 milestone is released as a minor version (M1 = v0.1.0 through M8 = v0.8.0),
 followed by v1.0.0 for the public release.
 
-## [0.1.0] - Unreleased (M1 Foundations; dated when the owner tags the release)
+## [Unreleased]
+
+### Changed
+- Auto Backup will include the database's `-wal` file as well as the main file, so a backup is
+  complete even if the app was killed before checkpointing (tech plan §5, §8; decision 0002).
+- PRD edits E-009 (the v1 home-screen widget opens a text-capture dialog) and E-010 (the Phase 2
+  widget records voice; captures list transcriptions and AI proposals with Accept, Fix, Edit, Discard).
+
+## [0.1.0] - 2026-10-30 (M1 Foundations)
 
 ### Added
 - M1 Explorer: bottom tabs (Summary, Set-Aside and Capture show what is coming), a Settings
