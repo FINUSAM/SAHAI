@@ -4,12 +4,21 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
 import '../shared/time.dart';
+import 'database.steps.dart';
 import 'tables.dart';
 
 part 'database.g.dart';
 
 @DriftDatabase(
-  tables: [Nodes, ContextGroups, SummarySlots, Events, Captures, SettingsTable],
+  tables: [
+    Nodes,
+    ContextGroups,
+    SummarySlots,
+    Events,
+    Captures,
+    SettingsTable,
+    SummaryVisible,
+  ],
 )
 class SahaiDatabase extends _$SahaiDatabase {
   SahaiDatabase(super.executor, {this._clock = const Clock()});
@@ -20,7 +29,7 @@ class SahaiDatabase extends _$SahaiDatabase {
   static const keptBackups = 2;
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -35,11 +44,18 @@ class SahaiDatabase extends _$SahaiDatabase {
         ),
       );
     },
-    // Version 1 is the first schema, so there is nothing to upgrade from yet.
-    // Each future step must call backupBeforeMigration first and must never
-    // drop data (PRD 13).
+    // Every upgrade copies the database first and only adds tables and
+    // columns; nothing is ever dropped (PRD 13, AT-012).
+    // Each step builds the tables as they were at that version (from the
+    // generated `database.steps.dart`), so a later change to a table can't
+    // alter an older migration. `dart run drift_dev make-migrations` adds
+    // the next step and its test.
     onUpgrade: (m, from, to) async {
       await backupBeforeMigration(from);
+      await stepByStep(
+        // v2 (M2): the Summary's current card set, for surfaced events.
+        from1To2: (m, schema) => m.createTable(schema.summaryVisible),
+      )(m, from, to);
     },
     beforeOpen: (details) async {
       // WAL lets reads continue during writes. The app checkpoints when it

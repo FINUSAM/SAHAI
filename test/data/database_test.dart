@@ -3,18 +3,9 @@ import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sahai/data/database.dart';
-import 'package:sahai/engine/node_type.dart';
 
+import '../drift/sahai/generated/schema_v1.dart' as v1;
 import '../helpers.dart';
-
-/// The real database with its schema version bumped, so tests can run the
-/// upgrade path that every future migration goes through.
-class _NextVersionDatabase extends SahaiDatabase {
-  _NextVersionDatabase(super.executor);
-
-  @override
-  int get schemaVersion => super.schemaVersion + 1;
-}
 
 void main() {
   late Directory dir;
@@ -51,20 +42,43 @@ void main() {
 
   group('AT-012 schema migration keeps data', () {
     test('upgrading copies the database first and keeps every row', () async {
-      final first = TestApp(executor: NativeDatabase(file));
-      final d = await first.actions.create(
-        type: NodeType.domain,
-        title: 'Personal',
-      );
-      await first.actions.create(
-        type: NodeType.stream,
-        parentId: d,
-        title: 'Errands',
-      );
-      await first.close();
+      // A real v1 database file, built from the exported v1 schema.
+      final old = v1.DatabaseAtV1(NativeDatabase(file));
+      const t = 1793746101000;
+      await old.batch((b) {
+        b.insertAll(old.nodes, const [
+          v1.NodesData(
+            id: 'd',
+            type: 'domain',
+            title: 'Personal',
+            notes: '',
+            sortOrder: 0,
+            remindOnWake: 1,
+            isDeleted: 0,
+            snoozeOverridesShow: 0,
+            createdAt: t,
+            updatedAt: t,
+          ),
+          v1.NodesData(
+            id: 's',
+            parentId: 'd',
+            type: 'stream',
+            title: 'Errands',
+            notes: '',
+            sortOrder: 0,
+            remindOnWake: 1,
+            isDeleted: 0,
+            snoozeOverridesShow: 0,
+            createdAt: t,
+            updatedAt: t,
+          ),
+        ]);
+      });
+      await old.close();
 
-      final upgraded = _NextVersionDatabase(NativeDatabase(file));
+      final upgraded = SahaiDatabase(NativeDatabase(file));
       addTearDown(upgraded.close);
+      expect(await upgraded.select(upgraded.summaryVisible).get(), isEmpty);
       final titles = await (upgraded.select(upgraded.nodes))
           .map((r) => r.title)
           .get();

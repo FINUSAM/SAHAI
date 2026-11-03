@@ -126,7 +126,7 @@ After each recompute, the engine compares the new card set with the previous one
 
 - **E-002:** `occurred_at` is the moment the item actually became visible. If it came back while the app was closed, that's the wake or show time that caused it, worked out by the engine, not the time the app was opened.
 - **E-001:** for Undo of a completion, the action records `completion_undone` (pointing to the `completed` event) and the restored card gets **no** new `surfaced` event.
-- The last known card set is stored in `settings` so the comparison works across app restarts.
+- The last known card set is the `summary_visible` table (schema v2, M2): one row per card on the Summary with the time it surfaced. The action that changed the tree recomputes, diffs, writes the `surfaced` events and updates this table **in the same transaction**, so a crash between the two can never log an appearance twice. (Changed 2026-11-04 from "stored in `settings`".)
 
 ### 4.6 Summary order and groups (PRD 8.2, M5)
 
@@ -154,6 +154,7 @@ See [decision 0002](../decisions/0002-database-drift-sqlite.md).
 | `captures` | As PRD 10. |
 | `settings` | A single row, with typed columns per setting plus `updated_at`. |
 | `event_daily_summaries` | Seventh table ([E-004](../PRD_Edits.md#e-004-compacted-activity-log-summaries-live-in-their-own-table)): `day`, `domain_id`, `group_id`, `event_type`, `count`. Filled by log compaction (M7). |
+| `summary_visible` | Schema v2 (M2): `node_id`, `surfaced_at`. The cards currently on the Summary, kept in step with the `surfaced` events (§4.5). Not user data: it is rebuilt from the tree, and its only job is to make the surfaced diff survive a restart. |
 
 Every table has `created_at`/`updated_at` in UTC ms and `is_deleted`. Every write sets `updated_at` (AT-010).
 

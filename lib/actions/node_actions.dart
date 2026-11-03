@@ -5,7 +5,9 @@ import 'package:drift/drift.dart';
 
 import '../data/database.dart';
 import '../engine/node_type.dart';
+import '../engine/surfaced.dart';
 import '../engine/tree.dart';
+import '../engine/visibility.dart';
 import '../shared/ids.dart';
 import '../shared/time.dart';
 
@@ -16,6 +18,13 @@ abstract final class EventTypes {
   static const reopened = 'reopened';
   static const deleted = 'deleted';
   static const restored = 'restored';
+
+  /// The item appeared on the Summary (PRD 9; E-002 for the time it uses).
+  static const surfaced = 'surfaced';
+
+  /// Undo after completing. The `completed` event stays; this one points at
+  /// it (E-001).
+  static const completionUndone = 'completion_undone';
 }
 
 /// Why an action was refused. The UI turns these into messages.
@@ -105,6 +114,7 @@ class NodeActions {
       if (parentId != null && type.hasStatus) {
         await _reopenDoneChain(tree, parentId, cause: 'created', childId: id);
       }
+      await _syncSummary();
       return id;
     });
   }
@@ -143,6 +153,7 @@ class NodeActions {
       await (_db.update(_db.nodes)..where((n) => n.id.equals(siblings[i].id)))
           .write(NodesCompanion(sortOrder: Value(i), updatedAt: Value(now)));
     }
+    await _syncSummary();
   });
 
   Future<void> moveUp(String id) => _shift(id, -1);
@@ -173,6 +184,7 @@ class NodeActions {
     if (node.isTodo) {
       await _reopenDoneChain(tree, newParentId, cause: 'moved', childId: id);
     }
+    await _syncSummary();
   });
 
   /// Saves a whole new order for [parentId]'s children (null for domains) in
@@ -196,6 +208,7 @@ class NodeActions {
       await (_db.update(_db.nodes)..where((n) => n.id.equals(orderedIds[i])))
           .write(NodesCompanion(sortOrder: Value(i), updatedAt: Value(now)));
     }
+    await _syncSummary();
   });
 
   /// Soft-deletes a node and everything under it, and returns the `deleted`
@@ -224,6 +237,7 @@ class NodeActions {
       groupId: tree.effectiveGroupOf(id),
       payload: {'count': affected.length},
     );
+    await _syncSummary();
     return eventId;
   });
 
@@ -254,12 +268,14 @@ class NodeActions {
       groupId: tree.effectiveGroupOf(root.id),
       payload: {'undoes_event_id': deleteEventId},
     );
+    await _syncSummary();
   });
 
-  /// Marks a node DONE. Locked tasks can't be completed (E-007), and a node
-  /// with TODO children can't either, so a DONE parent never holds a TODO
-  /// child (PRD 7).
-  Future<void> markDone(String id) => _db.transaction(() async {
+  /// Marks a node DONE and returns the `completed` event id, which is the
+  /// undo token for [undoComplete] (AT-025). Locked tasks can't be completed
+  /// (E-007), and a node with TODO children can't either, so a DONE parent
+  /// never holds a TODO child (PRD 7).
+  Future<String> markDone(String id) => _db.transaction(() async {
     final tree = await loadTree();
     final node = tree[id];
     if (node == null) throw const ActionRejected(RejectReason.notFound);
@@ -281,17 +297,65 @@ class NodeActions {
         updatedAt: Value(now),
       ),
     );
+    final eventId = _newId();
     await _log(
       EventTypes.completed,
+      eventId: eventId,
       nodeId: id,
       nodeType: node.type,
       domainId: tree.domainOf(id)?.id,
       groupId: tree.effectiveGroupOf(id),
     );
+    await _syncSummary();
+    return eventId;
   });
 
+  /// Undo after completing (AT-025, E-001): the item is TODO again and its
+  /// card comes back as if the tap never happened, so it gets no new
+  /// `surfaced` event. The `completed` event stays in the log and a
+  /// `completion_undone` event points at it. Any ancestor marked DONE in
+  /// the meantime reopens too, so a DONE parent never holds a TODO child.
+  Future<void> undoComplete(String completedEventId) =>
+      _db.transaction(() async {
+        final event = await (_db.select(
+          _db.events,
+        )..where((e) => e.eventId.equals(completedEventId))).getSingleOrNull();
+        if (event == null ||
+            event.eventType != EventTypes.completed ||
+            event.nodeId == null) {
+          throw const ActionRejected(RejectReason.notFound);
+        }
+        final tree = await loadTree();
+        final node = tree[event.nodeId!];
+        if (node == null) throw const ActionRejected(RejectReason.notFound);
+        if (!node.isDone) throw const ActionRejected(RejectReason.notDone);
+        final doneAncestors = tree.ancestorsOf(node.id).where((a) => a.isDone);
+        final reopened = [node.id, ...doneAncestors.map((a) => a.id)];
+        await (_db.update(_db.nodes)..where((n) => n.id.isIn(reopened))).write(
+          NodesCompanion(
+            status: Value(NodeStatus.todo.dbName),
+            completedAt: const Value(null),
+            updatedAt: Value(utcMillis(_clock)),
+          ),
+        );
+        await _log(
+          EventTypes.completionUndone,
+          nodeId: node.id,
+          nodeType: node.type,
+          domainId: tree.domainOf(node.id)?.id,
+          groupId: tree.effectiveGroupOf(node.id),
+          payload: {
+            'undoes_event_id': completedEventId,
+            if (reopened.length > 1)
+              'reopened_ancestors': reopened.skip(1).toList(),
+          },
+        );
+        await _syncSummary(suppress: {node.id});
+      });
+
   /// Sets a DONE node back to TODO, together with every DONE ancestor
-  /// (PRD 7). Undo after completing comes in M2.
+  /// (PRD 7, AT-027). Reopening an earlier task makes it current again, so
+  /// later tasks re-lock but keep their progress (AT-028).
   Future<void> reopen(String id) => _db.transaction(() async {
     final tree = await loadTree();
     final node = tree[id];
@@ -317,6 +381,7 @@ class NodeActions {
       groupId: tree.effectiveGroupOf(id),
       payload: {'reopened_ancestors': reopened.skip(1).toList()},
     );
+    await _syncSummary();
   });
 
   /// Reopens [nodeId] and its DONE ancestors, because a TODO child was just
@@ -389,6 +454,77 @@ class NodeActions {
     return current == null ? 0 : current + 1;
   }
 
+  /// Recomputes the Summary and records what newly appeared, inside the
+  /// same transaction as the change that caused it (tech plan 4.5): one
+  /// `surfaced` event per new card, and `summary_visible` kept in step, so
+  /// a crash between the two can never log an appearance twice.
+  ///
+  /// [suppress] names cards an undo restored: they get no new event and keep
+  /// their original surfaced time (E-001). [visibleAt] is when the cards
+  /// really became visible; M3 passes the wake time for items that came
+  /// back while the app was closed (E-002).
+  Future<void> _syncSummary({
+    Set<String> suppress = const {},
+    DateTime? visibleAt,
+  }) async {
+    final tree = await loadTree();
+    final summary = computeSummary(tree, now: _clock.now().toUtc());
+    final previousRows = await (_db.select(
+      _db.summaryVisible,
+    )..where((v) => v.isDeleted.equals(false))).get();
+    final previous = {for (final r in previousRows) r.nodeId};
+    final current = summary.cards.map((c) => c.id).toList();
+    final diff = diffVisible(
+      previous: previous,
+      current: current,
+      suppress: suppress,
+    );
+    final now = utcMillis(_clock);
+    final at = visibleAt?.toUtc().millisecondsSinceEpoch ?? now;
+    for (final id in diff.appeared) {
+      final node = tree[id]!;
+      await _log(
+        EventTypes.surfaced,
+        nodeId: id,
+        nodeType: node.type,
+        domainId: tree.domainOf(id)?.id,
+        groupId: tree.effectiveGroupOf(id),
+        occurredAt: at,
+      );
+    }
+    for (final id in current) {
+      if (previous.contains(id)) continue;
+      final keepTime = suppress.contains(id);
+      await _db
+          .into(_db.summaryVisible)
+          .insert(
+            SummaryVisibleCompanion.insert(
+              nodeId: id,
+              surfacedAt: at,
+              createdAt: now,
+              updatedAt: now,
+            ),
+            onConflict: DoUpdate(
+              (old) => SummaryVisibleCompanion(
+                surfacedAt: keepTime ? const Value.absent() : Value(at),
+                isDeleted: const Value(false),
+                updatedAt: Value(now),
+              ),
+            ),
+          );
+    }
+    if (diff.disappeared.isNotEmpty) {
+      await (_db.update(
+        _db.summaryVisible,
+      )..where((v) => v.nodeId.isIn(diff.disappeared))).write(
+        SummaryVisibleCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+  }
+
   Future<void> _log(
     String eventType, {
     String? eventId,
@@ -397,6 +533,7 @@ class NodeActions {
     String? domainId,
     String? groupId,
     Map<String, Object?> payload = const {},
+    int? occurredAt,
   }) async {
     final now = utcMillis(_clock);
     await _db
@@ -409,7 +546,7 @@ class NodeActions {
             nodeType: Value(nodeType.dbName),
             domainId: Value(domainId),
             groupId: Value(groupId),
-            occurredAt: now,
+            occurredAt: occurredAt ?? now,
             tzOffsetMinutes: tzOffsetMinutes(_clock),
             payload: Value(jsonEncode(payload)),
             createdAt: now,
@@ -427,5 +564,9 @@ class NodeActions {
     status: NodeStatus.fromDbName(row.status),
     sortOrder: row.sortOrder,
     groupId: row.groupId,
+    snoozeUntil: row.snoozeUntil == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(row.snoozeUntil!, isUtc: true),
+    isRecurring: row.recurrence != null,
   );
 }

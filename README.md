@@ -69,7 +69,8 @@ Run these from the repo root.
 | Analyze | `flutter analyze` |
 | Run all tests | `flutter test` |
 | Run the tests on a connected phone (uses throwaway databases, never your real data) | `flutter test integration_test` |
-| Acceptance test coverage | `dart run tool/at_coverage.dart M1` |
+| Acceptance test coverage | `dart run tool/at_coverage.dart M2` |
+| Engine benchmark on a 10,000-item tree | `dart run tool/benchmark.dart` |
 | Run on a connected phone | `flutter run` |
 | Release APK (debug-signed until M8) | `flutter build apk --release` |
 
@@ -83,9 +84,9 @@ Run these from the repo root.
 
 | Folder | Holds |
 |---|---|
-| `lib/engine/` | Pure Dart rules: node types, tree, current task and locks |
+| `lib/engine/` | Pure Dart rules: node types, tree, current task and locks, the Summary visibility rules and the surfaced diff |
 | `lib/data/` | drift tables, database, migrations |
-| `lib/actions/` | The only code that writes: each action is one transaction plus its log event |
+| `lib/actions/` | The only code that writes: each action is one transaction plus its log event, and it recomputes the Summary and logs what surfaced in that same transaction |
 | `lib/app/` | App widget, providers (database, clock, actions), routes and theme |
 | `lib/features/` | Screens: the Explorer, and placeholders for later tabs |
 | `lib/shared/` | Clock and id helpers, and every piece of user-facing text (`strings.dart`) |

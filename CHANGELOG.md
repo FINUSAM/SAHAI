@@ -10,6 +10,11 @@ followed by v1.0.0 for the public release.
 ## [Unreleased]
 
 ### Added
+- M2 engine (PR 1 of M2): the Summary visibility rules (PRD 6) as a pure Dart engine, with the
+  card kinds, sign-off and empty-project hints, and `nextChangeAt` for M3; Undo after completing
+  (`completion_undone`, E-001); `surfaced` events written in the same transaction as the change
+  that caused them; schema v2 with the `summary_visible` table and the first generated migration
+  test (v1 → v2); `tool/benchmark.dart` for the 10,000-item check.
 - Approved M2 Summary wireframes in `docs/design/m2-summary/` (10 frames) and the choices made with them.
 
 ### Changed
