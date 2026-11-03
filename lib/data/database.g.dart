@@ -3709,6 +3709,376 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsRow> {
   }
 }
 
+class $SummaryVisibleTable extends SummaryVisible
+    with TableInfo<$SummaryVisibleTable, SummaryVisibleRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SummaryVisibleTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nodeIdMeta = const VerificationMeta('nodeId');
+  @override
+  late final GeneratedColumn<String> nodeId = GeneratedColumn<String>(
+    'node_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _surfacedAtMeta = const VerificationMeta(
+    'surfacedAt',
+  );
+  @override
+  late final GeneratedColumn<int> surfacedAt = GeneratedColumn<int>(
+    'surfaced_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    nodeId,
+    surfacedAt,
+    isDeleted,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'summary_visible';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SummaryVisibleRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('node_id')) {
+      context.handle(
+        _nodeIdMeta,
+        nodeId.isAcceptableOrUnknown(data['node_id']!, _nodeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nodeIdMeta);
+    }
+    if (data.containsKey('surfaced_at')) {
+      context.handle(
+        _surfacedAtMeta,
+        surfacedAt.isAcceptableOrUnknown(data['surfaced_at']!, _surfacedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_surfacedAtMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {nodeId};
+  @override
+  SummaryVisibleRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SummaryVisibleRow(
+      nodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}node_id'],
+      )!,
+      surfacedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}surfaced_at'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SummaryVisibleTable createAlias(String alias) {
+    return $SummaryVisibleTable(attachedDatabase, alias);
+  }
+}
+
+class SummaryVisibleRow extends DataClass
+    implements Insertable<SummaryVisibleRow> {
+  final String nodeId;
+  final int surfacedAt;
+  final bool isDeleted;
+  final int createdAt;
+  final int updatedAt;
+  const SummaryVisibleRow({
+    required this.nodeId,
+    required this.surfacedAt,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['node_id'] = Variable<String>(nodeId);
+    map['surfaced_at'] = Variable<int>(surfacedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  SummaryVisibleCompanion toCompanion(bool nullToAbsent) {
+    return SummaryVisibleCompanion(
+      nodeId: Value(nodeId),
+      surfacedAt: Value(surfacedAt),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SummaryVisibleRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SummaryVisibleRow(
+      nodeId: serializer.fromJson<String>(json['nodeId']),
+      surfacedAt: serializer.fromJson<int>(json['surfacedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'nodeId': serializer.toJson<String>(nodeId),
+      'surfacedAt': serializer.toJson<int>(surfacedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  SummaryVisibleRow copyWith({
+    String? nodeId,
+    int? surfacedAt,
+    bool? isDeleted,
+    int? createdAt,
+    int? updatedAt,
+  }) => SummaryVisibleRow(
+    nodeId: nodeId ?? this.nodeId,
+    surfacedAt: surfacedAt ?? this.surfacedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SummaryVisibleRow copyWithCompanion(SummaryVisibleCompanion data) {
+    return SummaryVisibleRow(
+      nodeId: data.nodeId.present ? data.nodeId.value : this.nodeId,
+      surfacedAt: data.surfacedAt.present
+          ? data.surfacedAt.value
+          : this.surfacedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SummaryVisibleRow(')
+          ..write('nodeId: $nodeId, ')
+          ..write('surfacedAt: $surfacedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(nodeId, surfacedAt, isDeleted, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SummaryVisibleRow &&
+          other.nodeId == this.nodeId &&
+          other.surfacedAt == this.surfacedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SummaryVisibleCompanion extends UpdateCompanion<SummaryVisibleRow> {
+  final Value<String> nodeId;
+  final Value<int> surfacedAt;
+  final Value<bool> isDeleted;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const SummaryVisibleCompanion({
+    this.nodeId = const Value.absent(),
+    this.surfacedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SummaryVisibleCompanion.insert({
+    required String nodeId,
+    required int surfacedAt,
+    this.isDeleted = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  }) : nodeId = Value(nodeId),
+       surfacedAt = Value(surfacedAt),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<SummaryVisibleRow> custom({
+    Expression<String>? nodeId,
+    Expression<int>? surfacedAt,
+    Expression<bool>? isDeleted,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (nodeId != null) 'node_id': nodeId,
+      if (surfacedAt != null) 'surfaced_at': surfacedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SummaryVisibleCompanion copyWith({
+    Value<String>? nodeId,
+    Value<int>? surfacedAt,
+    Value<bool>? isDeleted,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SummaryVisibleCompanion(
+      nodeId: nodeId ?? this.nodeId,
+      surfacedAt: surfacedAt ?? this.surfacedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (nodeId.present) {
+      map['node_id'] = Variable<String>(nodeId.value);
+    }
+    if (surfacedAt.present) {
+      map['surfaced_at'] = Variable<int>(surfacedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SummaryVisibleCompanion(')
+          ..write('nodeId: $nodeId, ')
+          ..write('surfacedAt: $surfacedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SahaiDatabase extends GeneratedDatabase {
   _$SahaiDatabase(QueryExecutor e) : super(e);
   $SahaiDatabaseManager get managers => $SahaiDatabaseManager(this);
@@ -3718,6 +4088,7 @@ abstract class _$SahaiDatabase extends GeneratedDatabase {
   late final $EventsTable events = $EventsTable(this);
   late final $CapturesTable captures = $CapturesTable(this);
   late final $SettingsTableTable settingsTable = $SettingsTableTable(this);
+  late final $SummaryVisibleTable summaryVisible = $SummaryVisibleTable(this);
   late final Index nodesParentStatusDeleted = Index(
     'nodes_parent_status_deleted',
     'CREATE INDEX nodes_parent_status_deleted ON nodes (parent_id, status, is_deleted)',
@@ -3741,6 +4112,7 @@ abstract class _$SahaiDatabase extends GeneratedDatabase {
     events,
     captures,
     settingsTable,
+    summaryVisible,
     nodesParentStatusDeleted,
     nodesSnoozeUntil,
     eventsOccurredAt,
@@ -5580,6 +5952,227 @@ typedef $$SettingsTableTableProcessedTableManager =
       SettingsRow,
       PrefetchHooks Function()
     >;
+typedef $$SummaryVisibleTableCreateCompanionBuilder =
+    SummaryVisibleCompanion Function({
+      required String nodeId,
+      required int surfacedAt,
+      Value<bool> isDeleted,
+      required int createdAt,
+      required int updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SummaryVisibleTableUpdateCompanionBuilder =
+    SummaryVisibleCompanion Function({
+      Value<String> nodeId,
+      Value<int> surfacedAt,
+      Value<bool> isDeleted,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SummaryVisibleTableFilterComposer
+    extends Composer<_$SahaiDatabase, $SummaryVisibleTable> {
+  $$SummaryVisibleTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get nodeId => $composableBuilder(
+    column: $table.nodeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get surfacedAt => $composableBuilder(
+    column: $table.surfacedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SummaryVisibleTableOrderingComposer
+    extends Composer<_$SahaiDatabase, $SummaryVisibleTable> {
+  $$SummaryVisibleTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get nodeId => $composableBuilder(
+    column: $table.nodeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get surfacedAt => $composableBuilder(
+    column: $table.surfacedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SummaryVisibleTableAnnotationComposer
+    extends Composer<_$SahaiDatabase, $SummaryVisibleTable> {
+  $$SummaryVisibleTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get nodeId =>
+      $composableBuilder(column: $table.nodeId, builder: (column) => column);
+
+  GeneratedColumn<int> get surfacedAt => $composableBuilder(
+    column: $table.surfacedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SummaryVisibleTableTableManager
+    extends
+        RootTableManager<
+          _$SahaiDatabase,
+          $SummaryVisibleTable,
+          SummaryVisibleRow,
+          $$SummaryVisibleTableFilterComposer,
+          $$SummaryVisibleTableOrderingComposer,
+          $$SummaryVisibleTableAnnotationComposer,
+          $$SummaryVisibleTableCreateCompanionBuilder,
+          $$SummaryVisibleTableUpdateCompanionBuilder,
+          (
+            SummaryVisibleRow,
+            BaseReferences<
+              _$SahaiDatabase,
+              $SummaryVisibleTable,
+              SummaryVisibleRow
+            >,
+          ),
+          SummaryVisibleRow,
+          PrefetchHooks Function()
+        > {
+  $$SummaryVisibleTableTableManager(
+    _$SahaiDatabase db,
+    $SummaryVisibleTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SummaryVisibleTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SummaryVisibleTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SummaryVisibleTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> nodeId = const Value.absent(),
+                Value<int> surfacedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SummaryVisibleCompanion(
+                nodeId: nodeId,
+                surfacedAt: surfacedAt,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String nodeId,
+                required int surfacedAt,
+                Value<bool> isDeleted = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SummaryVisibleCompanion.insert(
+                nodeId: nodeId,
+                surfacedAt: surfacedAt,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$SummaryVisibleTable, SummaryVisibleRow>(table),
+                  BaseReferences<
+                    _$SahaiDatabase,
+                    $SummaryVisibleTable,
+                    SummaryVisibleRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SummaryVisibleTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SahaiDatabase,
+      $SummaryVisibleTable,
+      SummaryVisibleRow,
+      $$SummaryVisibleTableFilterComposer,
+      $$SummaryVisibleTableOrderingComposer,
+      $$SummaryVisibleTableAnnotationComposer,
+      $$SummaryVisibleTableCreateCompanionBuilder,
+      $$SummaryVisibleTableUpdateCompanionBuilder,
+      (
+        SummaryVisibleRow,
+        BaseReferences<
+          _$SahaiDatabase,
+          $SummaryVisibleTable,
+          SummaryVisibleRow
+        >,
+      ),
+      SummaryVisibleRow,
+      PrefetchHooks Function()
+    >;
 
 class $SahaiDatabaseManager {
   final _$SahaiDatabase _db;
@@ -5596,4 +6189,6 @@ class $SahaiDatabaseManager {
       $$CapturesTableTableManager(_db, _db.captures);
   $$SettingsTableTableTableManager get settingsTable =>
       $$SettingsTableTableTableManager(_db, _db.settingsTable);
+  $$SummaryVisibleTableTableManager get summaryVisible =>
+      $$SummaryVisibleTableTableManager(_db, _db.summaryVisible);
 }

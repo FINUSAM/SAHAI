@@ -76,6 +76,22 @@ class SummarySlots extends Table {
   Set<Column> get primaryKey => {ownerId};
 }
 
+/// The items currently on the Summary and when each surfaced (schema v2,
+/// tech plan 4.5). Written in the same transaction as the `surfaced` events,
+/// so a crash can never log the same appearance twice. Deleted rows mean
+/// "no longer visible"; the row is reinserted when the item returns.
+@DataClassName('SummaryVisibleRow')
+class SummaryVisible extends Table {
+  TextColumn get nodeId => text()();
+  IntColumn get surfacedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {nodeId};
+}
+
 /// The activity log (PRD 9). Append-only: rows are never updated.
 @DataClassName('EventRow')
 @TableIndex(name: 'events_occurred_at', columns: {#occurredAt})
