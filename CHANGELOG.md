@@ -9,6 +9,10 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+### Added
+- Approved M3 Set aside wireframes in `docs/design/m3-set-aside/` (14 frames) and the choices made
+  with them; the M3 plan in `docs/plans/0005-m3-set-aside.md`.
+
 ## [0.2.0] - 2026-11-04 (M2 Core loop)
 
 ### Added
