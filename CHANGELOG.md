@@ -24,6 +24,10 @@ followed by v1.0.0 for the public release.
 - Approved M2 Summary wireframes in `docs/design/m2-summary/` (10 frames) and the choices made with them.
 
 ### Changed
+- App icon: an S monogram in the brand colours (off-white on teal) as an adaptive icon with a
+  themed-icon layer, replacing the Flutter logo. The app theme is now seeded with the brand teal
+  instead of Material indigo. Brand files live in `docs/design/brand/`. Placeholder until the M8
+  brand work.
 - Auto Backup will include the database's `-wal` file as well as the main file, so a backup is
   complete even if the app was killed before checkpointing (tech plan §5, §8; decision 0002).
 - PRD edits E-009 (the v1 home-screen widget opens a text-capture dialog) and E-010 (the Phase 2
