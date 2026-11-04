@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,13 +16,86 @@ import 'explorer_state.dart';
 import 'node_icons.dart';
 import 'node_sheets.dart';
 
+/// How long an "Open in tree" highlight stays before fading (frame 8).
+const highlightDuration = Duration(seconds: 3);
+
 /// The whole tree (PRD 8.4, frames 2, 3 and 9).
-class ExplorerScreen extends ConsumerWidget {
-  const ExplorerScreen({super.key});
+class ExplorerScreen extends ConsumerStatefulWidget {
+  const ExplorerScreen({super.key, this.focusNodeId});
+
+  /// A node to open the tree at and highlight for a moment, from the
+  /// Summary's "Open in tree" (M2 frame 8, AT-029).
+  final String? focusNodeId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ExplorerScreen> createState() => _ExplorerScreenState();
+}
+
+class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
+  final _scroll = ScrollController();
+  String? _pendingFocus;
+  String? _highlighted;
+  Timer? _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _pendingFocus = widget.focusNodeId;
+  }
+
+  @override
+  void didUpdateWidget(ExplorerScreen old) {
+    super.didUpdateWidget(old);
+    if (widget.focusNodeId != old.focusNodeId) {
+      _pendingFocus = widget.focusNodeId;
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade?.cancel();
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Opens the ancestors of the pending node, scrolls to it and highlights
+  /// it. The provider change happens after the frame, not during build.
+  void _applyFocus(Tree tree) {
+    final id = _pendingFocus;
+    if (id == null) return;
+    _pendingFocus = null;
+    if (!tree.contains(id)) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(expandedProvider.notifier)
+          .open(tree.ancestorsOf(id).map((a) => a.id));
+      setState(() => _highlighted = id);
+      _fade?.cancel();
+      _fade = Timer(highlightDuration, () {
+        if (mounted) setState(() => _highlighted = null);
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollTo(tree, id));
+    });
+  }
+
+  void _scrollTo(Tree tree, String id) {
+    if (!mounted || !_scroll.hasClients) return;
+    final rows = explorerRows(tree, ref.read(expandedProvider));
+    final index = rows.indexWhere((r) => r is NodeLine && r.node.id == id);
+    if (index < 0) return;
+    // Rows vary in height, so this lands near the row rather than on it.
+    final target = (index * _rowEstimate).clamp(
+      0.0,
+      _scroll.position.maxScrollExtent,
+    );
+    _scroll.jumpTo(target);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tree = ref.watch(treeProvider);
+    if (tree case AsyncData(:final value)) _applyFocus(value);
     final hasRoots = tree.value?.roots.isNotEmpty ?? false;
     return Scaffold(
       appBar: AppBar(
@@ -29,7 +104,11 @@ class ExplorerScreen extends ConsumerWidget {
       ),
       body: switch (tree) {
         AsyncData(:final value) when value.roots.isEmpty => const _EmptyTree(),
-        AsyncData(:final value) => _TreeList(tree: value),
+        AsyncData(:final value) => _TreeList(
+          tree: value,
+          controller: _scroll,
+          highlighted: _highlighted,
+        ),
         AsyncError() => const Center(child: Text(Strings.loadError)),
         _ => const Center(child: CircularProgressIndicator()),
       },
@@ -45,6 +124,9 @@ class ExplorerScreen extends ConsumerWidget {
     );
   }
 }
+
+/// A rough row height, for scrolling near a highlighted row.
+const _rowEstimate = 64.0;
 
 class _EmptyTree extends StatelessWidget {
   const _EmptyTree();
@@ -89,20 +171,31 @@ class _EmptyTree extends StatelessWidget {
 }
 
 class _TreeList extends ConsumerWidget {
-  const _TreeList({required this.tree});
+  const _TreeList({
+    required this.tree,
+    required this.controller,
+    required this.highlighted,
+  });
 
   final Tree tree;
+  final ScrollController controller;
+  final String? highlighted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rows = explorerRows(tree, ref.watch(expandedProvider));
     return ListView.separated(
+      controller: controller,
       // Room for the floating button over the last row.
       padding: const EdgeInsets.only(bottom: 96),
       itemCount: rows.length,
       separatorBuilder: (context, i) => const Divider(height: 1),
       itemBuilder: (context, i) => switch (rows[i]) {
-        final NodeLine line => _NodeTile(tree: tree, line: line),
+        final NodeLine line => _NodeTile(
+          tree: tree,
+          line: line,
+          highlighted: line.node.id == highlighted,
+        ),
         final AddLine line => _AddTile(line: line),
       },
     );
@@ -113,10 +206,15 @@ class _TreeList extends ConsumerWidget {
 const _indent = 16.0;
 
 class _NodeTile extends ConsumerWidget {
-  const _NodeTile({required this.tree, required this.line});
+  const _NodeTile({
+    required this.tree,
+    required this.line,
+    required this.highlighted,
+  });
 
   final Tree tree;
   final NodeLine line;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -126,7 +224,11 @@ class _NodeTile extends ConsumerWidget {
     final actions = ref.read(nodeActionsProvider);
     return InkWell(
       onTap: () => _openActions(context, ref, tree, node),
-      child: ConstrainedBox(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        color: highlighted
+            ? theme.colorScheme.primaryContainer
+            : Colors.transparent,
         constraints: const BoxConstraints(minHeight: 56),
         child: Padding(
           padding: EdgeInsets.only(left: line.depth * _indent),
@@ -154,7 +256,7 @@ class _NodeTile extends ConsumerWidget {
                   icon: const Icon(Icons.radio_button_unchecked),
                   tooltip: Strings.markDoneTooltip(node.title),
                   onPressed: () =>
-                      runAction(context, () => actions.markDone(node.id)),
+                      completeWithUndo(context, actions, node.id, line.title),
                 ),
                 RowMark.done => IconButton(
                   icon: const Icon(Icons.check_circle_outline),
@@ -257,7 +359,12 @@ Future<void> _openActions(
     case NodeChoice.add:
       await _add(context, node);
     case NodeChoice.markDone:
-      await runAction(context, () => actions.markDone(node.id));
+      await completeWithUndo(
+        context,
+        actions,
+        node.id,
+        displayTitle(tree, node),
+      );
     case NodeChoice.reopen:
       await runAction(context, () => actions.reopen(node.id));
     case NodeChoice.move:
