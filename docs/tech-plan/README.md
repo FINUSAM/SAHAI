@@ -109,6 +109,7 @@ The cost is O(n log n), because sibling lists are sorted. The engine also return
 - **Clock.** Everything gets the time from an injected `Clock` (`package:clock`). Tests use a fixed or advancing fake clock. Nothing calls `DateTime.now()` directly. There's no standard lint rule for this, so a CI step searches `lib/` for it and fails outside the one clock file.
 - **Logical day.** `logicalDate(instant, dayStartHour)` returns the calendar date a moment belongs to. Before the day-start hour (default 4:00 AM), it's still the previous day. This one function drives presets (AT-043, AT-110), due labels (AT-062, AT-063) and recurring show dates (AT-061).
 - **Presets.** Computed from the logical day: Tonight = 8 PM, Tomorrow morning = next logical day 8 AM, 3 days later = logical day + 3 at 8 AM, Next week = next Monday 8 AM. Presets in the past are hidden (AT-044). The times are user-editable (M7).
+- **Where (M3).** `logicalDate` and the presets are in `lib/engine/time.dart`, the set-aside scope in `lib/engine/scope.dart`. They read wall-clock rules in the phone's local zone (`toLocal()`) and return local times; actions store them as UTC.
 - **Storage.** Instants (`snooze_until`, `created_at`, `updated_at`, `completed_at`, event times) are stored as UTC milliseconds. A set-aside time is an absolute moment, so it survives a time-zone change (AT-118). Due dates are stored as local calendar dates (`YYYY-MM-DD`) and read in the phone's *current* time zone (AT-081).
 
 ### 4.4 Recurring items (PRD 7)
@@ -127,6 +128,7 @@ After each recompute, the engine compares the new card set with the previous one
 - **E-002:** `occurred_at` is the moment the item actually became visible. If it came back while the app was closed, that's the wake or show time that caused it, worked out by the engine, not the time the app was opened.
 - **E-001:** for Undo of a completion, the action records `completion_undone` (pointing to the `completed` event) and the restored card gets **no** new `surfaced` event.
 - The last known card set is the `summary_visible` table (schema v2, M2): one row per card on the Summary with the time it surfaced. The action that changed the tree recomputes, diffs, writes the `surfaced` events and updates this table **in the same transaction**, so a crash between the two can never log an appearance twice. (Changed 2026-11-04 from "stored in `settings`".)
+- **Catch-up (M3).** Every write first records what time alone changed since the last one. Items whose wake time has passed get an automatic `woke` event dated with that time. Cards that appeared because of it get `surfaced` dated with the latest wake time on the card or its ancestors. Then `snooze_until` is cleared on those items, so each wake is logged once. `NodeActions.recompute()` runs only this step; the user's next action can't take the credit for a wake that happened while the app was closed.
 
 ### 4.6 Summary order and groups (PRD 8.2, M5)
 
@@ -185,8 +187,11 @@ See [decision 0003](../decisions/0003-state-management-and-navigation.md).
 ### When the Summary recomputes (PRD 6)
 
 - after every action (the action invalidates the snapshot provider)
+- on app start, since items may have woken while the app was closed
 - on app resume (`AppLifecycleListener`), which also re-reads the time zone
 - when `nextChangeAt` arrives (a single `Timer`)
+
+The last three live in `SummaryRefresher` (`lib/app/summary_refresher.dart`, M3). It calls `recompute()`, which logs the wakes, then bumps a tick that `summaryProvider` watches.
 
 ---
 

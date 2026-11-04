@@ -175,4 +175,6 @@ abstract final class Strings {
   static const hasTodoChildren = 'Finish or delete what is inside it first.';
   static const alreadyDone = 'That item is already done.';
   static const notDone = 'That item is not done.';
+  static const pastWakeTime = 'Pick a time in the future.';
+  static const notSetAside = 'That item is not set aside.';
 }

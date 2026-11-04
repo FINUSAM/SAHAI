@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../shared/strings.dart';
 import 'router.dart';
+import 'summary_refresher.dart';
 import 'theme.dart';
 
 class SahaiApp extends StatefulWidget {
@@ -27,5 +28,6 @@ class _SahaiAppState extends State<SahaiApp> {
     theme: buildTheme(Brightness.light),
     darkTheme: buildTheme(Brightness.dark),
     routerConfig: _router,
+    builder: (context, child) => SummaryRefresher(child: child!),
   );
 }

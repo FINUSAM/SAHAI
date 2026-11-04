@@ -65,8 +65,10 @@ class SummaryResult {
   final List<SummaryCard> cards;
 
   /// The earliest future set-aside wake time among items that would change
-  /// the Summary, or null when nothing is waiting. Always null in M2, where
-  /// nothing is set aside yet; M3 starts a timer for it (AT-034).
+  /// the Summary, or null when nothing is waiting. The app sets a timer for
+  /// it (AT-034). Items whose waking can't change anything, such as a later
+  /// subtask behind a visible one or anything under a set-aside ancestor,
+  /// don't count; the ancestor's own wake time does.
   final DateTime? nextChangeAt;
 
   Set<String> get visibleIds => {for (final c in cards) c.id};

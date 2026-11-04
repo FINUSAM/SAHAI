@@ -5,7 +5,9 @@ import 'package:drift/drift.dart';
 
 import '../data/database.dart';
 import '../engine/node_type.dart';
+import '../engine/scope.dart';
 import '../engine/surfaced.dart';
+import '../engine/time.dart';
 import '../engine/tree.dart';
 import '../engine/visibility.dart';
 import '../shared/ids.dart';
@@ -25,6 +27,19 @@ abstract final class EventTypes {
   /// Undo after completing. The `completed` event stays; this one points at
   /// it (E-001).
   static const completionUndone = 'completion_undone';
+
+  /// The payload holds the wake time, the preset or custom, Remind me and
+  /// the level chosen (PRD 9, AT-059).
+  static const setAside = 'set_aside';
+
+  /// The payload's `cause` is `automatic` or `wake_now` (PRD 9, AT-060).
+  static const woke = 'woke';
+}
+
+/// Why an item woke, stored in the `woke` event (AT-060).
+abstract final class WakeCause {
+  static const automatic = 'automatic';
+  static const wakeNow = 'wake_now';
 }
 
 /// Why an action was refused. The UI turns these into messages.
@@ -37,6 +52,12 @@ enum RejectReason {
   hasTodoChildren,
   alreadyDone,
   notDone,
+
+  /// A set-aside time that isn't in the future (AT-045).
+  pastWakeTime,
+
+  /// Wake now or Change time on something that isn't set aside.
+  notSetAside,
 }
 
 class ActionRejected implements Exception {
@@ -78,7 +99,7 @@ class NodeActions {
     if (cleanTitle.isEmpty) {
       throw const ActionRejected(RejectReason.emptyTitle);
     }
-    return _db.transaction(() async {
+    return _write(() async {
       final tree = await loadTree();
       final parent = parentId == null ? null : tree[parentId];
       if (parentId != null && parent == null) {
@@ -125,7 +146,7 @@ class NodeActions {
     if (cleanTitle != null && cleanTitle.isEmpty) {
       throw const ActionRejected(RejectReason.emptyTitle);
     }
-    return _db.transaction(() async {
+    return _write(() async {
       await _requireNode(id);
       await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
         NodesCompanion(
@@ -138,7 +159,7 @@ class NodeActions {
   }
 
   /// Moves a node to [newIndex] among its siblings (AT-004, AT-005).
-  Future<void> reorder(String id, int newIndex) => _db.transaction(() async {
+  Future<void> reorder(String id, int newIndex) => _write(() async {
     final tree = await loadTree();
     final node = tree[id];
     if (node == null) throw const ActionRejected(RejectReason.notFound);
@@ -163,7 +184,7 @@ class NodeActions {
   /// Moves a node, and everything under it, to the end of [newParentId]'s
   /// children (AT-006). Only a parent of the right type is accepted. Moving
   /// a TODO node under a DONE one reopens it and its DONE ancestors (E-008).
-  Future<void> move(String id, String newParentId) => _db.transaction(() async {
+  Future<void> move(String id, String newParentId) => _write(() async {
     final tree = await loadTree();
     final node = tree[id];
     final newParent = tree[newParentId];
@@ -193,7 +214,7 @@ class NodeActions {
   Future<void> setChildOrder(
     String? parentId,
     List<String> orderedIds,
-  ) => _db.transaction(() async {
+  ) => _write(() async {
     final tree = await loadTree();
     final siblings = parentId == null ? tree.roots : tree.childrenOf(parentId);
     final current = siblings.map((s) => s.id).toSet();
@@ -213,7 +234,7 @@ class NodeActions {
 
   /// Soft-deletes a node and everything under it, and returns the `deleted`
   /// event id that [undoDelete] needs (AT-008, AT-009, E-003).
-  Future<String> delete(String id) => _db.transaction(() async {
+  Future<String> delete(String id) => _write(() async {
     final tree = await loadTree();
     final node = tree[id];
     if (node == null) throw const ActionRejected(RejectReason.notFound);
@@ -243,7 +264,7 @@ class NodeActions {
 
   /// Restores exactly the rows that one delete removed. Anything deleted
   /// separately before it stays deleted (E-003).
-  Future<void> undoDelete(String deleteEventId) => _db.transaction(() async {
+  Future<void> undoDelete(String deleteEventId) => _write(() async {
     final rows = await (_db.select(
       _db.nodes,
     )..where((n) => n.deletedByEvent.equals(deleteEventId))).get();
@@ -275,7 +296,7 @@ class NodeActions {
   /// undo token for [undoComplete] (AT-025). Locked tasks can't be completed
   /// (E-007), and a node with TODO children can't either, so a DONE parent
   /// never holds a TODO child (PRD 7).
-  Future<String> markDone(String id) => _db.transaction(() async {
+  Future<String> markDone(String id) => _write(() async {
     final tree = await loadTree();
     final node = tree[id];
     if (node == null) throw const ActionRejected(RejectReason.notFound);
@@ -315,48 +336,163 @@ class NodeActions {
   /// `surfaced` event. The `completed` event stays in the log and a
   /// `completion_undone` event points at it. Any ancestor marked DONE in
   /// the meantime reopens too, so a DONE parent never holds a TODO child.
-  Future<void> undoComplete(String completedEventId) =>
-      _db.transaction(() async {
-        final event = await (_db.select(
-          _db.events,
-        )..where((e) => e.eventId.equals(completedEventId))).getSingleOrNull();
-        if (event == null ||
-            event.eventType != EventTypes.completed ||
-            event.nodeId == null) {
-          throw const ActionRejected(RejectReason.notFound);
-        }
+  Future<void> undoComplete(String completedEventId) => _write(() async {
+    final event = await (_db.select(
+      _db.events,
+    )..where((e) => e.eventId.equals(completedEventId))).getSingleOrNull();
+    if (event == null ||
+        event.eventType != EventTypes.completed ||
+        event.nodeId == null) {
+      throw const ActionRejected(RejectReason.notFound);
+    }
+    final tree = await loadTree();
+    final node = tree[event.nodeId!];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    if (!node.isDone) throw const ActionRejected(RejectReason.notDone);
+    final doneAncestors = tree.ancestorsOf(node.id).where((a) => a.isDone);
+    final reopened = [node.id, ...doneAncestors.map((a) => a.id)];
+    await (_db.update(_db.nodes)..where((n) => n.id.isIn(reopened))).write(
+      NodesCompanion(
+        status: Value(NodeStatus.todo.dbName),
+        completedAt: const Value(null),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    await _log(
+      EventTypes.completionUndone,
+      nodeId: node.id,
+      nodeType: node.type,
+      domainId: tree.domainOf(node.id)?.id,
+      groupId: tree.effectiveGroupOf(node.id),
+      payload: {
+        'undoes_event_id': completedEventId,
+        if (reopened.length > 1)
+          'reopened_ancestors': reopened.skip(1).toList(),
+      },
+    );
+    await _syncSummary(suppress: {node.id});
+  });
+
+  /// Sets [id] aside until [until] (PRD 7): it and everything under it
+  /// leave the Summary until then (check 5), and the next item takes its
+  /// place (AT-033). Any node can be set aside, from a card or the
+  /// Explorer (AT-041). [level] is the scope chosen on a card (AT-036),
+  /// [preset] is null for a custom time, and [remind] is the Remind me
+  /// switch. Undo of a set aside is [wakeNow] (M3 wireframe choice).
+  Future<void> setAside(
+    String id,
+    DateTime until, {
+    Preset? preset,
+    SetAsideLevel level = SetAsideLevel.item,
+    bool remind = true,
+  }) => _write(() async {
+    final tree = await loadTree();
+    final node = tree[id];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    if (!isValidWakeTime(until, _clock.now())) {
+      throw const ActionRejected(RejectReason.pastWakeTime);
+    }
+    final wakeAt = until.toUtc().millisecondsSinceEpoch;
+    await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
+      NodesCompanion(
+        snoozeUntil: Value(wakeAt),
+        remindOnWake: Value(remind),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    await _log(
+      EventTypes.setAside,
+      nodeId: id,
+      nodeType: node.type,
+      domainId: tree.domainOf(id)?.id,
+      groupId: tree.effectiveGroupOf(id),
+      payload: {
+        'wake_at': wakeAt,
+        'preset': preset?.logName ?? Preset.customLogName,
+        'remind': remind,
+        'level': level.name,
+      },
+    );
+    await _syncSummary();
+  });
+
+  /// Moves the wake time of something already set aside (PRD 8.3,
+  /// AT-049). Logged as another `set_aside`, keeping Remind me as it was,
+  /// with the time it replaced.
+  Future<void> changeWakeTime(String id, DateTime until, {Preset? preset}) =>
+      _write(() async {
         final tree = await loadTree();
-        final node = tree[event.nodeId!];
+        final node = tree[id];
         if (node == null) throw const ActionRejected(RejectReason.notFound);
-        if (!node.isDone) throw const ActionRejected(RejectReason.notDone);
-        final doneAncestors = tree.ancestorsOf(node.id).where((a) => a.isDone);
-        final reopened = [node.id, ...doneAncestors.map((a) => a.id)];
-        await (_db.update(_db.nodes)..where((n) => n.id.isIn(reopened))).write(
+        final previous = node.snoozeUntil;
+        if (previous == null || !previous.isAfter(_clock.now())) {
+          throw const ActionRejected(RejectReason.notSetAside);
+        }
+        if (!isValidWakeTime(until, _clock.now())) {
+          throw const ActionRejected(RejectReason.pastWakeTime);
+        }
+        final wakeAt = until.toUtc().millisecondsSinceEpoch;
+        await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
           NodesCompanion(
-            status: Value(NodeStatus.todo.dbName),
-            completedAt: const Value(null),
+            snoozeUntil: Value(wakeAt),
             updatedAt: Value(utcMillis(_clock)),
           ),
         );
         await _log(
-          EventTypes.completionUndone,
-          nodeId: node.id,
+          EventTypes.setAside,
+          nodeId: id,
           nodeType: node.type,
-          domainId: tree.domainOf(node.id)?.id,
-          groupId: tree.effectiveGroupOf(node.id),
+          domainId: tree.domainOf(id)?.id,
+          groupId: tree.effectiveGroupOf(id),
           payload: {
-            'undoes_event_id': completedEventId,
-            if (reopened.length > 1)
-              'reopened_ancestors': reopened.skip(1).toList(),
+            'wake_at': wakeAt,
+            'preset': preset?.logName ?? Preset.customLogName,
+            'remind': node.remindOnWake,
+            'level': SetAsideLevel.item.name,
+            'previous_wake_at': previous.millisecondsSinceEpoch,
           },
         );
-        await _syncSummary(suppress: {node.id});
+        await _syncSummary();
       });
+
+  /// Wakes a set-aside item straight away (PRD 7, AT-048): it shows on the
+  /// Summary now, if nothing else hides it, and leaves the Set-Aside page.
+  Future<void> wakeNow(String id) => _write(() async {
+    final tree = await loadTree();
+    final node = tree[id];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    final until = node.snoozeUntil;
+    if (until == null || !until.isAfter(_clock.now())) {
+      throw const ActionRejected(RejectReason.notSetAside);
+    }
+    await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
+      NodesCompanion(
+        snoozeUntil: const Value(null),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    await _log(
+      EventTypes.woke,
+      nodeId: id,
+      nodeType: node.type,
+      domainId: tree.domainOf(id)?.id,
+      groupId: tree.effectiveGroupOf(id),
+      payload: {
+        'cause': WakeCause.wakeNow,
+        'wake_at': until.millisecondsSinceEpoch,
+      },
+    );
+    await _syncSummary();
+  });
+
+  /// Catches the log up with time passing, with no user action: on app
+  /// start, on resume and when the Summary's next change is due (PRD 6).
+  Future<void> recompute() => _write(() async {});
 
   /// Sets a DONE node back to TODO, together with every DONE ancestor
   /// (PRD 7, AT-027). Reopening an earlier task makes it current again, so
   /// later tasks re-lock but keep their progress (AT-028).
-  Future<void> reopen(String id) => _db.transaction(() async {
+  Future<void> reopen(String id) => _write(() async {
     final tree = await loadTree();
     final node = tree[id];
     if (node == null) throw const ActionRejected(RejectReason.notFound);
@@ -418,6 +554,62 @@ class NodeActions {
     );
   }
 
+  /// Runs [body] in one transaction, after first catching up with time
+  /// passing since the last write, so an action never takes the credit for
+  /// a wake that happened before it (E-002).
+  Future<T> _write<T>(Future<T> Function() body) => _db.transaction(() async {
+    await _catchUp();
+    return body();
+  });
+
+  /// Records what time alone changed since the last write. Each item whose
+  /// wake time has passed gets an automatic `woke` event dated with that
+  /// time (AT-060), and each card that appeared because of it gets
+  /// `surfaced` dated with the moment it really became visible: the latest
+  /// wake time on it or its ancestors (E-002).
+  ///
+  /// The item was awake from its wake time with no write (PRD 5). Here,
+  /// once its `woke` is logged, `snooze_until` is cleared, so each wake is
+  /// logged once and later checks only look at fresh ones. The dates are
+  /// worked out before clearing.
+  Future<void> _catchUp() async {
+    final tree = await loadTree();
+    final now = _clock.now().toUtc();
+    final passed = [
+      for (final node in tree.nodes)
+        if (node.snoozeUntil case final until? when !until.isAfter(now)) node,
+    ];
+    if (passed.isEmpty) return;
+    passed.sort((a, b) => a.snoozeUntil!.compareTo(b.snoozeUntil!));
+    for (final node in passed) {
+      await _log(
+        EventTypes.woke,
+        nodeId: node.id,
+        nodeType: node.type,
+        domainId: tree.domainOf(node.id)?.id,
+        groupId: tree.effectiveGroupOf(node.id),
+        payload: {'cause': WakeCause.automatic},
+        occurredAt: node.snoozeUntil!.millisecondsSinceEpoch,
+      );
+    }
+    await _syncSummary(
+      tree: tree,
+      visibleAt: (id) {
+        DateTime? latest;
+        for (final n in [tree[id]!, ...tree.ancestorsOf(id)]) {
+          final until = n.snoozeUntil;
+          if (until == null || until.isAfter(now)) continue;
+          if (latest == null || until.isAfter(latest)) latest = until;
+        }
+        // Nothing woke on its path, as after an upgrade: it shows from now.
+        return latest ?? now;
+      },
+    );
+    await (_db.update(_db.nodes)
+          ..where((n) => n.id.isIn(passed.map((p) => p.id))))
+        .write(const NodesCompanion(snoozeUntil: Value(null)));
+  }
+
   SimpleSelectStatement<$NodesTable, NodeRow> _liveNodes() =>
       _db.select(_db.nodes)..where((n) => n.isDeleted.equals(false));
 
@@ -460,14 +652,16 @@ class NodeActions {
   /// a crash between the two can never log an appearance twice.
   ///
   /// [suppress] names cards an undo restored: they get no new event and keep
-  /// their original surfaced time (E-001). [visibleAt] is when the cards
-  /// really became visible; M3 passes the wake time for items that came
-  /// back while the app was closed (E-002).
+  /// their original surfaced time (E-001). [visibleAt] gives when each card
+  /// really became visible, for cards that came back while the app was
+  /// closed (E-002); otherwise it is now. [tree] saves a reload when the
+  /// caller has the current one.
   Future<void> _syncSummary({
     Set<String> suppress = const {},
-    DateTime? visibleAt,
+    Tree? tree,
+    DateTime Function(String id)? visibleAt,
   }) async {
-    final tree = await loadTree();
+    tree ??= await loadTree();
     final summary = computeSummary(tree, now: _clock.now().toUtc());
     final previousRows = await (_db.select(
       _db.summaryVisible,
@@ -480,7 +674,7 @@ class NodeActions {
       suppress: suppress,
     );
     final now = utcMillis(_clock);
-    final at = visibleAt?.toUtc().millisecondsSinceEpoch ?? now;
+    int at(String id) => visibleAt?.call(id).millisecondsSinceEpoch ?? now;
     for (final id in diff.appeared) {
       final node = tree[id]!;
       await _log(
@@ -489,7 +683,7 @@ class NodeActions {
         nodeType: node.type,
         domainId: tree.domainOf(id)?.id,
         groupId: tree.effectiveGroupOf(id),
-        occurredAt: at,
+        occurredAt: at(id),
       );
     }
     for (final id in current) {
@@ -500,13 +694,13 @@ class NodeActions {
           .insert(
             SummaryVisibleCompanion.insert(
               nodeId: id,
-              surfacedAt: at,
+              surfacedAt: at(id),
               createdAt: now,
               updatedAt: now,
             ),
             onConflict: DoUpdate(
               (old) => SummaryVisibleCompanion(
-                surfacedAt: keepTime ? const Value.absent() : Value(at),
+                surfacedAt: keepTime ? const Value.absent() : Value(at(id)),
                 isDeleted: const Value(false),
                 updatedAt: Value(now),
               ),
@@ -547,7 +741,11 @@ class NodeActions {
             domainId: Value(domainId),
             groupId: Value(groupId),
             occurredAt: occurredAt ?? now,
-            tzOffsetMinutes: tzOffsetMinutes(_clock),
+            // The offset at that moment, which differs from now's after a
+            // daylight-saving change (E-002).
+            tzOffsetMinutes: occurredAt == null
+                ? tzOffsetMinutes(_clock)
+                : tzOffsetMinutesAt(_clock, occurredAt),
             payload: Value(jsonEncode(payload)),
             createdAt: now,
             updatedAt: now,
@@ -567,6 +765,7 @@ class NodeActions {
     snoozeUntil: row.snoozeUntil == null
         ? null
         : DateTime.fromMillisecondsSinceEpoch(row.snoozeUntil!, isUtc: true),
+    remindOnWake: row.remindOnWake,
     isRecurring: row.recurrence != null,
   );
 }
