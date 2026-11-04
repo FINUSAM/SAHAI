@@ -8,7 +8,7 @@ Read at the start of every Claude Code session in this repo. These rules apply t
 
 - Android application ID: `com.finusam.sahai`
 - Owner: FINUSAM (founder and product owner). Only the owner approves changes to the PRD, these rules, dependencies and permissions.
-- Status: M1 Foundations shipped as `v0.1.0` (2026-10-30). M2 Core loop is next. Architecture and packages are decided in the technical plan (`docs/tech-plan/`), not ad hoc.
+- Status: M2 Core loop shipped as `v0.2.0` (2026-11-04). M3 Set aside is next. Architecture and packages are decided in the technical plan (`docs/tech-plan/`), not ad hoc.
 
 ### Never break these
 

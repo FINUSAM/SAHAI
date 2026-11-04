@@ -1,6 +1,6 @@
 # M2 Core loop
 
-- **Status:** In progress
+- **Status:** Done (v0.2.0 tagged 2026-11-04)
 - **Approved by:** FINUSAM on 2026-11-04
 - **Branches / PRs:** PR 1 `feat/m2-engine` → `dev`; PR 2 `feat/m2-summary` → `dev`; a third PR is reserved if needed
 - **PRD sections:** 5, 6, 7, 8.2, 9 (plus E-001, E-002)
@@ -43,17 +43,19 @@
 15. [x] Accessibility: labels on every card action, 48 dp targets, large-text check
 16. [x] Widget tests: AT-013 to AT-017, AT-019, AT-020, AT-022, AT-025, AT-026, AT-027, AT-029; restart flows added to `integration_test/`
 17. [x] Version 0.2.0+2; update `README.md`, `CHANGELOG.md` (0.2.0), matrix and this plan; open PR 2
-18. [ ] Owner: release build on the OnePlus, M2 Must tests from the sheet on the phone, daily use starts
+18. [x] Owner: release build on the OnePlus, M2 Must tests from the sheet on the phone, daily use starts
 
 **Release** (owner)
 
-19. [ ] When the M2 Must tests pass on the phone: PR `dev` → `main` (merge commit), tag `v0.2.0`
+19. [x] When the M2 Must tests pass on the phone: PR `dev` → `main` (merge commit), tag `v0.2.0`
 
 ## Changes to the plan
 
 - 2026-11-04: Step 1 branched from `dev` before PR #12 (wireframes, docs only) merged, so coding could start; `dev` is merged in again before PR 1 opens (step 9).
 
 ## Notes for whoever picks this up
+
+- **Close-out (2026-11-04):** the owner walked all 20 M2 rows of the acceptance sheet (AT-013 to AT-032) on the OnePlus with the v0.2.0 release build; all pass, recorded in the sheet with the date. Close-out docs PR closes #29; the release PR `dev` → `main` closes #28 and the owner tags `v0.2.0`. M2 is closed; M3 Set aside starts with issue #30.
 
 - **PR 2 (2026-11-04):** 137 tests pass, `at_coverage M2` is 20 of 20. The Explorer's checkmark tooltips keep the raw title ("Mark Write copy done", M1 tests) while the Summary's use the numbered title ("Mark 1. Write copy done"); the "Done: …" snackbar uses the numbered title on both screens. "Open in tree" scrolls to an estimated row position (64 dp per row), not the exact one; a long tree may land a little off. The `CLAUDE.md` status line still says M1 shipped; it changes with the owner's approval when `v0.2.0` is tagged.
 

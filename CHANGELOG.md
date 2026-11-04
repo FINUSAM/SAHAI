@@ -9,6 +9,8 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-04 (M2 Core loop)
+
 ### Added
 - M2 screens (PR 2 of M2): the Summary is the start screen, showing one card per project and
   stream in tree order with its type, path and sign-off or empty-project hint; a checkmark on
