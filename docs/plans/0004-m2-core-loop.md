@@ -35,14 +35,14 @@
 
 **PR 2: screens** (`feat/m2-summary`, after PR 1 merges)
 
-10. [ ] Summary screen per frames 1–6: cards in tree order with type label, path, hint and checkmark; empty state with Open Explorer; empty-project card with Add a task
-11. [ ] Card sheet per frame 7: title, path chips, notes, Mark done, Open in tree
-12. [ ] Open in tree per frame 8: `/explorer?node=<id>`, expand ancestors, highlight the row, fade
-13. [ ] Explorer: Mark done gets the "Done: <title>" Undo snackbar (frame 9); Reopen's menu line names the ancestors that reopen (frame 10)
-14. [ ] App opens on the Summary tab; Summary placeholder removed
-15. [ ] Accessibility: labels on every card action, 48 dp targets, large-text check
-16. [ ] Widget tests: AT-013 to AT-017, AT-019, AT-020, AT-022, AT-025, AT-026, AT-027, AT-029; restart flows added to `integration_test/`
-17. [ ] Version 0.2.0+2; update `README.md`, `CHANGELOG.md` (0.2.0), matrix and this plan; open PR 2
+10. [x] Summary screen per frames 1–6: cards in tree order with type label, path, hint and checkmark; empty state with Open Explorer; empty-project card with Add a task
+11. [x] Card sheet per frame 7: title, path chips, notes, Mark done, Open in tree
+12. [x] Open in tree per frame 8: `/explorer?node=<id>`, expand ancestors, highlight the row, fade
+13. [x] Explorer: Mark done gets the "Done: <title>" Undo snackbar (frame 9); Reopen's menu line names the ancestors that reopen (frame 10)
+14. [x] App opens on the Summary tab; Summary placeholder removed
+15. [x] Accessibility: labels on every card action, 48 dp targets, large-text check
+16. [x] Widget tests: AT-013 to AT-017, AT-019, AT-020, AT-022, AT-025, AT-026, AT-027, AT-029; restart flows added to `integration_test/`
+17. [x] Version 0.2.0+2; update `README.md`, `CHANGELOG.md` (0.2.0), matrix and this plan; open PR 2
 18. [ ] Owner: release build on the OnePlus, M2 Must tests from the sheet on the phone, daily use starts
 
 **Release** (owner)
@@ -54,6 +54,8 @@
 - 2026-11-04: Step 1 branched from `dev` before PR #12 (wireframes, docs only) merged, so coding could start; `dev` is merged in again before PR 1 opens (step 9).
 
 ## Notes for whoever picks this up
+
+- **PR 2 (2026-11-04):** 137 tests pass, `at_coverage M2` is 20 of 20. The Explorer's checkmark tooltips keep the raw title ("Mark Write copy done", M1 tests) while the Summary's use the numbered title ("Mark 1. Write copy done"); the "Done: …" snackbar uses the numbered title on both screens. "Open in tree" scrolls to an estimated row position (64 dp per row), not the exact one; a long tree may land a little off. The `CLAUDE.md` status line still says M1 shipped; it changes with the owner's approval when `v0.2.0` is tagged.
 
 - **Benchmark (2026-11-04, dev machine, `dart run tool/benchmark.dart`):** 10,002 nodes, 467 cards, tree build 13 ms, recompute median 0.7 ms, max 2.3 ms. The PRD limit is 50 ms on a mid-range phone (AT-114, checked for real in M7).
 - PR 1 (`feat/m2-engine`): 119 tests pass locally (79 from M1 + 40 new). `dart run tool/at_coverage.dart M2` reports 18 of 20; AT-026 and AT-029 are widget-only tests for PR 2.

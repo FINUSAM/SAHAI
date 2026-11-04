@@ -7,6 +7,7 @@ import '../features/explorer/move_screen.dart';
 import '../features/explorer/node_form_screen.dart';
 import '../features/explorer/reorder_screen.dart';
 import '../features/placeholders/coming_later_screen.dart';
+import '../features/summary/summary_screen.dart';
 import '../shared/strings.dart';
 import 'home_shell.dart';
 
@@ -25,6 +26,10 @@ abstract final class Routes {
 
   static String editNode(String id) => '/nodes/$id/edit';
 
+  /// The Explorer opened at [id], expanded and highlighted (frame 8).
+  static String explorerNode(String id) =>
+      Uri(path: explorer, queryParameters: {'node': id}).toString();
+
   static String moveNode(String id) => '/nodes/$id/move';
 
   /// Reorders [parentId]'s children; no parent means the domains.
@@ -38,20 +43,13 @@ GoRouter buildRouter() {
   final rootKey = GlobalKey<NavigatorState>();
   return GoRouter(
     navigatorKey: rootKey,
-    // The Summary becomes the start screen once it exists (M2).
-    initialLocation: Routes.explorer,
+    // The Summary is the start screen (M2 wireframe choice).
+    initialLocation: Routes.summary,
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),
         branches: [
-          _tab(
-            Routes.summary,
-            const ComingLaterScreen(
-              title: Strings.summary,
-              milestone: 'M2',
-              body: Strings.summaryLater,
-            ),
-          ),
+          _tab(Routes.summary, const SummaryScreen()),
           _tab(
             Routes.setAside,
             const ComingLaterScreen(
@@ -60,7 +58,16 @@ GoRouter buildRouter() {
               body: Strings.setAsideLater,
             ),
           ),
-          _tab(Routes.explorer, const ExplorerScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.explorer,
+                builder: (context, state) => ExplorerScreen(
+                  focusNodeId: state.uri.queryParameters['node'],
+                ),
+              ),
+            ],
+          ),
           _tab(
             Routes.capture,
             const ComingLaterScreen(

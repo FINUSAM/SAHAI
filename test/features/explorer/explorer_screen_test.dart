@@ -14,7 +14,7 @@ Future<(TestApp, SampleTree)> pumpSample(
 }) async {
   final testApp = app ?? TestApp();
   final sample = await SampleTree.create(testApp);
-  await pumpSahai(tester, app: testApp, textScale: textScale);
+  await pumpExplorer(tester, app: testApp, textScale: textScale);
   await expandAll(tester);
   return (testApp, sample);
 }
@@ -25,7 +25,7 @@ Finder lockIcon(String title) => find.byWidgetPredicate(
 
 void main() {
   testSahai('empty Explorer offers to add a domain', (tester) async {
-    final app = await pumpSahai(tester);
+    final app = await pumpExplorer(tester);
     expect(find.text(Strings.emptyTitle), findsOneWidget);
 
     await tester.tap(find.text(Strings.addADomain));
@@ -43,7 +43,7 @@ void main() {
     tester,
   ) async {
     final file = tempDatabaseFile();
-    final first = await pumpSahai(tester, app: appOnFile(file));
+    final first = await pumpExplorer(tester, app: appOnFile(file));
 
     await tester.tap(find.text(Strings.addADomain));
     await tester.pumpAndSettle();
@@ -71,7 +71,7 @@ void main() {
     await fillForm(tester, 'Send invoice');
 
     await closeSahai(tester, first);
-    final second = await pumpSahai(tester, app: appOnFile(file));
+    final second = await pumpExplorer(tester, app: appOnFile(file));
     await expandAll(tester);
     for (final title in [
       'Biztras',
@@ -238,7 +238,7 @@ void main() {
       title: 'Finished task',
     );
     await app.actions.markDone(done);
-    await pumpSahai(tester, app: app);
+    await pumpExplorer(tester, app: app);
     await expandAll(tester);
 
     await openActions(tester, 'Draft pricing page');
@@ -292,7 +292,7 @@ void main() {
     expect(find.text('1. Launch'), findsOneWidget);
 
     await closeSahai(tester, first);
-    final second = await pumpSahai(tester, app: appOnFile(file));
+    final second = await pumpExplorer(tester, app: appOnFile(file));
     final tree = await second.actions.loadTree();
     expect(tree.childrenOf(sample.project).map((n) => n.title), [
       'Launch',
@@ -334,7 +334,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await closeSahai(tester, first);
-    final second = await pumpSahai(tester, app: appOnFile(file));
+    final second = await pumpExplorer(tester, app: appOnFile(file));
     final tree = await second.actions.loadTree();
     expect(tree.childrenOf(sample.tasks[0]).map((n) => n.title), [
       'Draft pricing page',
@@ -366,7 +366,7 @@ void main() {
   });
 
   testSahai('Save stays disabled until there is a title', (tester) async {
-    await pumpSahai(tester);
+    await pumpExplorer(tester);
     await tester.tap(find.text(Strings.addADomain));
     await tester.pumpAndSettle();
 

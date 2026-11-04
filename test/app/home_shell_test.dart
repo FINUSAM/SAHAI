@@ -4,9 +4,9 @@ import 'package:sahai/shared/strings.dart';
 import '../widget_helpers.dart';
 
 void main() {
-  testSahai('the app opens on the Explorer with four tabs', (tester) async {
+  testSahai('the app opens on the Summary with four tabs', (tester) async {
     await pumpSahai(tester);
-    expect(find.text(Strings.emptyTitle), findsOneWidget);
+    expect(find.text(Strings.summaryEmptyTitle), findsOneWidget);
     for (final tab in [
       Strings.summary,
       Strings.setAside,
@@ -19,14 +19,9 @@ void main() {
 
   testSahai('later tabs show what is coming', (tester) async {
     await pumpSahai(tester);
-    final expected = {
-      Strings.summary: 'M2',
-      Strings.setAside: 'M3',
-      Strings.capture: 'M6',
-    };
+    final expected = {Strings.setAside: 'M3', Strings.capture: 'M6'};
     for (final MapEntry(key: tab, value: milestone) in expected.entries) {
-      await tester.tap(find.text(tab).last);
-      await tester.pumpAndSettle();
+      await goToTab(tester, tab);
       expect(find.text(Strings.comingIn(milestone)), findsOneWidget);
     }
   });
@@ -39,6 +34,6 @@ void main() {
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text(Strings.emptyTitle), findsOneWidget);
+    expect(find.text(Strings.summaryEmptyTitle), findsOneWidget);
   });
 }

@@ -10,6 +10,12 @@ followed by v1.0.0 for the public release.
 ## [Unreleased]
 
 ### Added
+- M2 screens (PR 2 of M2): the Summary is the start screen, showing one card per project and
+  stream in tree order with its type, path and sign-off or empty-project hint; a checkmark on
+  each card with a 5-second "Done: …" Undo snackbar (also in the Explorer); a card sheet with
+  path chips, notes, Mark done and Open in tree, which opens the Explorer at the item with its
+  ancestors expanded and the row highlighted for a moment; the Explorer's Reopen line names the
+  DONE ancestors it will reopen. Version 0.2.0+2.
 - M2 engine (PR 1 of M2): the Summary visibility rules (PRD 6) as a pure Dart engine, with the
   card kinds, sign-off and empty-project hints, and `nextChangeAt` for M3; Undo after completing
   (`completion_undone`, E-001); `surfaced` events written in the same transaction as the change
