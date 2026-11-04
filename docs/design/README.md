@@ -11,6 +11,7 @@ Wireframes for each milestone's screens. PRD 16 makes approved wireframes a gate
 |---|---|---|---|---|
 | M1 Foundations | Explorer (9 frames) | **Approved** by FINUSAM, 2026-10-30 | [`m1-explorer/`](m1-explorer/) | [Sahai wireframes: M1 Explorer](https://claude.ai/artifact/Md4TXCHV3iJ7GG9d3s7kFi) (private to the owner until shared) |
 | M2 Core loop | Summary, card sheet, Explorer Mark done and Reopen (10 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m2-summary/`](m2-summary/) | [Sahai wireframes: M2 Summary](https://claude.ai/artifact/5mT1TddXtf8N6TvygZgTLV) (private to the owner until shared) |
+| M3 Set aside | Set-aside picker, Set-Aside page, Explorer set aside, notifications, reminder settings (14 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m3-set-aside/`](m3-set-aside/) | [Sahai wireframes: M3 Set aside](https://claude.ai/artifact/Pyxg2E37pU7pYzF3KhPB12) (private to the owner until shared) |
 
 ## Brand
 
@@ -80,3 +81,44 @@ The PRD doesn't specify these. The owner approved them along with the wireframes
 - **Open in tree:** switches to the Explorer, expands the ancestors and highlights the row; the highlight fades after a moment.
 - **Reopen:** a line in the Explorer item menu for DONE items; its second line names the ancestors that reopen with it. No confirmation step and no Undo snackbar, because Mark done reverses it.
 - **Empty Summary:** "Nothing to show yet", one line of explanation, and an Open Explorer button.
+
+## M3 Set aside
+
+Same style and sample tree as M1 and M2. Unless a frame says otherwise it is 3:00 PM on Tuesday, Nov 3, the moment AT-042 uses. Dashed boxes in Settings mark settings from later milestones.
+
+| # | Frame | Shows | Acceptance tests |
+|---|---|---|---|
+| 1 | [Summary after setting aside](m3-set-aside/01-summary-set-aside.png) | Clock on every card; the next subtask takes the slot; "Set aside until Wed 8:00 AM" snackbar with Undo | AT-033, AT-040 |
+| 2 | [Set-aside picker](m3-set-aside/02-picker.png) | Scope dropdown, presets with their real times, Custom, Remind me on | AT-042, AT-053, AT-059 |
+| 3 | [Scope](m3-set-aside/03-scope.png) | This subtask, its task, its project or its domain, each naming the node | AT-036 to AT-039 |
+| 4 | [Picker after midnight](m3-set-aside/04-picker-after-midnight.png) | 1:30 AM with the day starting at 4 AM: Tonight hidden, Tomorrow morning is later this morning | AT-043, AT-044 |
+| 5 | [Custom: date](m3-set-aside/05-custom-date.png) | Android date picker with past days greyed | AT-045 |
+| 6 | [Custom: time in the past](m3-set-aside/06-custom-time-past.png) | "Pick a time after 3:00 PM"; OK disabled | AT-045 |
+| 7 | [Permission at the first set aside](m3-set-aside/07-permission.png) | Android's notification prompt, after the first set aside, never at launch | AT-055 |
+| 8 | [Set-Aside page](m3-set-aside/08-set-aside-page.png) | Today, Tomorrow, Later; wake time and time remaining; a set-aside stream or domain says what it hides | AT-039, AT-046, AT-047 |
+| 9 | [Set-Aside item sheet](m3-set-aside/09-set-aside-sheet.png) | What it hides, Wake now, Change time, Open in tree | AT-047, AT-048, AT-049, AT-060 |
+| 10 | [Set-Aside page, empty](m3-set-aside/10-set-aside-empty.png) | "Nothing set aside" | — |
+| 11 | [Explorer: set-aside marks](m3-set-aside/11-explorer-marks.png) | Clock and "Back …" on set-aside nodes; everything under them greyed | AT-041 |
+| 12 | [Explorer: item menu](m3-set-aside/12-explorer-menu.png) | Wake now and Change set-aside time on a set-aside node; Set aside… on any other | AT-041, AT-048, AT-049 |
+| 13 | [Notifications](m3-set-aside/13-notifications.png) | One item named with its path; several at once grouped and expandable | AT-050, AT-051, AT-052, AT-054 |
+| 14 | [Settings: reminders](m3-set-aside/14-settings-reminders.png) | Notifications and Exact reminders switches | AT-056, AT-058 |
+
+AT-034, AT-035 and AT-057 have no frame of their own: they are about timing (a waking item takes its place back, a branch goes dark, reminders survive a restart).
+
+### Choices approved with these wireframes
+
+The PRD doesn't specify these. The owner approved them along with the wireframes on 2026-11-04. None changes PRD behaviour, so there's no PRD edit.
+
+- **Clock on every Summary card** opens the set-aside picker. The card sheet's M2 placeholder becomes a Set aside line.
+- **One tap on a preset sets the item aside;** there is no Save button. Each preset shows its real time ("Wed 8:00 AM"), so the day-start rule is never a surprise.
+- **Scope** is a dropdown at the top of the picker, defaulting to the item itself. Each option names the node it would set aside ("Its project · Website relaunch").
+- **Remind me** is a switch at the bottom of the picker, on each time the picker opens (the PRD default). It isn't remembered between uses.
+- **Custom date and time** uses Android's date picker, then its time picker. Past days are greyed; a past time on today's date shows "Pick a time after 3:00 PM" and OK stays disabled.
+- **Snackbar after setting aside:** "Set aside until Wed 8:00 AM" with Undo for 5 seconds. Undo wakes the item at once and is logged as a Wake now.
+- **Notification permission** is asked right after the first set aside is saved, so the item is set aside whatever the answer. Never at launch.
+- **Waking needs no database write.** An item is awake the moment its time passes. The automatic `woke` event and the `surfaced` event are written at the next recompute, dated with the wake time, as E-002 already does for `surfaced`.
+- **Set-Aside page** is grouped Today, Tomorrow and Later, soonest first. Each card shows the title, path, wake time, time remaining and a Wake now button. A set-aside project, stream or domain is listed once with "Hides 2 items"; its sheet lists them. A crossed-out bell marks items with Remind me off.
+- **Set-Aside card sheet:** Wake now, Change time (the same presets and Custom, without the scope) and Open in tree.
+- **Explorer:** a set-aside node shows a clock and "Back Mon, Nov 9 8:00 AM", and everything under it is greyed. Its menu offers Wake now and Change set-aside time; any other node offers Set aside…, which opens the picker without the scope dropdown, since the node is chosen directly.
+- **Notifications:** one item reads "<title> is back" with its path; several at the same moment read "3 items are back" and expand to list them. Tapping a single one opens the Summary with that card highlighted; tapping a grouped one opens the Summary.
+- **Settings** gets its first content: a Reminders section with Notifications and Exact reminders switches. Turning on Exact reminders sends the user to Android's alarm permission screen. Day starts at, the preset times and the bill reminder time keep the PRD defaults until M7 and M4.
