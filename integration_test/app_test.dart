@@ -1,7 +1,7 @@
 // Runs the app's widget tests on a real phone, including the restart flows
 // for AT-001 (create every node type), AT-004 (reorder tasks) and AT-005
 // (reorder subtasks and stream items), the M2 Summary flows, and the M3
-// set-aside flows.
+// set-aside and reminder flows (with the phone's notifications faked).
 //
 // Each test uses its own throwaway database (in memory, or a file in the
 // app's temporary folder), never the app's real `sahai.sqlite`.
@@ -14,6 +14,7 @@ import '../test/app/home_shell_test.dart' as home_shell;
 import '../test/app/summary_refresher_test.dart' as refresher;
 import '../test/features/explorer/explorer_m2_test.dart' as explorer_m2;
 import '../test/features/explorer/explorer_screen_test.dart' as explorer;
+import '../test/features/reminders_test.dart' as reminders;
 import '../test/features/set_aside/set_aside_screens_test.dart' as set_aside;
 import '../test/features/summary/summary_screen_test.dart' as summary;
 
@@ -25,4 +26,5 @@ void main() {
   summary.main();
   set_aside.main();
   refresher.main();
+  reminders.main();
 }

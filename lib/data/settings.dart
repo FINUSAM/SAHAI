@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart' show Value;
+
 import '../engine/settings.dart';
 import 'database.dart';
 
@@ -18,3 +20,22 @@ AppSettings settingsFromRow(SettingsRow? row) => row == null
 Stream<AppSettings> watchSettings(SahaiDatabase db) => (db.select(
   db.settingsTable,
 )..where((s) => s.id.equals(1))).watchSingleOrNull().map(settingsFromRow);
+
+/// Saves the reminder switches (frame 14). Not an activity log event
+/// (PRD 9).
+Future<void> saveReminderSettings(
+  SahaiDatabase db, {
+  bool? notificationsEnabled,
+  bool? exactReminders,
+  required int nowMillis,
+}) => (db.update(db.settingsTable)..where((s) => s.id.equals(1))).write(
+  SettingsTableCompanion(
+    notificationsEnabled: notificationsEnabled == null
+        ? const Value.absent()
+        : Value(notificationsEnabled),
+    exactReminders: exactReminders == null
+        ? const Value.absent()
+        : Value(exactReminders),
+    updatedAt: Value(nowMillis),
+  ),
+);

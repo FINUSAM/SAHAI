@@ -12,6 +12,7 @@ class TreeBuilder {
     String? parent,
     bool done = false,
     DateTime? snoozeUntil,
+    bool remind = true,
     bool recurring = false,
   }) {
     final order = _nextOrder[parent] ?? 0;
@@ -27,6 +28,7 @@ class TreeBuilder {
             : null,
         sortOrder: order,
         snoozeUntil: snoozeUntil,
+        remindOnWake: remind,
         isRecurring: recurring,
       ),
     );
