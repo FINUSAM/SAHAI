@@ -18,6 +18,15 @@ followed by v1.0.0 for the public release.
   wakes logged with their wake time, and items that came back while the app was closed logged as
   `surfaced` at that time (E-002); the Summary recomputes on start, on resume and when the next item
   wakes; settings read with the PRD defaults.
+- M3 screens (PR 2 of M3): a clock on every Summary card and Set aside in its sheet open the
+  set-aside picker, with the scope dropdown, the presets showing their real times, Custom date and
+  time (past times refused) and Remind me; a "Set aside until …" snackbar with Undo. The Set-Aside
+  tab lists everything set aside, grouped Today, Tomorrow and Later, with time remaining, what each
+  hides, Wake now, Change time and Open in tree. The Explorer marks set-aside nodes ("Back …"),
+  greys what they hide, and offers Set aside…, Wake now and Change set-aside time.
+
+### Changed
+- Version 0.3.0+3.
 
 ## [0.2.0] - 2026-11-04 (M2 Core loop)
 

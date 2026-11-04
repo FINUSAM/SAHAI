@@ -11,6 +11,7 @@ import '../../engine/visibility.dart';
 import '../../shared/strings.dart';
 import '../explorer/action_feedback.dart';
 import '../explorer/explorer_rows.dart';
+import '../set_aside/set_aside_flow.dart';
 import 'card_sheet.dart';
 
 /// The Summary Page (PRD 8.2, M2 frames 1–6): the next step of every
@@ -99,8 +100,8 @@ class _CardList extends StatelessWidget {
 }
 
 /// One card (frame 1): type label, title, path, a hint for sign-off and
-/// empty-project cards, and the checkmark. Tapping the card opens its
-/// sheet (frame 7).
+/// empty-project cards, the clock that sets it aside (M3 frame 1) and the
+/// checkmark. Tapping the card opens its sheet (frame 7).
 class SummaryCardTile extends ConsumerWidget {
   const SummaryCardTile({super.key, required this.tree, required this.card});
 
@@ -170,6 +171,11 @@ class SummaryCardTile extends ConsumerWidget {
                 ),
               ),
               IconButton(
+                icon: const Icon(Icons.schedule),
+                tooltip: Strings.setAsideTooltip(title),
+                onPressed: () => setAsideWithPicker(context, ref, tree, node),
+              ),
+              IconButton(
                 icon: const Icon(Icons.radio_button_unchecked),
                 tooltip: Strings.markDoneTooltip(title),
                 onPressed: () =>
@@ -194,6 +200,8 @@ class SummaryCardTile extends ConsumerWidget {
           card.node.id,
           title,
         );
+      case CardChoice.setAside:
+        await setAsideWithPicker(context, ref, tree, card.node);
       case CardChoice.openInTree:
         context.go(Routes.explorerNode(card.node.id));
     }

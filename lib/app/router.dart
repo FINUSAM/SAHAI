@@ -7,6 +7,7 @@ import '../features/explorer/move_screen.dart';
 import '../features/explorer/node_form_screen.dart';
 import '../features/explorer/reorder_screen.dart';
 import '../features/placeholders/coming_later_screen.dart';
+import '../features/set_aside/set_aside_screen.dart';
 import '../features/summary/summary_screen.dart';
 import '../shared/strings.dart';
 import 'home_shell.dart';
@@ -50,14 +51,7 @@ GoRouter buildRouter() {
         builder: (context, state, shell) => HomeShell(shell: shell),
         branches: [
           _tab(Routes.summary, const SummaryScreen()),
-          _tab(
-            Routes.setAside,
-            const ComingLaterScreen(
-              title: Strings.setAside,
-              milestone: 'M3',
-              body: Strings.setAsideLater,
-            ),
-          ),
+          _tab(Routes.setAside, const SetAsideScreen()),
           StatefulShellBranch(
             routes: [
               GoRoute(
