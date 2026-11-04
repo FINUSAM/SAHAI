@@ -6,10 +6,10 @@ import '../../shared/strings.dart';
 import '../explorer/explorer_rows.dart';
 
 /// What the user picked in a card's sheet (frame 7).
-enum CardChoice { markDone, openInTree }
+enum CardChoice { markDone, setAside, openInTree }
 
 /// Tapping a card shows where it lives, as a chip per ancestor, and offers
-/// Mark done and Open in tree (PRD 8.2, AT-029).
+/// Mark done, Set aside (M3) and Open in tree (PRD 8.2, AT-029).
 Future<CardChoice?> showCardSheet(
   BuildContext context,
   Tree tree,
@@ -87,6 +87,12 @@ class _CardSheet extends StatelessWidget {
             title: const Text(Strings.markDone),
             contentPadding: const EdgeInsets.symmetric(horizontal: 24),
             onTap: () => pick(CardChoice.markDone),
+          ),
+          ListTile(
+            leading: const Icon(Icons.schedule),
+            title: const Text(Strings.setAsideTitle),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+            onTap: () => pick(CardChoice.setAside),
           ),
           ListTile(
             leading: const Icon(Icons.account_tree_outlined),

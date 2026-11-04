@@ -48,14 +48,14 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 
 **PR 2: screens** (`feat/m3-screens`, #32, after PR 1 merges)
 
-13. [ ] Set-aside picker per frames 2 to 4: scope dropdown, presets with times, Custom, Remind me; one tap saves; snackbar with Undo (frame 1)
-14. [ ] Custom date and time per frames 5 and 6: past days blocked, a past time on today rejected with OK disabled (AT-045)
-15. [ ] Clock on Summary cards and Set aside in the card sheet
-16. [ ] Set-Aside page per frames 8 to 10: grouped Today, Tomorrow, Later; time remaining; "Hides N items"; Wake now; sheet with Change time and Open in tree; empty state (AT-046 to AT-049)
-17. [ ] Explorer per frames 11 and 12: clock and "Back …" marks, greyed descendants, Set aside…, Wake now and Change set-aside time in the item menu (AT-041)
-18. [ ] Accessibility: labels on every new action, 48 dp targets, large-text check
-19. [ ] Widget tests: AT-033, AT-036, AT-041, AT-044 to AT-049; integration flows in `integration_test/`
-20. [ ] Version 0.3.0+3 build for the phone; update `README.md`, `CHANGELOG.md`, matrix and this plan; open PR 2
+13. [x] Set-aside picker per frames 2 to 4: scope dropdown, presets with times, Custom, Remind me; one tap saves; snackbar with Undo (frame 1)
+14. [x] Custom date and time per frames 5 and 6: past days blocked, a past time on today rejected with OK disabled (AT-045)
+15. [x] Clock on Summary cards and Set aside in the card sheet
+16. [x] Set-Aside page per frames 8 to 10: grouped Today, Tomorrow, Later; time remaining; "Hides N items"; Wake now; sheet with Change time and Open in tree; empty state (AT-046 to AT-049)
+17. [x] Explorer per frames 11 and 12: clock and "Back …" marks, greyed descendants, Set aside…, Wake now and Change set-aside time in the item menu (AT-041)
+18. [x] Accessibility: labels on every new action, 48 dp targets, large-text check
+19. [x] Widget tests: AT-033, AT-036, AT-041, AT-044 to AT-049; integration flows in `integration_test/`
+20. [x] Version 0.3.0+3 build for the phone; update `README.md`, `CHANGELOG.md`, matrix and this plan; open PR 2
 21. [ ] Owner: set aside and wake items on the phone (no reminders yet)
 
 **PR 3: reminders** (`feat/m3-reminders`, #33, after PR 2 merges)
@@ -83,6 +83,13 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 - The M2 engine already treats an item with a future `snoozeUntil`, or under an ancestor with one, as hidden, and already returns `nextChangeAt`. PR 1 is mostly time, presets, scope, actions, events and the recompute triggers.
 - Android's time picker can't grey out individual past times, so frame 6's rule ("OK disabled until the time is after now") is checked after the pick, in our own dialog step.
 - Waking needs no write: an item is awake once its time passes. The first recompute after that (every action, app start, resume, or the `nextChangeAt` timer) logs its `woke` (automatic) event dated with the wake time, logs `surfaced` for anything it brought back dated with the latest wake time on its path (E-002), then clears `snooze_until` (see Changes to the plan).
+- **PR 2 (2026-11-05):** 220 tests pass (192 before + 28 new). `at_coverage M3` reports 19 of 26; the missing 7 are the notification tests for PR 3. Built as v0.3.0+3. How it differs from the frames, all small:
+  - The custom time step is our own dialog drawn like Android's typed time entry (frame 6), because Android's picker can't refuse a time. Its clock button opens Android's dial. It starts at the next whole hour on today, otherwise 8:00 AM.
+  - In the picker, today's presets read "Today 8:00 PM" (frame 4's wording) rather than frame 2's "Tue 8:00 PM". The Set-Aside page says "Tonight 8:00 PM" from 6 PM, as frame 8 does.
+  - At large text sizes a preset's time wraps under its name.
+  - The Explorer doesn't offer Set aside… on DONE items, since nothing would show anyway.
+  - The Set-Aside page refreshes "in 5 h" once a minute while it is open.
+  - The M2 test "later tabs show what is coming" checked the Set-Aside placeholder; it now checks the real empty page.
 - **PR 1 (2026-11-05):** 192 tests pass (137 before + 55 new). `dart run tool/at_coverage.dart M3` reports 17 of 26; the missing 9 are the Set-Aside page (AT-046, AT-047, PR 2) and notifications (AT-050 to AT-056, PR 3). AT-036 and AT-045 have unit tests now; their widget tests come with the picker in PR 2. Nothing is visible on the phone yet: PR 1 has no screens.
 - Preset times are computed in the phone's local zone. The unit tests use local times, so they pass in any zone; a zone with a daylight-saving change in early November could still differ on the change day itself, which no test covers.
 - The notification frames are wireframes of Android's own shade; the real look depends on the phone maker.

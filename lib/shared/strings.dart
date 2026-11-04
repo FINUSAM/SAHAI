@@ -1,4 +1,6 @@
 import '../engine/node_type.dart';
+import '../engine/scope.dart';
+import '../engine/time.dart';
 
 /// Every piece of user-facing text, kept in one place so translations can be
 /// added later without rewriting screens (E-006: v1 is English-only).
@@ -12,8 +14,6 @@ abstract final class Strings {
   static const capture = 'Capture';
   static const settings = 'Settings';
   static String comingIn(String milestone) => 'Coming in $milestone';
-  static const setAsideLater =
-      'Items you set aside until later will be listed here.';
   static const captureLater =
       'Quick notes to sort later will collect here, ready to turn into items.';
   static const settingsLater =
@@ -165,6 +165,71 @@ abstract final class Strings {
   static String _list(List<String> items) => items.length <= 1
       ? items.join()
       : '${items.sublist(0, items.length - 1).join(', ')} and ${items.last}';
+
+  // Set aside (M3 frames 1–12).
+  static const setAsideTitle = 'Set aside';
+  static const changeTime = 'Change time';
+  static const whatToSetAside = 'What to set aside';
+  static String setAsideTooltip(String title) => 'Set aside $title';
+
+  /// "This subtask", "Its task", "Its domain" (frame 3).
+  static String scopeLabel(SetAsideLevel level, NodeType itemType) =>
+      switch (level) {
+        SetAsideLevel.item => 'This ${_typeNoun(itemType)}',
+        SetAsideLevel.task => 'Its task',
+        SetAsideLevel.project => 'Its project',
+        SetAsideLevel.stream => 'Its stream',
+        SetAsideLevel.domain => 'Its domain',
+      };
+  static String withEverythingInIt(String title) =>
+      '$title, with everything in it';
+  static String presetName(Preset preset) => switch (preset) {
+    Preset.tonight => 'Tonight',
+    Preset.tomorrowMorning => 'Tomorrow morning',
+    Preset.threeDaysLater => '3 days later',
+    Preset.nextWeek => 'Next week',
+  };
+  static const customDateTime = 'Custom date and time…';
+  static const remindMe = 'Remind me';
+  static const remindMeHint = "Notify me when it's back";
+  static const remindOff = 'Remind me is off';
+  static String setAsideUntil(String when) => 'Set aside until $when';
+  static const todayWord = 'Today';
+  static const tonightWord = 'Tonight';
+  static String inMinutes(int n) => 'in $n min';
+  static String inHours(int n) => 'in $n h';
+  static String inDays(int n) => n == 1 ? 'in 1 day' : 'in $n days';
+
+  // Custom time (frame 6).
+  static String enterTime(String date) => '$date · Enter time';
+  static const hour = 'Hour';
+  static const minute = 'Minute';
+  static const am = 'AM';
+  static const pm = 'PM';
+  static const ok = 'OK';
+  static const chooseOnClock = 'Choose on a clock';
+  static const invalidTime = 'Enter a valid time';
+  static String pickTimeAfter(String time) => 'Pick a time after $time';
+
+  // Set-Aside page (frames 8–10).
+  static const groupToday = 'Today';
+  static const groupTomorrow = 'Tomorrow';
+  static const groupLater = 'Later';
+  static const wakeNow = 'Wake now';
+  static String wakeNowTooltip(String title) => 'Wake $title now';
+  static String hides(String counts) => 'Hides $counts';
+  static const hiddenUntilThen = 'Hidden until then';
+  static String backAt(String when) => 'back $when';
+  static const nothingSetAside = 'Nothing set aside';
+  static const nothingSetAsideBody =
+      'Tap the clock on a Summary card to set something aside until later. '
+      'It waits here until then.';
+
+  // Explorer (frames 11, 12).
+  static String back(String when) => 'Back $when';
+  static String hiddenWhile(String title) => 'Hidden while $title is set aside';
+  static const setAsideMenu = 'Set aside…';
+  static const changeSetAsideTime = 'Change set-aside time';
 
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';
