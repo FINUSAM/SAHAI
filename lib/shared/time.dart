@@ -9,3 +9,11 @@ int utcMillis(Clock clock) => clock.now().toUtc().millisecondsSinceEpoch;
 
 /// The phone's current offset from UTC, in minutes, for activity log events.
 int tzOffsetMinutes(Clock clock) => clock.now().timeZoneOffset.inMinutes;
+
+/// The offset from UTC at the moment [utcMillis], in the clock's zone: the
+/// phone's local offset then, which can differ from now's (E-002).
+int tzOffsetMinutesAt(Clock clock, int utcMillis) =>
+    DateTime.fromMillisecondsSinceEpoch(
+      utcMillis,
+      isUtc: clock.now().isUtc,
+    ).timeZoneOffset.inMinutes;

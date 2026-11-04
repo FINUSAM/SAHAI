@@ -59,4 +59,6 @@ String rejectMessage(RejectReason reason) => switch (reason) {
   RejectReason.hasTodoChildren => Strings.hasTodoChildren,
   RejectReason.alreadyDone => Strings.alreadyDone,
   RejectReason.notDone => Strings.notDone,
+  RejectReason.pastWakeTime => Strings.pastWakeTime,
+  RejectReason.notSetAside => Strings.notSetAside,
 };

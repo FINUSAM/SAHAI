@@ -12,6 +12,12 @@ followed by v1.0.0 for the public release.
 ### Added
 - Approved M3 Set aside wireframes in `docs/design/m3-set-aside/` (14 frames) and the choices made
   with them; the M3 plan in `docs/plans/0005-m3-set-aside.md`.
+- M3 set-aside engine (PR 1 of M3, no screens yet): the logical day ("Day starts at", default
+  4:00 AM) and the four presets, with past ones hidden; the scope choices for each card type;
+  Set aside, Change time and Wake now actions, logged as `set_aside` and `woke` events; automatic
+  wakes logged with their wake time, and items that came back while the app was closed logged as
+  `surfaced` at that time (E-002); the Summary recomputes on start, on resume and when the next item
+  wakes; settings read with the PRD defaults.
 
 ## [0.2.0] - 2026-11-04 (M2 Core loop)
 

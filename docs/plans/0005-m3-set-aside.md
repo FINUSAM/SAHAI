@@ -36,15 +36,15 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 
 **PR 1: engine, actions, log** (`feat/m3-engine`, #31)
 
-4. [ ] `lib/engine/time.dart`: `logicalDate(instant, dayStartMinutes)` and the four presets as pure functions of the clock and settings, presets in the past left out (AT-042 to AT-044), using the phone's local zone through `DateTime.toLocal()`
-5. [ ] Scope: for a card, the list of nodes it can set aside (the item, then its task, project, stream or domain as PRD 7 lists) (AT-036)
-6. [ ] Visibility already honours `snoozeUntil` and ancestors; add tests for AT-033 to AT-035, AT-037 to AT-040, and `nextChangeAt` returning the earliest future wake
-7. [ ] Actions `setAside(nodeId, until, {preset, level, remind})`, `changeWakeTime`, `wakeNow`, each in one transaction with the surfaced sync; `set_aside` event with wake time, preset or custom, Remind me and level (AT-059); `woke` with `automatic` or `wake_now` (AT-060); Undo of a set aside = `wakeNow`
-8. [ ] Automatic wakes: at each recompute, items whose wake time has passed since the last one get a `woke` (automatic) event, and newly visible items get `surfaced` dated with the time that made them visible (E-002). One transaction
-9. [ ] Recompute on resume and at `nextChangeAt` (a single timer in the app layer, injected clock); `summaryProvider` reads the clock at each recompute
-10. [ ] Settings read model: day start and notification options from the `settings` row, with the PRD defaults
-11. [ ] Unit tests named by AT ID with the fake clock; table-driven preset tests with the sheet's November 2026 dates; the E-002 test (an item that wakes while the app is closed gets `surfaced` at its wake time)
-12. [ ] Update tech plan notes, matrix, `CHANGELOG.md`; open PR 1
+4. [x] `lib/engine/time.dart`: `logicalDate(instant, dayStartMinutes)` and the four presets as pure functions of the clock and settings, presets in the past left out (AT-042 to AT-044), using the phone's local zone through `DateTime.toLocal()`
+5. [x] Scope: for a card, the list of nodes it can set aside (the item, then its task, project, stream or domain as PRD 7 lists) (AT-036)
+6. [x] Visibility already honours `snoozeUntil` and ancestors; add tests for AT-033 to AT-035, AT-037 to AT-040, and `nextChangeAt` returning the earliest future wake
+7. [x] Actions `setAside(nodeId, until, {preset, level, remind})`, `changeWakeTime`, `wakeNow`, each in one transaction with the surfaced sync; `set_aside` event with wake time, preset or custom, Remind me and level (AT-059); `woke` with `automatic` or `wake_now` (AT-060); Undo of a set aside = `wakeNow`
+8. [x] Automatic wakes: at each recompute, items whose wake time has passed since the last one get a `woke` (automatic) event, and newly visible items get `surfaced` dated with the time that made them visible (E-002). One transaction
+9. [x] Recompute on resume and at `nextChangeAt` (a single timer in the app layer, injected clock); `summaryProvider` reads the clock at each recompute
+10. [x] Settings read model: day start and notification options from the `settings` row, with the PRD defaults
+11. [x] Unit tests named by AT ID with the fake clock; table-driven preset tests with the sheet's November 2026 dates; the E-002 test (an item that wakes while the app is closed gets `surfaced` at its wake time)
+12. [x] Update tech plan notes, matrix, `CHANGELOG.md`; open PR 1
 
 **PR 2: screens** (`feat/m3-screens`, #32, after PR 1 merges)
 
@@ -76,11 +76,13 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 
 ## Changes to the plan
 
-None yet.
+- 2026-11-05 (PR 1, step 8): once a recompute has logged an item's automatic `woke` event, it clears that item's `snooze_until`. The plan's note said `snooze_until` would stay in the past until the next set aside; clearing it means each wake is logged exactly once and later recomputes only look at fresh wakes, instead of searching the log for every item ever set aside. The item is still awake from its wake time with no write (PRD 5): clearing happens at the next recompute and changes nothing on screen. The wake time stays in the `set_aside` and `woke` events.
 
 ## Notes for whoever picks this up
 
 - The M2 engine already treats an item with a future `snoozeUntil`, or under an ancestor with one, as hidden, and already returns `nextChangeAt`. PR 1 is mostly time, presets, scope, actions, events and the recompute triggers.
 - Android's time picker can't grey out individual past times, so frame 6's rule ("OK disabled until the time is after now") is checked after the pick, in our own dialog step.
-- Waking writes nothing to `nodes`; `snooze_until` stays in the past until the next set aside. The `woke` (automatic) event is written by the first recompute after the wake time, dated with the wake time.
+- Waking needs no write: an item is awake once its time passes. The first recompute after that (every action, app start, resume, or the `nextChangeAt` timer) logs its `woke` (automatic) event dated with the wake time, logs `surfaced` for anything it brought back dated with the latest wake time on its path (E-002), then clears `snooze_until` (see Changes to the plan).
+- **PR 1 (2026-11-05):** 192 tests pass (137 before + 55 new). `dart run tool/at_coverage.dart M3` reports 17 of 26; the missing 9 are the Set-Aside page (AT-046, AT-047, PR 2) and notifications (AT-050 to AT-056, PR 3). AT-036 and AT-045 have unit tests now; their widget tests come with the picker in PR 2. Nothing is visible on the phone yet: PR 1 has no screens.
+- Preset times are computed in the phone's local zone. The unit tests use local times, so they pass in any zone; a zone with a daylight-saving change in early November could still differ on the change day itself, which no test covers.
 - The notification frames are wireframes of Android's own shade; the real look depends on the phone maker.

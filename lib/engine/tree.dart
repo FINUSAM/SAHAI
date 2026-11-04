@@ -12,6 +12,7 @@ class TreeNode {
     required this.sortOrder,
     this.groupId,
     this.snoozeUntil,
+    this.remindOnWake = true,
     this.isRecurring = false,
   });
 
@@ -27,8 +28,11 @@ class TreeNode {
   final String? groupId;
 
   /// Set aside until this moment (UTC); null or past means awake (PRD 5).
-  /// Nothing sets it until M3.
   final DateTime? snoozeUntil;
+
+  /// The set-aside picker's Remind me switch: whether waking notifies
+  /// (PRD 7, AT-053).
+  final bool remindOnWake;
 
   /// A stream item with a repeat schedule (PRD 7). Nothing sets it until M4.
   final bool isRecurring;
@@ -62,6 +66,9 @@ class Tree {
   TreeNode? operator [](String id) => _byId[id];
 
   bool contains(String id) => _byId.containsKey(id);
+
+  /// Every node, in no particular order.
+  Iterable<TreeNode> get nodes => _byId.values;
 
   /// Top-level nodes (domains), in order.
   List<TreeNode> get roots => List.unmodifiable(_children[null] ?? const []);
