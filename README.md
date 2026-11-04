@@ -6,14 +6,14 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**M2 Core loop ready for testing on a phone.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set aside and Capture arrive in later milestones.
+**M2 Core loop shipped as v0.2.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set aside (M3) is next; Capture arrives in M6.
 
 | | |
 |---|---|
 | Platform | Android (iOS later) |
 | Framework | Flutter |
 | Application ID | `com.finusam.sahai` |
-| Current milestone | M2 Core loop (v0.2.0, on-device testing) |
+| Current milestone | M3 Set aside (v0.3.0, planning) |
 
 ## Roadmap
 
