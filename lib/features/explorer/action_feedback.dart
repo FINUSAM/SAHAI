@@ -17,6 +17,33 @@ Future<T?> runAction<T>(
   }
 }
 
+/// Marks [id] done and offers Undo for 5 seconds (PRD 7, AT-025, AT-026).
+/// Used by the Summary's checkmark and the Explorer alike (frames 6, 9).
+Future<void> completeWithUndo(
+  BuildContext context,
+  NodeActions actions,
+  String id,
+  String title,
+) async {
+  final token = await runAction(context, () => actions.markDone(id));
+  if (token == null || !context.mounted) return;
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(Strings.doneSnack(title)),
+        duration: const Duration(seconds: 5),
+        // Snackbars with an action stay until dismissed unless told not to.
+        persist: false,
+        action: SnackBarAction(
+          label: Strings.undo,
+          onPressed: () =>
+              runAction(context, () => actions.undoComplete(token)),
+        ),
+      ),
+    );
+}
+
 void showMessage(BuildContext context, String text) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()

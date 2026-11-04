@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// A plain Material 3 theme. The wireframes are layout only; visual design
-/// comes in M7.
+import '../shared/brand.dart';
+
+/// A plain Material 3 theme seeded with the brand teal, so the screens and
+/// the launcher icon agree. The wireframes are layout only; the rest of
+/// the visual design comes in M7.
 ThemeData buildTheme(Brightness brightness) => ThemeData(
   colorScheme: ColorScheme.fromSeed(
-    seedColor: const Color(0xFF3F51B5),
+    seedColor: Brand.teal,
     brightness: brightness,
   ),
 );

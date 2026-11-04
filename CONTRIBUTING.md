@@ -26,7 +26,7 @@ docs/... chore/... ─────┘
 - **`main`** is always releasable. It changes only when the owner merges `dev` into it for a release. No direct pushes.
 - **`dev`** is the integration branch. All work arrives through pull requests. No direct pushes.
 - **Both are protected on GitHub:** changes only through a PR, no force pushes, no deletion, and the rules apply to admins too. Approvals are set to 0 because the owner's merge is the review (GitHub doesn't let an account approve its own PR). CI must pass before merging once CI exists.
-- **Work branches** are short-lived, created from the latest `dev`, and deleted after merging:
+- **Work branches** are short-lived, created from the latest `dev`, and deleted after merging. GitHub deletes the branch on GitHub automatically when its PR is merged (the repo's "Automatically delete head branches" setting); protected branches such as `dev` are never deleted this way:
 
 | Prefix | Use for | Example |
 |---|---|---|
@@ -57,7 +57,7 @@ docs: add decision record for database choice
 - Open PRs **into `dev`**. Fill in the [PR template](.github/pull_request_template.md).
 - Every PR names its **milestone**, the **PRD sections** and the **acceptance test IDs** it covers.
 - Merge with **squash merge**. The PR title becomes the commit message, so it must follow Conventional Commits.
-- Delete the branch after merging.
+- After merging, GitHub deletes the branch on GitHub. Delete your local copy yourself: `git switch dev`, `git pull`, `git branch -d <branch>` (use `-D` for a squash-merged branch, because git can't tell its commits are in `dev`), then `git fetch --prune` to clear references to deleted branches.
 
 ## Definition of done
 
@@ -93,6 +93,17 @@ A change is done when all of these are true:
 ## Decisions
 
 Record significant technical decisions in [`docs/decisions/`](docs/decisions/), copying [`0000-template.md`](docs/decisions/0000-template.md).
+
+## Tracking
+
+Work is tracked on GitHub so the owner can see progress without reading the plans:
+
+- **Milestones** mirror PRD 16, one per milestone (`M3 Set aside (v0.3.0)` and so on). Each milestone's page shows its open and closed issues and a percentage. A milestone is closed when its version is tagged.
+- **Issues** are work packages, not single tasks: a milestone's wireframes and plan, each of its PRs, the owner's phone tests and release, and the close-out docs. Each issue lists the PRD sections and acceptance test IDs it covers, a task list that is ticked as work lands, and a "Done when".
+- **Labels** say what kind of work it is (`type: feature`, `type: bug`, `type: chore`, `type: docs`, `type: design`, `type: release`, `type: test`) and who acts: `owner-action` marks things only the owner can do (approvals, phone tests, tagging, Play Console), `prd-question` marks a PRD question for the owner, `blocked` marks waiting.
+- **Every PR links its issue** with `Closes #N` in the description, so merging closes the issue. A PR that delivers part of an issue says `Part of #N` and ticks the tasks it covered.
+- **Bugs** found on the phone are opened with the bug report template, named with the acceptance test if there is one, and put in the milestone they affect.
+- The saved checklists in `docs/plans/` stay the detailed record for a milestone; the issues are the overview.
 
 ## Releases
 

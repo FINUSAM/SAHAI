@@ -1,6 +1,6 @@
 # M1 Foundations
 
-- **Status:** In progress
+- **Status:** Done
 - **Approved by:** FINUSAM on 2026-10-30
 - **Branches / PRs:** PR 1 `feat/m1-foundation` → `dev`; PR 2 `feat/m1-explorer` → `dev`
 - **PRD sections:** 3, 4, 8.4, 10 (plus E-003, E-006, E-007, E-008)
@@ -42,12 +42,12 @@
 15. [x] Explorer screens per frames 2–9
 16. [x] Accessibility basics: labels, 48 dp targets, up/down alternative to drag
 17. [x] Widget tests (AT-002, AT-003, AT-006, AT-007, AT-008) and integration tests (AT-001, AT-004, AT-005)
-18. [ ] Release build on the owner's phone and a real-device checklist (AT-011, AT-012, build your real tree)
+18. [x] Release build on the owner's phone and a real-device checklist (AT-011, AT-012, build your real tree)
 19. [x] Update `README.md`, `CHANGELOG.md` (0.1.0), matrix and this plan; open PR 2 with `gh`
 
 **Release** (owner)
 
-20. [ ] When all M1 Must tests pass on the phone: PR `dev` → `main` (merge commit), tag `v0.1.0`
+20. [x] When all M1 Must tests pass on the phone: PR `dev` → `main` (merge commit), tag `v0.1.0`
 
 ## Changes to the plan
 
@@ -68,3 +68,4 @@
 - PRD 9 lists a `reordered` event, described with "position and group", which matches the Summary ordering of M5. Reordering in the Explorer doesn't log it yet. To confirm with the owner before M5.
 - No phone was connected while building PR 2, so `flutter test integration_test` and the real-device checks (item 18) are for the owner.
 - PR 2 is #8. First CI run green (2026-10-30): 79 tests passed, release APK 58.9 MB, no network permissions.
+- 2026-10-30: Release build installed on the OnePlus Nord 5. AT-011 (no network permission in app info), AT-012 (install over the previous build keeps data) and the real tree confirmed by the owner. PR #9 merged `dev` into `main`, tagged `v0.1.0`. M1 is closed.

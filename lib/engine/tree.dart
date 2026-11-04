@@ -11,6 +11,8 @@ class TreeNode {
     required this.status,
     required this.sortOrder,
     this.groupId,
+    this.snoozeUntil,
+    this.isRecurring = false,
   });
 
   final String id;
@@ -23,6 +25,13 @@ class TreeNode {
   final NodeStatus? status;
   final int sortOrder;
   final String? groupId;
+
+  /// Set aside until this moment (UTC); null or past means awake (PRD 5).
+  /// Nothing sets it until M3.
+  final DateTime? snoozeUntil;
+
+  /// A stream item with a repeat schedule (PRD 7). Nothing sets it until M4.
+  final bool isRecurring;
 
   bool get isTodo => status == NodeStatus.todo;
   bool get isDone => status == NodeStatus.done;

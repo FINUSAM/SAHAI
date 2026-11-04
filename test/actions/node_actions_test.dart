@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/drift.dart' show OrderingTerm;
+import 'package:drift/drift.dart' show OrderingTerm, RowIdExtension;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sahai/actions/node_actions.dart';
@@ -34,12 +34,14 @@ void main() {
   Future<NodeRow> row(String id) =>
       (app.db.select(app.db.nodes)..where((n) => n.id.equals(id))).getSingle();
 
-  Future<List<EventRow>> events() =>
-      (app.db.select(app.db.events)..orderBy([
-            (e) => OrderingTerm.asc(e.createdAt),
-            (e) => OrderingTerm.asc(e.eventId),
-          ]))
-          .get();
+  /// Events in insertion order, leaving out the Summary's own `surfaced`
+  /// events (M2), which these tests don't cover.
+  Future<List<EventRow>> events() async =>
+      (await (app.db.select(
+            app.db.events,
+          )..orderBy([(e) => OrderingTerm.asc(e.rowId)])).get())
+          .where((e) => e.eventType != EventTypes.surfaced)
+          .toList();
 
   group('AT-001 create every node type', () {
     test('each appears under its parent with the right type', () async {

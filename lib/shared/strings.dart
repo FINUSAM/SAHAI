@@ -12,8 +12,6 @@ abstract final class Strings {
   static const capture = 'Capture';
   static const settings = 'Settings';
   static String comingIn(String milestone) => 'Coming in $milestone';
-  static const summaryLater =
-      'Your next steps from every project and stream will show here.';
   static const setAsideLater =
       'Items you set aside until later will be listed here.';
   static const captureLater =
@@ -147,6 +145,26 @@ abstract final class Strings {
       : 'Deleted $title and ${under == 1 ? '1 item' : '$under items'} '
             'under it';
   static const undo = 'Undo';
+
+  // Summary (M2 frames 1–7).
+  static const summaryEmptyTitle = 'Nothing to show yet';
+  static const summaryEmptyBody =
+      'Add a domain and a project in the Explorer. The next step of each '
+      'project appears here.';
+  static const openExplorer = 'Open Explorer';
+  static String allDone(NodeType type, int n) => 'All ${count(type, n)} done';
+  static String markDoneToUnlock(String title) => 'Mark done to unlock $title';
+  static const noTasksYet = 'No tasks yet';
+  static const addATask = 'Add a task';
+  static String doneSnack(String title) => 'Done: $title';
+  static const openInTree = 'Open in tree';
+  static String alsoReopens(List<String> titles) =>
+      'Also reopens ${_list(titles)}';
+
+  /// "A", "A and B", "A, B and C".
+  static String _list(List<String> items) => items.length <= 1
+      ? items.join()
+      : '${items.sublist(0, items.length - 1).join(', ')} and ${items.last}';
 
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';

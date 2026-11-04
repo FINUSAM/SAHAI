@@ -126,7 +126,7 @@ After each recompute, the engine compares the new card set with the previous one
 
 - **E-002:** `occurred_at` is the moment the item actually became visible. If it came back while the app was closed, that's the wake or show time that caused it, worked out by the engine, not the time the app was opened.
 - **E-001:** for Undo of a completion, the action records `completion_undone` (pointing to the `completed` event) and the restored card gets **no** new `surfaced` event.
-- The last known card set is stored in `settings` so the comparison works across app restarts.
+- The last known card set is the `summary_visible` table (schema v2, M2): one row per card on the Summary with the time it surfaced. The action that changed the tree recomputes, diffs, writes the `surfaced` events and updates this table **in the same transaction**, so a crash between the two can never log an appearance twice. (Changed 2026-11-04 from "stored in `settings`".)
 
 ### 4.6 Summary order and groups (PRD 8.2, M5)
 
@@ -141,7 +141,7 @@ See [decision 0002](../decisions/0002-database-drift-sqlite.md).
 - **Engine:** **drift** on SQLite, opened with `drift_flutter`. Since `sqlite3` 3.x, SQLite is bundled automatically; the old `sqlite3_flutter_libs` package is end-of-life and not used.
 - **Threading:** the database runs on a background isolate (a separate Dart thread) so queries never block the UI (PRD 13).
 - **File:** `sahai.sqlite` in the app's private files directory.
-- **Journal mode:** WAL (write-ahead log), with a full checkpoint each time the app goes to the background. That way the main database file is complete when Android Auto Backup copies it (section 8).
+- **Journal mode:** WAL (write-ahead log). Recent changes sit in `sahai.sqlite-wal` until a checkpoint copies them into the main file. Android Auto Backup therefore includes **both** `sahai.sqlite` and `sahai.sqlite-wal` (section 8), so a backup is complete even if the app was killed before it could checkpoint. A full checkpoint each time the app goes to the background is kept as a second layer; it keeps the WAL small and usually empty. (Changed 2026-11-04; the plan originally backed up the main file only.)
 
 ### Tables (PRD 10)
 
@@ -154,6 +154,7 @@ See [decision 0002](../decisions/0002-database-drift-sqlite.md).
 | `captures` | As PRD 10. |
 | `settings` | A single row, with typed columns per setting plus `updated_at`. |
 | `event_daily_summaries` | Seventh table ([E-004](../PRD_Edits.md#e-004-compacted-activity-log-summaries-live-in-their-own-table)): `day`, `domain_id`, `group_id`, `event_type`, `count`. Filled by log compaction (M7). |
+| `summary_visible` | Schema v2 (M2): `node_id`, `surfaced_at`. The cards currently on the Summary, kept in step with the `surfaced` events (§4.5). Not user data: it is rebuilt from the tree, and its only job is to make the surfaced diff survive a restart. |
 
 Every table has `created_at`/`updated_at` in UTC ms and `is_deleted`. Every write sets `updated_at` (AT-010).
 
@@ -232,7 +233,8 @@ Each permission still needs the owner's approval when it's added, as with packag
 ### Auto Backup (PRD 3, M7)
 
 - `android:allowBackup="true"`, with `fullBackupContent` (Android 11 and lower) and `dataExtractionRules` (Android 12 and higher) pointing to rule files.
-- The rules **include** `sahai.sqlite` and **exclude** the `-wal`/`-shm` files (complete anyway after the background checkpoint), `pre-migration/`, caches and temp files.
+- The rules **include** `sahai.sqlite` and `sahai.sqlite-wal`, and **exclude** `sahai.sqlite-shm` (a cache SQLite rebuilds), `pre-migration/`, caches and temp files. Android stops the app's process before copying files, so the pair is consistent; this is confirmed against the Android documentation when the rules are written in M7.
+- The restore test (AT-111) is run with uncheckpointed changes in the WAL, to prove the backup carries the latest edits.
 - The database size is shown in Settings, with a warning above 20 MB (AT-112).
 - Restore is tested on a real device with `adb shell bmgr` (AT-111).
 
@@ -329,7 +331,7 @@ Before each milestone: wireframes approved (PRD 16), the developer's estimate, a
 | **M3** Set aside | Set-aside picker (presets, scope), Explorer set-aside, Set-Aside page, notifications | Logical day, presets, `nextChangeAt` timer, notification planner | Notification behaviour with the app closed differs by phone maker: test on 2+ devices | 28 (22) |
 | **M4** Recurring | Schedules, due labels, skip, stop repeating, recurring reminders | Recurrence functions, show-time calculation | Time-zone and month-end edge cases; a full simulated month with the fake clock | 22 (17) |
 | **M5** Groups and order | Groups, inheritance, drag between groups, saved positions | Slots (4.6) | Drag-and-drop accessibility needs button alternatives (AT-116) | 12 (9) |
-| **M6** Capture | Scratchpad, convert form, widget, share target | Captures, `captured`/`converted` events | Widget quick-add without opening the full app: spike, then a decision record | 10 (9) |
+| **M6** Capture | Scratchpad, convert form, widget, share target | Captures, `captured`/`converted` events | The widget is a button that opens a lightweight text dialog, since Android widgets can't hold a text field ([E-009](../PRD_Edits.md#e-009-the-v1-home-screen-widget-opens-a-lightweight-text-capture-dialog)): spike, then a decision record | 10 (9) |
 | **M7** Polish and safety | Onboarding, full Settings, backup rules, 20 MB warning, log retention, accessibility, speed check | Retention compaction | Backup restore on a real device; TalkBack pass | 16 (7) |
 | **M8** Release prep | Icon, store listing, privacy policy, Data safety form, testing track upload | — | Play Console account type and the 12-tester rule (PRD 2) | 4 (3) |
 
@@ -343,7 +345,7 @@ Before each milestone: wireframes approved (PRD 16), the developer's estimate, a
 | R2 | Summary too slow at 10,000 items | Pure in-memory engine; benchmark from M2; cache the snapshot and update it after each write |
 | R3 | Phone makers delay or kill scheduled notifications | Plan ahead with the OS alarm list (no background job needed); test on 2+ brands; "Exact reminders" option |
 | R4 | Reminders stop if the app isn't opened for 60+ days | Horizon of 60 days, rescheduled on every open. If this matters, a periodic background job could extend it later (an extra package, so it needs approval) |
-| R5 | Auto Backup copies a database mid-write, or goes over 25 MB | WAL checkpoint on background; only the main file is backed up; size warning; log retention |
+| R5 | Auto Backup copies a database mid-write, or goes over 25 MB; or the app is killed before checkpointing, so the main file alone is stale | The main file and the WAL are both backed up (the WAL is at most about 4 MB before SQLite checkpoints on its own); WAL checkpoint on background; size warning; log retention |
 | R6 | Day-start and time-zone bugs | One `logicalDate` function, table-driven tests with the AT sheet's dates, time-zone switch tests |
 | R7 | Migrations lose data | Generated migration tests from every released schema, plus the pre-migration copy |
 | R8 | Wireframes aren't ready when a milestone starts | PRD 16 makes them a gate. `docs/design/` is still empty, so M1's Explorer wireframes are needed first |

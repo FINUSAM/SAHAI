@@ -35,6 +35,7 @@ Future<TestApp> pumpSahai(
   WidgetTester tester, {
   TestApp? app,
   double textScale = 1,
+  String? tab,
 }) async {
   final testApp = app ?? TestApp();
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
@@ -54,8 +55,29 @@ Future<TestApp> pumpSahai(
     ),
   );
   await tester.pumpAndSettle();
+  if (tab != null) {
+    await tester.tap(
+      find.descendant(of: find.byType(NavigationBar), matching: find.text(tab)),
+    );
+    await tester.pumpAndSettle();
+  }
   _open.add(testApp);
   return testApp;
+}
+
+/// [pumpSahai], then the Explorer tab. The app opens on the Summary (M2).
+Future<TestApp> pumpExplorer(
+  WidgetTester tester, {
+  TestApp? app,
+  double textScale = 1,
+}) => pumpSahai(tester, app: app, textScale: textScale, tab: Strings.explorer);
+
+/// Switches to [tab] through the bottom bar.
+Future<void> goToTab(WidgetTester tester, String tab) async {
+  await tester.tap(
+    find.descendant(of: find.byType(NavigationBar), matching: find.text(tab)),
+  );
+  await tester.pumpAndSettle();
 }
 
 /// Unmounts the app, so drift's live queries stop, then closes the

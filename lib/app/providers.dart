@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../actions/node_actions.dart';
 import '../data/database.dart';
 import '../engine/tree.dart';
+import '../engine/visibility.dart';
 
 /// The one source of "now". Tests override it with a fake (decision 0004).
 final clockProvider = Provider<Clock>((ref) => const Clock());
@@ -30,3 +31,12 @@ final nodeActionsProvider = Provider<NodeActions>(
 final treeProvider = StreamProvider<Tree>(
   (ref) => ref.watch(nodeActionsProvider).watchTree(),
 );
+
+/// The Summary, recomputed from the tree after every change and never
+/// stored (PRD 6). M3 adds recomputing on resume and at `nextChangeAt`.
+final summaryProvider = Provider<AsyncValue<SummaryResult>>((ref) {
+  final clock = ref.watch(clockProvider);
+  return ref
+      .watch(treeProvider)
+      .whenData((tree) => computeSummary(tree, now: clock.now().toUtc()));
+});

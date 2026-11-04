@@ -50,6 +50,11 @@ class _NodeActionsSheet extends StatelessWidget {
     final path = pathOf(tree, node);
     final mark = markOf(tree, node);
     final parentType = node.type.parentType;
+    // Reopening a DONE child reopens its DONE ancestors too (PRD 7, AT-027).
+    final reopensWith = [
+      for (final a in tree.ancestorsOf(node.id))
+        if (a.isDone) displayTitle(tree, a),
+    ];
     void pick(NodeChoice choice) => Navigator.of(context).pop(choice);
 
     return SingleChildScrollView(
@@ -91,7 +96,14 @@ class _NodeActionsSheet extends StatelessWidget {
               () => pick(NodeChoice.markDone),
             ),
           if (mark == RowMark.done)
-            _item(Icons.undo, Strings.reopen, () => pick(NodeChoice.reopen)),
+            _item(
+              Icons.undo,
+              Strings.reopen,
+              () => pick(NodeChoice.reopen),
+              subtitle: reopensWith.isEmpty
+                  ? null
+                  : Strings.alsoReopens(reopensWith),
+            ),
           if (parentType != null)
             _item(
               Icons.drive_file_move_outlined,
@@ -143,9 +155,15 @@ class _NodeActionsSheet extends StatelessWidget {
     );
   }
 
-  Widget _item(IconData icon, String label, VoidCallback onTap) => ListTile(
+  Widget _item(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    String? subtitle,
+  }) => ListTile(
     leading: Icon(icon),
     title: Text(label),
+    subtitle: subtitle == null ? null : Text(subtitle),
     contentPadding: const EdgeInsets.symmetric(horizontal: 24),
     onTap: onTap,
   );
