@@ -12,6 +12,17 @@ Wireframes for each milestone's screens. PRD 16 makes approved wireframes a gate
 | M1 Foundations | Explorer (9 frames) | **Approved** by FINUSAM, 2026-10-30 | [`m1-explorer/`](m1-explorer/) | [Sahai wireframes: M1 Explorer](https://claude.ai/artifact/Md4TXCHV3iJ7GG9d3s7kFi) (private to the owner until shared) |
 | M2 Core loop | Summary, card sheet, Explorer Mark done and Reopen (10 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m2-summary/`](m2-summary/) | [Sahai wireframes: M2 Summary](https://claude.ai/artifact/5mT1TddXtf8N6TvygZgTLV) (private to the owner until shared) |
 
+## Brand
+
+The owner's logo files are in [`brand/`](brand/): the "SAHAI" wordmark (`logo.png`, with the tagline on a paper texture) and a 1024 px adaptive-icon pair (`app_icon_foreground.png`, `app_icon_background.png`) plus their composite (`app_icon.png`).
+
+| | Value | Used by |
+|---|---|---|
+| Teal | `#0F6469` | App theme seed (`lib/shared/brand.dart`), icon background (`res/values/colors.xml`) |
+| Off-white | `#F5F2ED` | Icon S (`res/drawable/ic_launcher_foreground.xml`), logo background |
+
+**Launcher icon (2026-11-04, placeholder):** an S monogram, off-white on teal, drawn by hand as a vector path in the same rounded spirit as the wordmark. It ships as an adaptive icon (`res/mipmap-anydpi-v26/ic_launcher.xml`) with the S reused as the monochrome layer for Android 13 themed icons, plus the five `mipmap-*dpi/ic_launcher.png` fallbacks rendered from the same shape. The wordmark itself is not used as the icon: five letters are unreadable at home-screen size. The wordmark is kept for the splash screen, README and store listing in M8, when the icon gets its final design with the real typeface.
+
 ## M1 Explorer
 
 Low-fidelity, grey on purpose: layout and flow only, no visual design yet. Dashed boxes mark controls from later milestones (set aside M3, repeat M4, groups M5), shown only so the layout leaves room for them.
