@@ -94,6 +94,17 @@ A change is done when all of these are true:
 
 Record significant technical decisions in [`docs/decisions/`](docs/decisions/), copying [`0000-template.md`](docs/decisions/0000-template.md).
 
+## Tracking
+
+Work is tracked on GitHub so the owner can see progress without reading the plans:
+
+- **Milestones** mirror PRD 16, one per milestone (`M3 Set aside (v0.3.0)` and so on). Each milestone's page shows its open and closed issues and a percentage. A milestone is closed when its version is tagged.
+- **Issues** are work packages, not single tasks: a milestone's wireframes and plan, each of its PRs, the owner's phone tests and release, and the close-out docs. Each issue lists the PRD sections and acceptance test IDs it covers, a task list that is ticked as work lands, and a "Done when".
+- **Labels** say what kind of work it is (`type: feature`, `type: bug`, `type: chore`, `type: docs`, `type: design`, `type: release`, `type: test`) and who acts: `owner-action` marks things only the owner can do (approvals, phone tests, tagging, Play Console), `prd-question` marks a PRD question for the owner, `blocked` marks waiting.
+- **Every PR links its issue** with `Closes #N` in the description, so merging closes the issue. A PR that delivers part of an issue says `Part of #N` and ticks the tasks it covered.
+- **Bugs** found on the phone are opened with the bug report template, named with the acceptance test if there is one, and put in the milestone they affect.
+- The saved checklists in `docs/plans/` stay the detailed record for a milestone; the issues are the overview.
+
 ## Releases
 
 The owner releases at the end of each milestone:
