@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,6 +43,13 @@ Future<void> setAsideWithPicker(
     return true;
   });
   if (done == null || !context.mounted) return;
+  // Asked after the first set aside is saved, never at launch, so the item
+  // is set aside whatever the answer (AT-055, frame 7). Android shows
+  // nothing once the user has decided.
+  if (_settings(ref).notificationsEnabled) {
+    unawaited(ref.read(remindersProvider).askPermission());
+  }
+  if (!context.mounted) return;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -98,5 +107,7 @@ Future<void> changeTimeWithPicker(
 Future<void> wakeNow(BuildContext context, WidgetRef ref, TreeNode node) =>
     runAction(context, () => ref.read(nodeActionsProvider).wakeNow(node.id));
 
-int _dayStart(WidgetRef ref) =>
-    (ref.read(settingsProvider).value ?? const AppSettings()).dayStartMinutes;
+int _dayStart(WidgetRef ref) => _settings(ref).dayStartMinutes;
+
+AppSettings _settings(WidgetRef ref) =>
+    ref.read(settingsProvider).value ?? const AppSettings();

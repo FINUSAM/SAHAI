@@ -56,18 +56,18 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 18. [x] Accessibility: labels on every new action, 48 dp targets, large-text check
 19. [x] Widget tests: AT-033, AT-036, AT-041, AT-044 to AT-049; integration flows in `integration_test/`
 20. [x] Version 0.3.0+3 build for the phone; update `README.md`, `CHANGELOG.md`, matrix and this plan; open PR 2
-21. [ ] Owner: set aside and wake items on the phone (no reminders yet)
+21. [ ] Owner: set aside and wake items on the phone (no reminders yet). Moved into step 30 at the owner's request (2026-11-05)
 
 **PR 3: reminders** (`feat/m3-reminders`, #33, after PR 2 merges)
 
-22. [ ] Owner approval of the three packages and the permissions above (versions re-checked that day)
-23. [ ] Pure planner over the next 60 days, capped at 100 notifications: named single, grouped same-moment, none for Remind me off, notifications off, or items still hidden (AT-050 to AT-054, AT-056); unit tests with the fake clock
-24. [ ] Platform adapter: cancel and reschedule after every action, on start, on resume and after a time-zone change; boot restore (AT-057); exact scheduling only with Exact reminders on and the alarm permission granted (AT-058)
-25. [ ] Permission asked at the first set aside, never at launch (AT-055, frame 7)
-26. [ ] Settings screen per frame 14: Notifications and Exact reminders
-27. [ ] Tap opens `/summary?focus=<id>` with the card highlighted; a grouped tap opens the Summary
-28. [ ] Release manifest still has no network permission (CI APK check); list the device-only checks in the PR
-29. [ ] Update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; open PR 3
+22. [x] Owner approval of the three packages and the permissions above (versions re-checked that day)
+23. [x] Pure planner over the next 60 days, capped at 100 notifications: named single, grouped same-moment, none for Remind me off, notifications off, or items still hidden (AT-050 to AT-054, AT-056); unit tests with the fake clock
+24. [x] Platform adapter: cancel and reschedule after every action, on start, on resume and after a time-zone change; boot restore (AT-057); exact scheduling only with Exact reminders on and the alarm permission granted (AT-058)
+25. [x] Permission asked at the first set aside, never at launch (AT-055, frame 7)
+26. [x] Settings screen per frame 14: Notifications and Exact reminders
+27. [x] Tap opens `/summary?focus=<id>` with the card highlighted; a grouped tap opens the Summary
+28. [x] Release manifest still has no network permission (CI APK check); list the device-only checks in the PR
+29. [x] Update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; open PR 3
 30. [ ] Owner: release build on the phone; AT-033 to AT-058 Founder rows on the phone, including app closed and a restart; second brand if available
 
 **Release** (owner)
@@ -77,12 +77,19 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 ## Changes to the plan
 
 - 2026-11-05 (PR 1, step 8): once a recompute has logged an item's automatic `woke` event, it clears that item's `snooze_until`. The plan's note said `snooze_until` would stay in the past until the next set aside; clearing it means each wake is logged exactly once and later recomputes only look at fresh wakes, instead of searching the log for every item ever set aside. The item is still awake from its wake time with no write (PRD 5): clearing happens at the next recompute and changes nothing on screen. The wake time stays in the `set_aside` and `woke` events.
+- 2026-11-05 (PR 3, step 22): the owner approved `flutter_local_notifications` 22.3.3 and `timezone` 0.11.2 but not `flutter_timezone`, since reminders are scheduled in UTC and need no zone name. Library desugaring (`desugar_jdk_libs` 2.1.4) was added because the plugin requires it. Recorded in decision 0005.
+- 2026-11-05 (step 21): the owner's phone check of PR 2 moved into step 30, so both are done on one build.
 
 ## Notes for whoever picks this up
 
 - The M2 engine already treats an item with a future `snoozeUntil`, or under an ancestor with one, as hidden, and already returns `nextChangeAt`. PR 1 is mostly time, presets, scope, actions, events and the recompute triggers.
 - Android's time picker can't grey out individual past times, so frame 6's rule ("OK disabled until the time is after now") is checked after the pick, in our own dialog step.
 - Waking needs no write: an item is awake once its time passes. The first recompute after that (every action, app start, resume, or the `nextChangeAt` timer) logs its `woke` (automatic) event dated with the wake time, logs `surfaced` for anything it brought back dated with the latest wake time on its path (E-002), then clears `snooze_until` (see Changes to the plan).
+- **PR 3 (2026-11-05):** 244 tests pass (220 before + 24 new). Notifications are planned in pure Dart (`lib/notifications/planner.dart`), worded in `reminders.dart` and scheduled by `ReminderSync`. Small choices:
+  - A reminder fires only when a card newly appears on the Summary *and* a node waking at that exact moment has Remind me on. An item that comes back only because its project's next step changed is not announced.
+  - Reminders already in the notification shade stay there when the schedule is replaced; only pending ones are cancelled.
+  - Settings shows only the REMINDERS section of frame 14; the rest says it comes in M7.
+  - The release APK's permissions are exactly the four approved ones plus androidx's internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, which only this app can hold.
 - **PR 2 (2026-11-05):** 220 tests pass (192 before + 28 new). `at_coverage M3` reports 19 of 26; the missing 7 are the notification tests for PR 3. Built as v0.3.0+3. How it differs from the frames, all small:
   - The custom time step is our own dialog drawn like Android's typed time entry (frame 6), because Android's picker can't refuse a time. Its clock button opens Android's dial. It starts at the next whole hour on today, otherwise 8:00 AM.
   - In the picker, today's presets read "Today 8:00 PM" (frame 4's wording) rather than frame 2's "Tue 8:00 PM". The Set-Aside page says "Tonight 8:00 PM" from 6 PM, as frame 8 does.

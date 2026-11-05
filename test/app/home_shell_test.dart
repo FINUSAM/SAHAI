@@ -31,7 +31,8 @@ void main() {
     await pumpSahai(tester);
     await tester.tap(find.byTooltip(Strings.settings));
     await tester.pumpAndSettle();
-    expect(find.text(Strings.comingIn('M7')), findsOneWidget);
+    // M3 brings the Reminders section (frame 14).
+    expect(find.text(Strings.notifications), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();

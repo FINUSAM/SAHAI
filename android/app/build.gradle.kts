@@ -11,6 +11,9 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // flutter_local_notifications needs desugaring for scheduled
+        // notifications on older Android versions (M3 plan, approved 2026-11-05).
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -45,4 +48,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Pinned; the version flutter_local_notifications documents.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../shared/strings.dart';
+import 'reminder_sync.dart';
 import 'router.dart';
 import 'summary_refresher.dart';
 import 'theme.dart';
@@ -16,6 +17,11 @@ class SahaiApp extends StatefulWidget {
 class _SahaiAppState extends State<SahaiApp> {
   final GoRouter _router = buildRouter();
 
+  /// A single item's notification opens it on the Summary; a grouped one
+  /// opens the Summary (M3 wireframe choice, AT-051).
+  void _openFromNotification(String? nodeId) =>
+      _router.go(nodeId == null ? Routes.summary : Routes.summaryFocus(nodeId));
+
   @override
   void dispose() {
     _router.dispose();
@@ -28,6 +34,8 @@ class _SahaiAppState extends State<SahaiApp> {
     theme: buildTheme(Brightness.light),
     darkTheme: buildTheme(Brightness.dark),
     routerConfig: _router,
-    builder: (context, child) => SummaryRefresher(child: child!),
+    builder: (context, child) => SummaryRefresher(
+      child: ReminderSync(onOpen: _openFromNotification, child: child!),
+    ),
   );
 }

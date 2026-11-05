@@ -24,6 +24,15 @@ followed by v1.0.0 for the public release.
   tab lists everything set aside, grouped Today, Tomorrow and Later, with time remaining, what each
   hides, Wake now, Change time and Open in tree. The Explorer marks set-aside nodes ("Back …"),
   greys what they hide, and offers Set aside…, Wake now and Change set-aside time.
+- M3 reminders (PR 3 of M3): a notification when set-aside items come back, named for one item
+  ("Draft homepage is back", with its path) or grouped for several at the same moment; none for
+  Remind me off or items still hidden. Tapping one opens the Summary with the card highlighted.
+  Notification permission is asked at the first set aside, never at launch. Reminders are replanned
+  after every change and on resume, and restored after a phone restart. A Settings screen with
+  Notifications and Exact reminders.
+- Packages `flutter_local_notifications` 22.3.3 and `timezone` 0.11.2; Android library desugaring
+  (`desugar_jdk_libs` 2.1.4); permissions `POST_NOTIFICATIONS`, `VIBRATE`, `RECEIVE_BOOT_COMPLETED`
+  and `SCHEDULE_EXACT_ALARM`.
 
 ### Changed
 - Version 0.3.0+3.

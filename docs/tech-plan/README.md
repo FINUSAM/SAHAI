@@ -212,8 +212,10 @@ The approach is to **plan notifications ahead of time with the engine, and resch
 - **Horizon.** The plan covers the next **60 days**, capped at **100 scheduled notifications**. Android allows 500 alarms per app. If the app isn't opened for over 60 days, later reminders aren't scheduled. This is listed as risk R4.
 - **Inexact by default.** Reminders may arrive a few minutes late (PRD 7). With "Exact reminders" on, the app asks for Android's alarm permission (`SCHEDULE_EXACT_ALARM`; Android 14 and higher deny it by default and send the user to a system screen) and uses exact scheduling (AT-058).
 - **Notification permission.** On Android 13 and higher, `POST_NOTIFICATIONS` is requested the first time the user sets something aside, never at launch (AT-055).
+- **Fixed moments, scheduled in UTC (M3).** A set-aside wake time is a fixed moment, so reminders are scheduled in UTC and need no time-zone database or zone name. Rescheduling on resume covers a time-zone change. Recurring reminders at a local clock time (M4) will be revisited then.
+- **Where it runs.** `ReminderSync` (app layer) replans whenever the tree or the settings change and on resume, then hands the worded messages to `Reminders`, an interface with a plugin version for the phone and a fake for tests.
 
-**Packages:** `flutter_local_notifications` (schedule, group, boot restore, exact alarms), `timezone` (time-zone-aware scheduling) and `flutter_timezone` (the phone's current zone name).
+**Packages:** `flutter_local_notifications` (schedule, group, boot restore, exact alarms) and `timezone` (the scheduling type the plugin requires). `flutter_timezone` was dropped on 2026-11-05 because UTC scheduling doesn't need the zone name. The plugin needs Java 8+ library desugaring (`desugar_jdk_libs` 2.1.4, a build-time Android library, approved 2026-11-05).
 
 ---
 
@@ -224,9 +226,11 @@ The approach is to **plan notifications ahead of time with the engine, and resch
 | Permission | Why | When |
 |---|---|---|
 | `POST_NOTIFICATIONS` | Wake and bill reminders (Android 13+) | Asked at the first set aside |
-| `RECEIVE_BOOT_COMPLETED` | Restore scheduled reminders after a restart | Added by the notifications plugin |
-| `SCHEDULE_EXACT_ALARM` | Only if "Exact reminders" is on | Asked when the setting is turned on |
-| `VIBRATE` | Notification vibration, if the plugin needs it | Added by the plugin |
+| `RECEIVE_BOOT_COMPLETED` | Restore scheduled reminders after a restart, through the plugin's boot receiver (AT-057) | Declared in our manifest (M3) |
+| `SCHEDULE_EXACT_ALARM` | Only used if "Exact reminders" is on | Declared in our manifest; Android's alarm screen opens when the setting is turned on |
+| `VIBRATE` | Notification vibration | Added by the plugin |
+
+The manifest also declares the plugin's two receivers, both not exported: one fires scheduled reminders, the other restores them after a restart or an app update.
 
 **No `INTERNET`, no `ACCESS_NETWORK_STATE`.**
 - Flutter adds `INTERNET` to the **debug and profile** manifests so hot reload works. That's expected, and those builds are never shipped.
@@ -315,13 +319,13 @@ Current versions were checked on pub.dev on 2026-10-30. Each package is added on
 | `flutter_lints` (dev) | 6.0.0 | BSD-3 | flutter.dev | 2025-05-27 | Official lint rules | M1 |
 | `flutter_local_notifications` | 22.3.3 | BSD-3 | dexterx.dev | 2026-10-25 | Scheduled, grouped notifications | M3 |
 | `timezone` | 0.11.2 | BSD-2 | labs.dart.dev | 2026-10-12 | Time-zone-aware schedules | M3 |
-| `flutter_timezone` | 5.1.1 | Apache-2.0 | wolverinebeach.net | 2026-10-03 | Phone's current time zone | M3 |
+| `desugar_jdk_libs` (Android build) | 2.1.4 | GPL-2.0 with Classpath Exception | Google (com.android.tools) | 2024 | Java 8+ APIs the notifications plugin needs on older Android | M3 |
 | `home_widget` | 0.10.0 | BSD-3 | antonborri.es | 2026-09-17 | Home-screen widget (to confirm in an M6 spike) | M6 |
 | `receive_sharing_intent` | 1.9.0 | Apache-2.0 | kasem.dev | 2026-06-24 | Share target (or about 40 lines of our own Kotlin, decided in M6) | M6 |
 
 All of these are actively maintained (released within the last 6 months, except `flutter_lints`, the official and stable Flutter lint set) and score 110–160 out of 160 pub points. `sqlite3`, `path_provider` and `path` come in automatically through drift; the lock file pins them.
 
-**Considered and not chosen:** `sqflite` (hand-written SQL, no generated migration tests), `sqlite3_flutter_libs` (end-of-life), `flutter_bloc` (more boilerplate for a two-person team), `very_good_analysis` (stricter than needed; can be revisited), `url_launcher` (a few lines of Kotlin are enough for one email draft).
+**Considered and not chosen:** `flutter_timezone` (planned for M3, dropped 2026-11-05 because reminders are scheduled in UTC), `sqflite` (hand-written SQL, no generated migration tests), `sqlite3_flutter_libs` (end-of-life), `flutter_bloc` (more boilerplate for a two-person team), `very_good_analysis` (stricter than needed; can be revisited), `url_launcher` (a few lines of Kotlin are enough for one email draft).
 
 ---
 

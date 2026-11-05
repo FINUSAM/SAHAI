@@ -16,8 +16,6 @@ abstract final class Strings {
   static String comingIn(String milestone) => 'Coming in $milestone';
   static const captureLater =
       'Quick notes to sort later will collect here, ready to turn into items.';
-  static const settingsLater =
-      'Day start, reminders and other settings will be here.';
 
   // Explorer.
   static const loadError = "Your items couldn't be loaded.";
@@ -230,6 +228,23 @@ abstract final class Strings {
   static String hiddenWhile(String title) => 'Hidden while $title is set aside';
   static const setAsideMenu = 'Set aside…';
   static const changeSetAsideTime = 'Change set-aside time';
+
+  // Notifications (frame 13) and Settings (frame 14).
+  static String isBack(String title) => '$title is back';
+  static String itemsBack(int n) => '$n items are back';
+  static const remindersChannel = 'Reminders';
+  static const remindersChannelDescription =
+      'When something you set aside comes back';
+  static const remindersSection = 'Reminders';
+  static const notifications = 'Notifications';
+  static const notificationsHint =
+      'Tell me when something I set aside comes back';
+  static const exactReminders = 'Exact reminders';
+  static const exactRemindersHint =
+      'Arrive on the minute instead of a few minutes late. Android asks '
+      'for permission to set alarms.';
+  static const laterSettings =
+      'Day start, preset times, groups, backup and more come in M7.';
 
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';

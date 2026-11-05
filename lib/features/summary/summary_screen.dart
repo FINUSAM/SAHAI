@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,14 +16,74 @@ import '../explorer/explorer_rows.dart';
 import '../set_aside/set_aside_flow.dart';
 import 'card_sheet.dart';
 
+/// How long a card opened from a notification stays highlighted.
+const focusHighlightDuration = Duration(seconds: 3);
+
 /// The Summary Page (PRD 8.2, M2 frames 1–6): the next step of every
 /// project and stream, nothing else.
-class SummaryScreen extends ConsumerWidget {
-  const SummaryScreen({super.key});
+class SummaryScreen extends ConsumerStatefulWidget {
+  const SummaryScreen({super.key, this.focusNodeId});
+
+  /// A card to scroll to and highlight for a moment, when a notification
+  /// for it was tapped (AT-051).
+  final String? focusNodeId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SummaryScreen> createState() => _SummaryScreenState();
+}
+
+class _SummaryScreenState extends ConsumerState<SummaryScreen> {
+  final _focusKey = GlobalKey();
+  String? _pendingFocus;
+  String? _highlighted;
+  Timer? _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _pendingFocus = widget.focusNodeId;
+  }
+
+  @override
+  void didUpdateWidget(SummaryScreen old) {
+    super.didUpdateWidget(old);
+    if (widget.focusNodeId != old.focusNodeId) {
+      _pendingFocus = widget.focusNodeId;
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade?.cancel();
+    super.dispose();
+  }
+
+  /// Highlights the pending card once it is on the Summary, after the
+  /// frame, and scrolls it into view.
+  void _applyFocus(SummaryResult summary) {
+    final id = _pendingFocus;
+    if (id == null || !summary.visibleIds.contains(id)) return;
+    _pendingFocus = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _highlighted = id);
+      _fade?.cancel();
+      _fade = Timer(focusHighlightDuration, () {
+        if (mounted) setState(() => _highlighted = null);
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final target = _focusKey.currentContext;
+        if (target != null && target.mounted) {
+          unawaited(Scrollable.ensureVisible(target, alignment: 0.3));
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final summary = ref.watch(summaryProvider);
+    if (summary case AsyncData(:final value)) _applyFocus(value);
     final tree = ref.watch(treeProvider).value;
     return Scaffold(
       appBar: AppBar(
@@ -34,6 +96,8 @@ class SummaryScreen extends ConsumerWidget {
         AsyncData(:final value) when tree != null => _CardList(
           tree: tree,
           cards: value.cards,
+          highlighted: _highlighted,
+          focusKey: _focusKey,
         ),
         AsyncError() => const Center(child: Text(Strings.loadError)),
         _ => const Center(child: CircularProgressIndicator()),
@@ -85,17 +149,37 @@ class _EmptySummary extends StatelessWidget {
 }
 
 class _CardList extends StatelessWidget {
-  const _CardList({required this.tree, required this.cards});
+  const _CardList({
+    required this.tree,
+    required this.cards,
+    required this.highlighted,
+    required this.focusKey,
+  });
 
   final Tree tree;
   final List<SummaryCard> cards;
+  final String? highlighted;
+  final GlobalKey focusKey;
 
+  // A Column rather than a lazy list, so a highlighted card further down
+  // exists and can be scrolled to. The Summary is short by design.
   @override
-  Widget build(BuildContext context) => ListView.separated(
+  Widget build(BuildContext context) => SingleChildScrollView(
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-    itemCount: cards.length,
-    separatorBuilder: (context, i) => const SizedBox(height: 10),
-    itemBuilder: (context, i) => SummaryCardTile(tree: tree, card: cards[i]),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, card) in cards.indexed) ...[
+          if (i > 0) const SizedBox(height: 10),
+          SummaryCardTile(
+            key: card.id == highlighted ? focusKey : null,
+            tree: tree,
+            card: card,
+            highlighted: card.id == highlighted,
+          ),
+        ],
+      ],
+    ),
   );
 }
 
@@ -103,10 +187,16 @@ class _CardList extends StatelessWidget {
 /// empty-project cards, the clock that sets it aside (M3 frame 1) and the
 /// checkmark. Tapping the card opens its sheet (frame 7).
 class SummaryCardTile extends ConsumerWidget {
-  const SummaryCardTile({super.key, required this.tree, required this.card});
+  const SummaryCardTile({
+    super.key,
+    required this.tree,
+    required this.card,
+    this.highlighted = false,
+  });
 
   final Tree tree;
   final SummaryCard card;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -122,6 +212,7 @@ class SummaryCardTile extends ConsumerWidget {
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
+      color: highlighted ? theme.colorScheme.primaryContainer : null,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(12),

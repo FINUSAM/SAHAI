@@ -6,7 +6,7 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**M2 Core loop shipped as v0.2.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set aside (M3) is being built: setting items aside and waking them works on `dev`; reminders come next. Capture arrives in M6.
+**M2 Core loop shipped as v0.2.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set aside (M3) is being built: setting items aside, waking them and reminders work on `dev`, waiting for checks on the phone. Capture arrives in M6.
 
 | | |
 |---|---|
