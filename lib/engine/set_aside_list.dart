@@ -1,8 +1,14 @@
+import 'settings.dart';
 import 'tree.dart';
 
-/// [node]'s wake time while it is set aside, or null when it is awake.
-DateTime? wakeTimeOf(TreeNode node, DateTime now) {
-  final until = node.snoozeUntil;
+/// [node]'s wake time while it is set aside, or waiting for its show date,
+/// which counts as set aside (E-005). Null when it is awake.
+DateTime? wakeTimeOf(
+  TreeNode node,
+  DateTime now, {
+  AppSettings settings = const AppSettings(),
+}) {
+  final until = node.wakeAt(settings);
   return until != null && until.isAfter(now) ? until : null;
 }
 
@@ -32,12 +38,17 @@ class SetAsideEntry {
 }
 
 /// The Set-Aside page (PRD 8.3): everything set aside directly, soonest
-/// first (AT-046). Something under a set-aside ancestor is listed under
-/// that ancestor rather than on its own (AT-047).
-List<SetAsideEntry> setAsideEntries(Tree tree, {required DateTime now}) {
+/// first (AT-046), with recurring items waiting for their show date listed
+/// once, at whichever time is later (E-005). Something under a set-aside
+/// ancestor is listed under that ancestor rather than on its own (AT-047).
+List<SetAsideEntry> setAsideEntries(
+  Tree tree, {
+  required DateTime now,
+  AppSettings settings = const AppSettings(),
+}) {
   final entries = [
     for (final node in tree.nodes)
-      if (wakeTimeOf(node, now) case final wakeAt?
+      if (wakeTimeOf(node, now, settings: settings) case final wakeAt?
           when setAsideAncestor(tree, node.id, now) == null)
         SetAsideEntry(
           node: node,

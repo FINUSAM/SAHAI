@@ -1,10 +1,10 @@
 # M4 Recurring items
 
 - **Status:** In progress
-- **Approved by:** FINUSAM on 2026-11-06 (wireframes). The plan is approved when the owner merges its PR
-- **Branches / PRs:** plan and wireframes `docs/m4-plan` (#36); PR 1 `feat/m4-engine` (#37); PR 2 `feat/m4-screens` (#38)
-- **PRD sections:** 5, 6, 7 (Recurring items, Notifications), 8.2, 8.3, 8.4, 9, 16 (plus E-001, E-005)
-- **Acceptance tests:** AT-061 to AT-082 (22 rows: 17 Must, 5 Should), plus the E-001 and E-005 tests
+- **Approved by:** FINUSAM on 2026-11-06 (wireframes and plan)
+- **Branches / PRs:** plan and wireframes `docs/m4-plan` (#36, #75); PR 1 `feat/m4-engine` (#37); PR 2 `feat/m4-screens` (#38)
+- **PRD sections:** 5, 6, 7 (Recurring items, Notifications), 8.2, 8.3, 8.4, 9, 16 (plus E-001, E-005, E-011)
+- **Acceptance tests:** AT-061 to AT-082 (22 rows: 17 Must, 5 Should), plus the E-001, E-005 and E-011 tests
 - **Wireframes:** [`docs/design/m4-recurring/`](../design/m4-recurring/) (approved 2026-11-06)
 - **Test devices:** OnePlus Nord 5 (OxygenOS 16 / Android 16)
 
@@ -17,12 +17,12 @@
 - The 11 choices approved with the wireframes (design README, M4 section) are the screen spec.
 - The reminder time and the default lead setting keep their PRD defaults until the full Settings screen in M7 (#54). Each item's own "Show before due" is editable from M4.
 
-## Open questions for the owner
+## Questions the owner settled
 
-Neither blocks merging this plan. Question 1 is needed before PR 1 starts, question 2 before #38 can be called done.
+Both were open when the plan merged, and the owner accepted the recommendations on 2026-11-06.
 
-1. **Log events for the new Undos.** Undo on Skip and Undo on Stop repeating were approved with the frames, and PRD 7 says every action can be reversed, but PRD 9 has no event for them, and none for Stop repeating itself. The log is append-only, so these need event types, and that needs a PRD edit the owner approves. Proposed E-011: add `skip_undone` and `repeat_stopped`, with Undo of a stop logged as `repeat_restored`, each undo pointing at the event it cancels, as `completion_undone` does (E-001). Nothing has been added to `PRD_Edits.md` yet.
-2. **How a month is tested.** #38's "done when" says the owner runs their real bills through a month on the phone, which would hold up v0.4.0 by a month. Recommended: the simulated month in automated tests (step 11, which #37 needs anyway), plus spot checks on the phone with its date changed, and the real bills carrying on as daily use after the release. That changes what "done" means on #38, so it stays as written until the owner decides. Steps 22 and 23 depend on the answer.
+1. **Log events for the new Undos.** Undo on Skip and Undo on Stop repeating were approved with the frames, but PRD 9 had no event for them, and none for Stop repeating itself. Recorded as [E-011](../PRD_Edits.md#e-011-skip-and-stop-repeating-have-undo-and-the-log-records-them): `skip_undone`, `repeat_stopped` and `repeat_restored`, each undo pointing at the event it cancels.
+2. **How a month is tested.** The simulated month in automated tests (step 11), plus spot checks on the phone with its date changed, and the real bills carrying on as daily use after the release. v0.4.0 doesn't wait for a real month. #38's "done when" now says this.
 
 ## Estimate
 
@@ -32,7 +32,7 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 |---|---|---|
 | PR 1: engine, actions, log | 2 to 3 sessions | Month-end and interval edge cases; show time and `snooze_until` working together with `snooze_overrides_show` (E-005) |
 | PR 2: screens and reminders | 2 to 3 sessions, plus checks on the phone | The planner today announces only what newly appears at a wake moment. Recurring reminders add a local clock time and a due-day reminder that ignores set-aside ancestors |
-| Owner testing | Depends on open question 2 | A few days with spot checks, or a month with real bills |
+| Owner testing | A few days of spot checks with the phone's date changed | Changing the date on the phone may affect other apps while testing |
 
 ## Checklist
 
@@ -44,15 +44,15 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 
 **PR 1: engine, actions, log** (`feat/m4-engine`, #37)
 
-4. [ ] Owner answers open question 1; add the approved entry to `PRD_Edits.md`
-5. [ ] `lib/engine/recurrence.dart`: schedule model read from and written to the `recurrence` JSON; next due date as a pure function for daily, weekly on chosen weekdays, monthly and yearly, with intervals, a missing month day falling on the last day, and repeat from the due date or the completion's logical date (AT-067 to AT-069, AT-073 to AT-076)
-6. [ ] Show time (`due_on` minus `lead_days` at the day-start hour, in the current zone) and due labels in logical days (AT-061 to AT-063, AT-081)
-7. [ ] Visibility: every awake recurring item shows, and none blocks the normal items of its stream (AT-064, AT-065); `nextChangeAt` includes show times; the item is awake only when the show time and any `snooze_until` have both passed, unless `snooze_overrides_show` is set (AT-072)
-8. [ ] Set-Aside list: waiting recurring items at their effective wake time, listed once, and under a set-aside ancestor when there is one; Wake now and Change time change this occurrence only (E-005)
-9. [ ] Actions, each in one transaction with an undo token: complete stores the due date, advances `due_on`, stays TODO and clears `snooze_until` and `snooze_overrides_show` (AT-066, AT-077, AT-082); undo restores them (AT-070, E-001); skip logs `skipped` and no `completed` (AT-071); stop repeating clears the schedule and due date (AT-080); undo of skip and stop per question 1
-10. [ ] Unit tests named by AT ID with the fake clock, including the E-001 and E-005 tests
-11. [ ] Simulated month: the four PRD 7 bills through a full month and into the next, with the fake clock, including an unpaid HDFC on the 9th, a late payment, a missed cycle and a skip
-12. [ ] Update the tech plan notes (7, recurring reminders), matrix, `CHANGELOG.md` and this plan; tick #37; open PR 1
+4. [x] Owner answers question 1; add the approved entry to `PRD_Edits.md`
+5. [x] `lib/engine/recurrence.dart`: schedule model read from and written to the `recurrence` JSON; next due date as a pure function for daily, weekly on chosen weekdays, monthly and yearly, with intervals, a missing month day falling on the last day, and repeat from the due date or the completion's logical date (AT-067 to AT-069, AT-073 to AT-076)
+6. [x] Show time (`due_on` minus `lead_days` at the day-start hour, in the current zone) and due labels in logical days (AT-061 to AT-063, AT-081)
+7. [x] Visibility: every awake recurring item shows, and none blocks the normal items of its stream (AT-064, AT-065); `nextChangeAt` includes show times; the item is awake only when the show time and any `snooze_until` have both passed, unless `snooze_overrides_show` is set (AT-072)
+8. [x] Set-Aside list: waiting recurring items at their effective wake time, listed once, and under a set-aside ancestor when there is one; Wake now and Change time change this occurrence only (E-005)
+9. [x] Actions, each in one transaction with an undo token: complete stores the due date, advances `due_on`, stays TODO and clears `snooze_until` and `snooze_overrides_show` (AT-066, AT-077, AT-082); undo restores them (AT-070, E-001); skip logs `skipped` and no `completed` (AT-071); stop repeating clears the schedule and due date (AT-080); undo of skip and stop (E-011)
+10. [x] Unit tests named by AT ID with the fake clock, including the E-001 and E-005 tests
+11. [x] Simulated month: the four PRD 7 bills through a full month and into the next, with the fake clock, including an unpaid HDFC on the 9th, a late payment, a missed cycle and a skip
+12. [x] Update the tech plan notes (7, recurring reminders), matrix, `CHANGELOG.md` and this plan; tick #37; open PR 1
 
 **PR 2: screens and reminders** (`feat/m4-screens`, #38, after PR 1 merges)
 
@@ -65,7 +65,7 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 19. [ ] Accessibility: labels on every new action, 48 dp targets, large-text check
 20. [ ] Widget tests for the AT rows the matrix marks W; integration flows in `integration_test/`; list the device-only checks in the PR
 21. [ ] Version 0.4.0+4 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #38; open PR 2
-22. [ ] Owner: release build on the phone; AT-061 to AT-081 Founder rows, in the way open question 2 settles. The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner
+22. [ ] Owner: release build on the phone; AT-061 to AT-081 Founder rows as spot checks with the phone's date changed (question 2). The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner
 
 **Release** (owner)
 
@@ -73,9 +73,21 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 
 ## Changes to the plan
 
-None yet.
+- 2026-11-06 (PR 1): the owner accepted both open questions. E-011 was added, and #38's "done when" changed to the simulated month plus spot checks.
+- 2026-11-06 (PR 1, step 9): added a `setRecurrence` action, which the plan didn't list. The tests and PR 2's form both need a way to give an item a schedule. Like `edit`, it isn't an activity log event in PRD 9.
 
 ## Notes for whoever picks this up
+
+- **PR 1 (2026-11-06):** 304 tests pass (244 before + 60 new). `dart run tool/at_coverage.dart M4` reports 20 of 22; the missing two are the reminders AT-078 and AT-079, for PR 2. Those 20 cover the logic: AT-062, AT-063, AT-070, AT-071 and AT-077 still need their widget tests in PR 2. Nothing changes on the phone: no screen can create a schedule yet. AT-081 is tested only as far as a running test can go, since it can't change the phone's zone. Small choices, all open to change:
+  - `TreeNode.wakeAt` is the one rule for when a node comes back, so the Summary, `nextChangeAt`, the Set-Aside list and Wake now all agree.
+  - A show time is computed, not stored, so `_catchUp` compares the Summary on every write once any item has a due date. A bill reaching its show date gets `surfaced` dated at that time, as E-002 does, but no `woke`: logging each one exactly once would need a stored record of it.
+  - Skip always follows the due date, even when repeating from completion, because nothing was completed.
+  - Monthly and yearly schedules step from the month of their base date, so "monthly on the 5th" completed on Nov 3 or Nov 7 from completion both give Dec 5.
+  - A card that stays on the Summary across a completion, as in AT-068, gets no new `surfaced`, because it never left. The time from surfaced to done for that occurrence will read long.
+  - Undo is refused with `staleUndo` if the occurrence has already moved on.
+- **For PR 2:**
+  - `wakeTimeOf` and `setAsideEntries` take `settings`, and the Explorer, its sheet and the Set-Aside screen don't pass it yet. They use the PRD defaults, which is only wrong once Day starts at is editable, but the waiting-bill screens should pass it.
+  - Undo of a set aside is `wakeNow`. On a bill set aside from the Explorer while it's waiting for its show date, that would bring it onto the Summary instead of putting it back. Handle this before Set aside is offered there.
 
 - PRD 16's gate for M4 is that the four credit card bills behave correctly through a full month.
 - The show-day reminder arrives at 9:00 AM but the card appears at the start of the day (4:00 AM), so the card can be on the Summary for hours before its reminder. That's what PRD 7 asks for.

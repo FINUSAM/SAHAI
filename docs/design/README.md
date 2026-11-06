@@ -146,7 +146,7 @@ AT-068, AT-072, AT-076, AT-081 and AT-082 have no frame of their own: they are a
 
 ### Choices approved with these wireframes
 
-The PRD doesn't specify these. The owner approved them along with the wireframes on 2026-11-06. None changes what the PRD asks for, so they add no PRD edit, except that Undo on Skip and on Stop repeating need log events PRD 9 doesn't have yet: that is open question 1 in [plan 0006](../plans/0006-m4-recurring.md).
+The PRD doesn't specify these. The owner approved them along with the wireframes on 2026-11-06. None changes what the PRD asks for, except that Undo on Skip and on Stop repeating needed log events PRD 9 didn't have: that is [E-011](../PRD_Edits.md#e-011-skip-and-stop-repeating-have-undo-and-the-log-records-them).
 
 - **Repeat** is a switch in the create and edit forms, on stream items only. Turning it on opens the schedule fields below it.
 - **Schedule fields:** Every, Period, then On day or weekday buttons, Next due, Repeat from, Show before due, and a line saying when the item appears ("Appears Wed, Dec 2").

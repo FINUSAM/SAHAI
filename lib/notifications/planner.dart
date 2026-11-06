@@ -40,10 +40,10 @@ List<PlannedNotification> planNotifications(
   if (!settings.notificationsEnabled) return const [];
   final end = now.add(planHorizon);
   final plan = <PlannedNotification>[];
-  var previous = computeSummary(tree, now: now);
+  var previous = computeSummary(tree, now: now, settings: settings);
   var at = previous.nextChangeAt;
   while (at != null && !at.isAfter(end) && plan.length < maxPlanned) {
-    final current = computeSummary(tree, now: at);
+    final current = computeSummary(tree, now: at, settings: settings);
     final before = previous.visibleIds;
     final moment = at;
     final cards = [

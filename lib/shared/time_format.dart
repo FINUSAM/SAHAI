@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../engine/recurrence.dart';
+import '../engine/time.dart';
 import 'strings.dart';
 
 // How wake times read on screen (M3 wireframes): "Tonight 8:00 PM",
@@ -8,6 +10,7 @@ import 'strings.dart';
 final _time = DateFormat('h:mm a');
 final _weekday = DateFormat('EEE');
 final _date = DateFormat('EEE, MMM d');
+final _monthDay = DateFormat('MMM d');
 
 /// Which group of the Set-Aside page a wake time falls in (frame 8), by
 /// calendar day.
@@ -69,3 +72,18 @@ String clockTime(DateTime at) => _time.format(at.toLocal());
 
 /// "Tue, Nov 3".
 String shortDate(DateTime at) => _date.format(at.toLocal());
+
+/// A recurring card's label (PRD 7): "Due Nov 5", "Due today" or "3 days
+/// overdue". "Due today" lasts until the next day start (AT-062, AT-063).
+String dueLabel(
+  DateTime dueOn,
+  DateTime now, {
+  int dayStartMinutes = defaultDayStartMinutes,
+}) {
+  final today = logicalDate(now, dayStartMinutes: dayStartMinutes);
+  final days = daysUntilDue(dueOn, today);
+  if (days == 0) return Strings.dueToday;
+  return days > 0
+      ? Strings.dueOn(_monthDay.format(dueOn))
+      : Strings.daysOverdue(-days);
+}
