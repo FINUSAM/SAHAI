@@ -40,6 +40,8 @@ followed by v1.0.0 for the public release.
 - Version 0.3.0+3.
 - The on-phone test suite leaves out `summary_refresher_test.dart`: its time skips are real waits of
   hours on a phone. CI still runs it on every PR.
+- The on-phone test command is now `flutter test integration_test --no-uninstall`, with a warning in
+  the README: without the flag, the run uninstalls the app and deletes its data on the phone.
 
 ## [0.2.0] - 2026-11-04 (M2 Core loop)
 

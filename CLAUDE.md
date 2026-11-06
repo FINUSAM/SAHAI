@@ -56,6 +56,7 @@ Milestones: M1 Foundations, M2 Core loop, M3 Set aside, M4 Recurring items, M5 G
 - Bug fix: first write a test that fails because of the bug, then fix it.
 - Code that depends on the date or time must take an injectable clock so tests can fake any date. Never read the system clock directly in logic.
 - All tests must pass before committing. Never delete, skip or weaken a test to make it pass without the owner's approval.
+- Run the on-phone suite only as `flutter test integration_test --no-uninstall`, and only after warning the owner. Without the flag it uninstalls the app and deletes the data on the phone. The test build replaces the installed app, so reinstall the release build afterwards with `adb install -r`, never `flutter install`.
 
 ### Code quality
 - Official Dart and Flutter style. `flutter analyze` and `dart format` must be clean, with no new warnings.
