@@ -209,7 +209,12 @@ The approach is to **plan notifications ahead of time with the engine, and resch
   - Different moments produce separate notifications (AT-052).
   - An item that wakes but stays hidden under a set-aside ancestor produces nothing (AT-054).
   - Items with Remind me off, or all items when notifications are off in Settings, produce nothing (AT-053, AT-056).
-- **Recurring items** get two reminders at the reminder time (default 9:00 AM): one on the show day and one on the due day if still not done (AT-078). The due-day reminder ignores set-aside ancestors (AT-079).
+- **Recurring items** get two reminders at the reminder time (default 9:00 AM): one on the show day and one on the due day if still not done (AT-078). The due-day reminder ignores set-aside ancestors (AT-079). Owner decisions from M4 (plan 0006):
+  - The due-day reminder also fires when the bill itself is set aside.
+  - The show-day reminder fires when the bill itself is set aside, but not while an ancestor hides it (PRD 7). A bill set aside past its show day also gets "is back" when it wakes, if Remind me is on.
+  - With no lead days the two reminders fall on one day, so only the due-day one is sent.
+  - A group whose dates differ reads "2 items are due", and each line gives its own date.
+  - Tapping a reminder for a bill that isn't on the Summary opens its sheet, with a note saying why.
 - **Rescheduling.** Everything is cancelled and rescheduled after each action, on app start, on resume and after a time-zone change. The phone's own alarm list survives restarts through the plugin's boot receiver (AT-057).
 - **Horizon.** The plan covers the next **60 days**, capped at **100 scheduled notifications**. Android allows 500 alarms per app. If the app isn't opened for over 60 days, later reminders aren't scheduled. This is listed as risk R4.
 - **Inexact by default.** Reminders may arrive a few minutes late (PRD 7). With "Exact reminders" on, the app asks for Android's alarm permission (`SCHEDULE_EXACT_ALARM`; Android 14 and higher deny it by default and send the user to a system screen) and uses exact scheduling (AT-058).

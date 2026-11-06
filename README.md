@@ -6,7 +6,7 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**M3 Set aside shipped as v0.3.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set anything aside until later, with a reminder when it comes back; the Set-Aside page lists what's away. Recurring items (M4) are next; Capture arrives in M6.
+**M3 Set aside shipped as v0.3.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set anything aside until later, with a reminder when it comes back; the Set-Aside page lists what's away. Recurring items (M4) are built and being checked on the phone: stream items can repeat, with due labels, Skip, Stop repeating and reminders on the show day and the due day. Capture arrives in M6.
 
 | | |
 |---|---|

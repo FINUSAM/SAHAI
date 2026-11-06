@@ -4,8 +4,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../engine/tree.dart';
+import '../engine/visibility.dart';
 import '../features/explorer/explorer_rows.dart';
 import '../shared/strings.dart';
+import '../shared/time_format.dart';
 import 'planner.dart';
 
 /// One scheduled notification, worded and ready to hand to Android.
@@ -34,11 +36,16 @@ class ReminderMessage {
 }
 
 /// Words the plan (frame 13): one item is "<title> is back" with its path;
-/// several are "3 items are back", expanding to list them.
+/// several are "3 items are back", expanding to list them. Recurring
+/// reminders read "<title> is due Nov 5" or "<title> is due today", and "2
+/// items are due today" (M4 frame 10). When a group's dates differ it says
+/// "2 items are due", and each line gives its own date.
 List<ReminderMessage> messagesFor(Tree tree, List<PlannedNotification> plan) =>
     [
       for (final (i, n) in plan.indexed)
-        if (n.grouped)
+        if (n.dueToday case final dueToday?)
+          _dueMessage(tree, i, n, dueToday)
+        else if (n.grouped)
           ReminderMessage(
             id: i,
             at: n.at,
@@ -52,13 +59,58 @@ List<ReminderMessage> messagesFor(Tree tree, List<PlannedNotification> plan) =>
             id: i,
             at: n.at,
             title: Strings.isBack(displayTitle(tree, n.cards.single.node)),
-            body: n.cards.single.path
-                .map((a) => displayTitle(tree, a))
-                .join(Strings.pathSeparator),
+            body: _pathOf(tree, n.cards.single),
             lines: const [],
             nodeId: n.cards.single.id,
           ),
     ];
+
+ReminderMessage _dueMessage(
+  Tree tree,
+  int id,
+  PlannedNotification n,
+  Set<String> dueToday,
+) {
+  if (!n.grouped) {
+    final card = n.cards.single;
+    final title = displayTitle(tree, card.node);
+    return ReminderMessage(
+      id: id,
+      at: n.at,
+      title: dueToday.contains(card.id)
+          ? Strings.isDueToday(title)
+          : Strings.isDueOn(title, monthDay(card.node.dueOn!)),
+      body: _pathOf(tree, card),
+      lines: const [],
+      nodeId: card.id,
+    );
+  }
+  final allToday = n.cards.every((c) => dueToday.contains(c.id));
+  final lines = [
+    for (final c in n.cards)
+      allToday
+          ? displayTitle(tree, c.node)
+          : Strings.dueLine(
+              displayTitle(tree, c.node),
+              dueToday.contains(c.id)
+                  ? Strings.dueToday
+                  : Strings.dueOn(monthDay(c.node.dueOn!)),
+            ),
+  ];
+  return ReminderMessage(
+    id: id,
+    at: n.at,
+    title: allToday
+        ? Strings.itemsDueToday(n.cards.length)
+        : Strings.itemsDue(n.cards.length),
+    body: lines.join(', '),
+    lines: lines,
+    nodeId: null,
+  );
+}
+
+String _pathOf(Tree tree, SummaryCard card) =>
+    card.path.map((a) => displayTitle(tree, a)).join(Strings.pathSeparator);
 
 /// The phone's notifications, behind an interface so tests use a fake and
 /// never touch the real ones.

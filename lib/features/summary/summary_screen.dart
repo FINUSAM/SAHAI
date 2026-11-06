@@ -8,13 +8,17 @@ import '../../app/home_shell.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../engine/node_type.dart';
+import '../../engine/set_aside_list.dart';
+import '../../engine/settings.dart';
 import '../../engine/tree.dart';
 import '../../engine/visibility.dart';
 import '../../shared/strings.dart';
+import '../../shared/time_format.dart';
 import '../explorer/action_feedback.dart';
 import '../explorer/explorer_rows.dart';
 import '../set_aside/set_aside_flow.dart';
 import 'card_sheet.dart';
+import 'due_line.dart';
 
 /// How long a card opened from a notification stays highlighted.
 const focusHighlightDuration = Duration(seconds: 3);
@@ -62,7 +66,11 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   /// frame, and scrolls it into view.
   void _applyFocus(SummaryResult summary) {
     final id = _pendingFocus;
-    if (id == null || !summary.visibleIds.contains(id)) return;
+    if (id == null) return;
+    if (!summary.visibleIds.contains(id)) {
+      _openHiddenItem(id);
+      return;
+    }
     _pendingFocus = null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -78,6 +86,45 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
         }
       });
     });
+  }
+
+  /// A recurring item's reminder can arrive while the item isn't on the
+  /// Summary, so its sheet opens directly, saying why (AT-079, frame 11).
+  /// Anything else waits until it's on the Summary.
+  void _openHiddenItem(String id) {
+    final tree = ref.read(treeProvider).value;
+    final node = tree?[id];
+    if (tree == null || node == null || !node.isRecurring) return;
+    _pendingFocus = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final now = ref.read(clockProvider).now();
+      final settings = ref.read(settingsProvider).value ?? const AppSettings();
+      final card = SummaryCard.ofRecurring(tree, node);
+      final choice = await showCardSheet(
+        context,
+        tree,
+        card,
+        now: now,
+        settings: settings,
+        hiddenNote: _hiddenNote(tree, node, now, settings),
+      );
+      if (choice != null && mounted) {
+        await applyCardChoice(context, ref, tree, card, choice);
+      }
+    });
+  }
+
+  /// "Personal is set aside until Tue, Nov 10, so this isn't on the Summary."
+  String _hiddenNote(
+    Tree tree,
+    TreeNode node,
+    DateTime now,
+    AppSettings settings,
+  ) {
+    final holder = setAsideAncestor(tree, node.id, now) ?? node;
+    final until = wakeTimeOf(holder, now, settings: settings) ?? now;
+    return Strings.notOnSummary(displayTitle(tree, holder), shortDate(until));
   }
 
   @override
@@ -242,6 +289,7 @@ class SummaryCardTile extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (node.dueOn != null) DueLine(node: node),
                     if (hint != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
@@ -280,22 +328,39 @@ class SummaryCardTile extends ConsumerWidget {
   }
 
   Future<void> _openSheet(BuildContext context, WidgetRef ref) async {
-    final choice = await showCardSheet(context, tree, card);
+    final choice = await showCardSheet(
+      context,
+      tree,
+      card,
+      now: ref.read(clockProvider).now(),
+      settings: ref.read(settingsProvider).value ?? const AppSettings(),
+    );
     if (choice == null || !context.mounted) return;
-    final title = displayTitle(tree, card.node);
-    switch (choice) {
-      case CardChoice.markDone:
-        await completeWithUndo(
-          context,
-          ref.read(nodeActionsProvider),
-          card.node.id,
-          title,
-        );
-      case CardChoice.setAside:
-        await setAsideWithPicker(context, ref, tree, card.node);
-      case CardChoice.openInTree:
-        context.go(Routes.explorerNode(card.node.id));
-    }
+    await applyCardChoice(context, ref, tree, card, choice);
+  }
+}
+
+/// Carries out what was picked in a card's sheet.
+Future<void> applyCardChoice(
+  BuildContext context,
+  WidgetRef ref,
+  Tree tree,
+  SummaryCard card,
+  CardChoice choice,
+) async {
+  final actions = ref.read(nodeActionsProvider);
+  final title = displayTitle(tree, card.node);
+  switch (choice) {
+    case CardChoice.markDone:
+      await completeWithUndo(context, actions, card.node.id, title);
+    case CardChoice.setAside:
+      await setAsideWithPicker(context, ref, tree, card.node);
+    case CardChoice.skip:
+      await skipWithUndo(context, actions, card.node);
+    case CardChoice.stopRepeating:
+      await stopRepeatingWithUndo(context, actions, card.node.id, title);
+    case CardChoice.openInTree:
+      context.go(Routes.explorerNode(card.node.id));
   }
 }
 

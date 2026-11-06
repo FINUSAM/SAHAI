@@ -9,6 +9,7 @@ import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
+import '../../engine/settings.dart';
 import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
@@ -233,7 +234,8 @@ class _NodeTile extends ConsumerWidget {
     final actions = ref.read(nodeActionsProvider);
     // M3 frame 11: a set-aside node says when it's back, and everything
     // under it is greyed and says why.
-    final wakeAt = wakeTimeOf(node, now);
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
+    final wakeAt = wakeTimeOf(node, now, settings: settings);
     final hiddenBy = wakeAt == null
         ? setAsideAncestor(tree, node.id, now)
         : null;
@@ -306,7 +308,14 @@ class _NodeTile extends ConsumerWidget {
                                 : null,
                           ),
                         ),
-                        if (wakeAt != null)
+                        if (node.isRecurring && hiddenBy == null)
+                          _RepeatLine(
+                            node: node,
+                            wakeAt: wakeAt,
+                            now: now,
+                            dayStartMinutes: settings.dayStartMinutes,
+                          )
+                        else if (wakeAt != null)
                           Row(
                             children: [
                               Icon(
@@ -354,6 +363,46 @@ class _NodeTile extends ConsumerWidget {
   }
 }
 
+/// "Monthly · due Dec 5 · back Dec 2" with the repeat mark (M4 frame 8). A
+/// recurring item is never DONE: it shows its next date instead (AT-077).
+class _RepeatLine extends StatelessWidget {
+  const _RepeatLine({
+    required this.node,
+    required this.wakeAt,
+    required this.now,
+    required this.dayStartMinutes,
+  });
+
+  final TreeNode node;
+  final DateTime? wakeAt;
+  final DateTime now;
+  final int dayStartMinutes;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      const Icon(Icons.repeat, size: 16, semanticLabel: Strings.repeatsLabel),
+      const SizedBox(width: 4),
+      Flexible(
+        child: Text(
+          [
+            scheduleName(node.schedule!),
+            dueLabel(
+              node.dueOn!,
+              now,
+              dayStartMinutes: dayStartMinutes,
+              inSentence: true,
+            ),
+            if (wakeAt case final back?)
+              Strings.backAt(monthDay(back.toLocal())),
+          ].join(Strings.separator),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ),
+    ],
+  );
+}
+
 class _AddTile extends ConsumerWidget {
   const _AddTile({required this.line});
 
@@ -399,7 +448,13 @@ Future<void> _openActions(
   TreeNode node,
   DateTime now,
 ) async {
-  final choice = await showNodeActions(context, tree, node, now: now);
+  final choice = await showNodeActions(
+    context,
+    tree,
+    node,
+    now: now,
+    settings: ref.read(settingsProvider).value ?? const AppSettings(),
+  );
   if (choice == null || !context.mounted) return;
   final actions = ref.read(nodeActionsProvider);
   switch (choice) {

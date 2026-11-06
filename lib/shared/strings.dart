@@ -1,4 +1,5 @@
 import '../engine/node_type.dart';
+import '../engine/recurrence.dart';
 import '../engine/scope.dart';
 import '../engine/time.dart';
 
@@ -203,6 +204,114 @@ abstract final class Strings {
   static String dueOn(String date) => 'Due $date';
   static String daysOverdue(int n) =>
       n == 1 ? '1 day overdue' : '$n days overdue';
+  static const repeatsLabel = 'Repeats';
+
+  // Repeat form (M4 frames 2 to 4).
+  static const repeat = 'Repeat';
+  static const repeatHint = 'For routines like bills and rent';
+  static const every = 'Every';
+  static const period = 'Period';
+  static const onDay = 'On day';
+  static const onWeekdays = 'On';
+  static const inMonth = 'In month';
+  static const lastDayHint =
+      "Days 29 to 31 use the month's last day when needed.";
+  static const nextDue = 'Next due';
+  static const repeatFromLabel = 'Repeat from';
+  static const dueDate = 'Due date';
+  static const completionDate = 'Completion date';
+  static const fromDueHint =
+      'Paid late? The next date still follows the due date.';
+  static const fromCompletionHint =
+      'The next date counts from the day you finish it.';
+  static const showBeforeDue = 'Show before due (days)';
+  static const everyError = 'Enter 1 or more';
+  static const leadError = 'Enter 0 or more';
+  static const appearsToday = 'Appears today';
+  static String appears(String date) => 'Appears $date';
+
+  static String periodName(Frequency frequency, {required int interval}) {
+    final name = switch (frequency) {
+      Frequency.daily => 'Day',
+      Frequency.weekly => 'Week',
+      Frequency.monthly => 'Month',
+      Frequency.yearly => 'Year',
+    };
+    return interval == 1 ? name : '${name}s';
+  }
+
+  static String frequencyName(Frequency frequency) => switch (frequency) {
+    Frequency.daily => 'Daily',
+    Frequency.weekly => 'Weekly',
+    Frequency.monthly => 'Monthly',
+    Frequency.yearly => 'Yearly',
+  };
+
+  /// "Every 2 months".
+  static String everyN(int n, Frequency frequency) =>
+      'Every $n ${periodName(frequency, interval: n).toLowerCase()}';
+
+  /// Uses [DateTime.monday] to [DateTime.sunday].
+  static String weekdayName(int weekday) => const [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ][weekday - 1];
+  static String weekdayAbbreviation(int weekday) =>
+      weekdayName(weekday).substring(0, 3);
+  static String weekdayButton(int weekday) =>
+      weekdayName(weekday).substring(0, 2);
+  static String monthName(int month) => const [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ][month - 1];
+
+  /// "the 1st", "the 22nd", "the 13th".
+  static String theDay(int day) {
+    final suffix = switch ((day % 100, day % 10)) {
+      (11 || 12 || 13, _) => 'th',
+      (_, 1) => 'st',
+      (_, 2) => 'nd',
+      (_, 3) => 'rd',
+      _ => 'th',
+    };
+    return 'the $day$suffix';
+  }
+
+  /// "Repeats monthly on the 5th", with [every] already in lower case.
+  static String repeats(
+    String every, {
+    String? on,
+    required bool fromCompletion,
+  }) => [
+    'Repeats $every',
+    if (on != null) 'on $on',
+    if (fromCompletion) 'from completion',
+  ].join(' ');
+
+  // Recurring actions (M4 frames 5, 6, 9, 11).
+  static const skipOccurrence = 'Skip this occurrence';
+  static const stopRepeating = 'Stop repeating';
+  static String nextDueOn(String date) => 'Next due $date';
+  static String doneNextDue(String date) => 'Done. Next due $date';
+  static String skippedNextDue(String date) => 'Skipped. Next due $date';
+  static String noLongerRepeats(String title) => '$title no longer repeats';
+  static String notOnSummary(String title, String date) =>
+      "$title is set aside until $date, so this isn't on the Summary.";
 
   // Custom time (frame 6).
   static String enterTime(String date) => '$date · Enter time';
@@ -238,13 +347,21 @@ abstract final class Strings {
   // Notifications (frame 13) and Settings (frame 14).
   static String isBack(String title) => '$title is back';
   static String itemsBack(int n) => '$n items are back';
+  static String isDueOn(String title, String date) => '$title is due $date';
+  static String isDueToday(String title) => '$title is due today';
+  static String itemsDueToday(int n) => '$n items are due today';
+  static String itemsDue(int n) => '$n items are due';
+
+  /// One line of a grouped reminder whose items are due on different days.
+  static String dueLine(String title, String due) => '$title$separator$due';
   static const remindersChannel = 'Reminders';
   static const remindersChannelDescription =
-      'When something you set aside comes back';
+      'When something you set aside comes back, or a recurring item is due';
   static const remindersSection = 'Reminders';
   static const notifications = 'Notifications';
   static const notificationsHint =
-      'Tell me when something I set aside comes back';
+      'Tell me when something I set aside comes back, or a recurring item is '
+      'due';
   static const exactReminders = 'Exact reminders';
   static const exactRemindersHint =
       'Arrive on the minute instead of a few minutes late. Android asks '

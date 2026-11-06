@@ -73,17 +73,51 @@ String clockTime(DateTime at) => _time.format(at.toLocal());
 /// "Tue, Nov 3".
 String shortDate(DateTime at) => _date.format(at.toLocal());
 
+/// "Nov 5".
+String monthDay(DateTime date) => _monthDay.format(date);
+
 /// A recurring card's label (PRD 7): "Due Nov 5", "Due today" or "3 days
 /// overdue". "Due today" lasts until the next day start (AT-062, AT-063).
+/// With [inSentence] it starts lower case: "Monthly · due Dec 5" (frame 8).
 String dueLabel(
   DateTime dueOn,
   DateTime now, {
   int dayStartMinutes = defaultDayStartMinutes,
+  bool inSentence = false,
 }) {
   final today = logicalDate(now, dayStartMinutes: dayStartMinutes);
   final days = daysUntilDue(dueOn, today);
-  if (days == 0) return Strings.dueToday;
-  return days > 0
-      ? Strings.dueOn(_monthDay.format(dueOn))
+  final label = days == 0
+      ? Strings.dueToday
+      : days > 0
+      ? Strings.dueOn(monthDay(dueOn))
       : Strings.daysOverdue(-days);
+  return inSentence ? label.replaceFirst('D', 'd') : label;
+}
+
+/// "Monthly", or "Every 2 months" (M4 frame 8).
+String scheduleName(Schedule schedule) => schedule.interval == 1
+    ? Strings.frequencyName(schedule.frequency)
+    : Strings.everyN(schedule.interval, schedule.frequency);
+
+/// "Repeats monthly on the 5th", "Repeats every 2 weeks on Mon, Thu" (M4
+/// frame 5).
+String repeatsLine(Schedule schedule) {
+  final on = switch (schedule.frequency) {
+    Frequency.daily => null,
+    Frequency.weekly when schedule.days.isEmpty => null,
+    Frequency.weekly => ([
+      ...schedule.days,
+    ]..sort()).map(Strings.weekdayAbbreviation).join(', '),
+    Frequency.monthly => Strings.theDay(schedule.days.first),
+    // A leap year, so Feb 29 stays Feb 29.
+    Frequency.yearly => monthDay(
+      DateTime(2024, schedule.month!, schedule.days.first),
+    ),
+  };
+  return Strings.repeats(
+    scheduleName(schedule).toLowerCase(),
+    on: on,
+    fromCompletion: schedule.repeatFrom == RepeatFrom.completionDate,
+  );
 }
