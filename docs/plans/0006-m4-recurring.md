@@ -13,7 +13,7 @@
 - Two PRs, matching issues #37 and #38. Each leaves `dev` green and usable: after PR 1 nothing changes on the phone, because no screen can create a schedule yet; PR 2 adds the screens and reminders.
 - **No schema change.** `nodes.due_on`, `recurrence`, `lead_days` and `snooze_overrides_show`, and the `settings` columns `reminder_minutes` and `default_lead_days`, already exist with the PRD defaults (9:00 AM, 3 days). The database stays at version 2.
 - **No new packages and no new permissions.** Recurring reminders go through the M3 planner and the M3 notification permissions.
-- **Reminder times are scheduled in UTC, as in M3.** The planner works out the moment of 9:00 AM local when it plans. The time-zone limit this leaves is parked in #74 at the owner's request (2026-11-06), with no milestone: if the phone changes zone, a reminder already scheduled stays at the old local time until the app is next opened. For example, a 9:00 AM reminder set in India fires at 7:30 AM after moving to Dubai. Due dates and card labels aren't affected, because they're worked out in the phone's current zone each time.
+- **Reminder times are scheduled in UTC, as in M3.** The planner works out the moment of 9:00 AM local when it plans. The owner accepted the time-zone limit this leaves for v1 on 2026-11-06 (#74): if the phone changes zone, a reminder already scheduled stays at the old local time until the app is next opened. For example, a 9:00 AM reminder set in India fires at 7:30 AM after moving to Dubai. Due dates and card labels aren't affected, because they're worked out in the phone's current zone each time.
 - The 11 choices approved with the wireframes (design README, M4 section) are the screen spec.
 - The reminder time and the default lead setting keep their PRD defaults until the full Settings screen in M7 (#54). Each item's own "Show before due" is editable from M4.
 
@@ -92,6 +92,6 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 - PRD 16's gate for M4 is that the four credit card bills behave correctly through a full month.
 - The show-day reminder arrives at 9:00 AM but the card appears at the start of the day (4:00 AM), so the card can be on the Summary for hours before its reminder. That's what PRD 7 asks for.
 - Not decided yet, to settle in step 17: which reminder a bill gets when the user has set it aside past its show day, for example AT-072's Nov 4 at 8 AM. M3's "is back" rule and the recurring rule both seem to apply. Raise it with the owner if the PRD doesn't answer it by then.
-- An open-the-app-late gap carries over from M3: opening the app before a late inexact reminder fires may drop that reminder, since the schedule is replaced and past times are skipped.
+- An open-the-app-late gap carries over from M3: opening the app before a late inexact reminder fires may drop that reminder, since the schedule is replaced and past times are skipped. Tracked in #77.
 - Notifications were tested on the OnePlus only in M3 (accepted by the owner, 2026-11-06). AT-078 and AT-079 have the same gap.
 - The frames were rendered from the canvas pages with headless Chrome, because the canvas can't export PNGs. All 11 PNGs were viewed in their final form before committing; the live canvas itself was never seen rendering (it froze the browser tab), so the PNGs are the reference if the two differ.
