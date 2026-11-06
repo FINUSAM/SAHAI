@@ -6,12 +6,14 @@
 // Each test uses its own throwaway database (in memory, or a file in the
 // app's temporary folder), never the app's real `sahai.sqlite`.
 //
+// summary_refresher_test.dart stays out: it skips hours ahead with pump(), which
+// is instant on a computer but a real wait on a phone. CI runs it on every PR.
+//
 // With the phone connected over USB:
 //   flutter test integration_test
 import 'package:integration_test/integration_test.dart';
 
 import '../test/app/home_shell_test.dart' as home_shell;
-import '../test/app/summary_refresher_test.dart' as refresher;
 import '../test/features/explorer/explorer_m2_test.dart' as explorer_m2;
 import '../test/features/explorer/explorer_screen_test.dart' as explorer;
 import '../test/features/reminders_test.dart' as reminders;
@@ -25,6 +27,5 @@ void main() {
   explorer_m2.main();
   summary.main();
   set_aside.main();
-  refresher.main();
   reminders.main();
 }

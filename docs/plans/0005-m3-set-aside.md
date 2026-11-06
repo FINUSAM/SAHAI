@@ -1,12 +1,12 @@
 # M3 Set aside
 
-- **Status:** In progress
+- **Status:** Done (v0.3.0, 2026-11-06)
 - **Approved by:** FINUSAM on 2026-11-04 (wireframes and plan)
 - **Branches / PRs:** plan and wireframes `docs/m3-plan` (#30); PR 1 `feat/m3-engine` (#31); PR 2 `feat/m3-screens` (#32); PR 3 `feat/m3-reminders` (#33)
 - **PRD sections:** 5, 6, 7 (Set aside, Notifications), 8.3, 8.4, 8.6, 9 (plus E-002, E-005)
 - **Acceptance tests:** AT-033 to AT-060 (28 rows: 22 Must, 6 Should), plus the E-002 test
 - **Wireframes:** [`docs/design/m3-set-aside/`](../design/m3-set-aside/) (approved 2026-11-04)
-- **Test devices:** OnePlus Nord 5 (OxygenOS 16 / Android 16). A second brand is still needed for the notification checks (see Owner decisions)
+- **Test devices:** OnePlus Nord 5 (OxygenOS 16 / Android 16). Only this phone was tested for v0.3.0; a second brand is still needed for the notification checks (see the close-out note)
 
 ## Owner decisions for M3
 
@@ -56,7 +56,7 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 18. [x] Accessibility: labels on every new action, 48 dp targets, large-text check
 19. [x] Widget tests: AT-033, AT-036, AT-041, AT-044 to AT-049; integration flows in `integration_test/`
 20. [x] Version 0.3.0+3 build for the phone; update `README.md`, `CHANGELOG.md`, matrix and this plan; open PR 2
-21. [ ] Owner: set aside and wake items on the phone (no reminders yet). Moved into step 30 at the owner's request (2026-11-05)
+21. [x] Owner: set aside and wake items on the phone (no reminders yet). Moved into step 30 at the owner's request (2026-11-05)
 
 **PR 3: reminders** (`feat/m3-reminders`, #33, after PR 2 merges)
 
@@ -68,23 +68,27 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 27. [x] Tap opens `/summary?focus=<id>` with the card highlighted; a grouped tap opens the Summary
 28. [x] Release manifest still has no network permission (CI APK check); list the device-only checks in the PR
 29. [x] Update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; open PR 3
-30. [ ] Owner: release build on the phone; AT-033 to AT-058 Founder rows on the phone, including app closed and a restart; second brand if available
+30. [x] Owner: release build on the phone; AT-033 to AT-058 Founder rows on the phone, including app closed and a restart; second brand if available
 
 **Release** (owner)
 
-31. [ ] When the M3 Must tests pass on the phone: close-out docs PR (#35), release PR `dev` → `main` (#34, merge commit), tag `v0.3.0`
+31. [x] When the M3 Must tests pass on the phone: close-out docs PR (#35), release PR `dev` → `main` (#34, merge commit), tag `v0.3.0`
 
 ## Changes to the plan
 
 - 2026-11-05 (PR 1, step 8): once a recompute has logged an item's automatic `woke` event, it clears that item's `snooze_until`. The plan's note said `snooze_until` would stay in the past until the next set aside; clearing it means each wake is logged exactly once and later recomputes only look at fresh wakes, instead of searching the log for every item ever set aside. The item is still awake from its wake time with no write (PRD 5): clearing happens at the next recompute and changes nothing on screen. The wake time stays in the `set_aside` and `woke` events.
 - 2026-11-05 (PR 3, step 22): the owner approved `flutter_local_notifications` 22.3.3 and `timezone` 0.11.2 but not `flutter_timezone`, since reminders are scheduled in UTC and need no zone name. Library desugaring (`desugar_jdk_libs` 2.1.4) was added because the plugin requires it. Recorded in decision 0005.
 - 2026-11-05 (step 21): the owner's phone check of PR 2 moved into step 30, so both are done on one build.
+- 2026-11-06 (release): `summary_refresher_test.dart`, added to `integration_test/` in PR 2, was taken off the on-phone list. Its `pump` time skips are instant on a computer but real waits of hours on a phone, so the run timed out at AT-034. CI still runs it on every PR.
 
 ## Notes for whoever picks this up
 
 - The M2 engine already treats an item with a future `snoozeUntil`, or under an ancestor with one, as hidden, and already returns `nextChangeAt`. PR 1 is mostly time, presets, scope, actions, events and the recompute triggers.
 - Android's time picker can't grey out individual past times, so frame 6's rule ("OK disabled until the time is after now") is checked after the pick, in our own dialog step.
 - Waking needs no write: an item is awake once its time passes. The first recompute after that (every action, app start, resume, or the `nextChangeAt` timer) logs its `woke` (automatic) event dated with the wake time, logs `surfaced` for anything it brought back dated with the latest wake time on its path (E-002), then clears `snooze_until` (see Changes to the plan).
+- **Close-out (2026-11-06):** the owner recorded all 28 M3 rows of the acceptance sheet (AT-033 to AT-060) as Pass, dated 2026-11-05: 26 Founder rows on the OnePlus, and the Developer rows AT-059 and AT-060 from their automated tests. 65 integration tests passed on the OnePlus CPH2707 (Android 16). The release PR `dev` → `main` closes #31 to #35 and the owner tags `v0.3.0`. M4 Recurring items is next.
+  - **Known gap, accepted by the owner:** notifications were tested on the OnePlus only, not on a second brand as issue #34 and decision 0005 hoped. Some makers stop alarms for closed apps, so AT-050 to AT-058 should be repeated on another brand at the latest in the tester trial.
+  - **Not covered by a test:** opening the app before a late inexact reminder fires may drop that reminder, since the schedule is replaced and past times are skipped. Low impact, because the item is already on the Summary by then.
 - **PR 3 (2026-11-05):** 244 tests pass (220 before + 24 new). Notifications are planned in pure Dart (`lib/notifications/planner.dart`), worded in `reminders.dart` and scheduled by `ReminderSync`. Small choices:
   - A reminder fires only when a card newly appears on the Summary *and* a node waking at that exact moment has Remind me on. An item that comes back only because its project's next step changed is not announced.
   - Reminders already in the notification shade stay there when the schedule is replaced; only pending ones are cancelled.

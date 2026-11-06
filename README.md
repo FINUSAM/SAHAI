@@ -6,14 +6,14 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**M2 Core loop shipped as v0.2.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set aside (M3) is being built: setting items aside, waking them and reminders work on `dev`, waiting for checks on the phone. Capture arrives in M6.
+**M3 Set aside shipped as v0.3.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set anything aside until later, with a reminder when it comes back; the Set-Aside page lists what's away. Recurring items (M4) are next; Capture arrives in M6.
 
 | | |
 |---|---|
 | Platform | Android (iOS later) |
 | Framework | Flutter |
 | Application ID | `com.finusam.sahai` |
-| Current milestone | M3 Set aside (v0.3.0, in progress) |
+| Current milestone | M4 Recurring items (v0.4.0, planning) |
 
 ## Roadmap
 

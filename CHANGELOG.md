@@ -9,6 +9,8 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-06 (M3 Set aside)
+
 ### Added
 - Approved M3 Set aside wireframes in `docs/design/m3-set-aside/` (14 frames) and the choices made
   with them; the M3 plan in `docs/plans/0005-m3-set-aside.md`.
@@ -36,6 +38,8 @@ followed by v1.0.0 for the public release.
 
 ### Changed
 - Version 0.3.0+3.
+- The on-phone test suite leaves out `summary_refresher_test.dart`: its time skips are real waits of
+  hours on a phone. CI still runs it on every PR.
 
 ## [0.2.0] - 2026-11-04 (M2 Core loop)
 
