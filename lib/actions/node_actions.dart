@@ -4,8 +4,11 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
 import '../data/database.dart';
+import '../data/settings.dart';
 import '../engine/node_type.dart';
+import '../engine/recurrence.dart';
 import '../engine/scope.dart';
+import '../engine/settings.dart';
 import '../engine/surfaced.dart';
 import '../engine/time.dart';
 import '../engine/tree.dart';
@@ -34,7 +37,28 @@ abstract final class EventTypes {
 
   /// The payload's `cause` is `automatic` or `wake_now` (PRD 9, AT-060).
   static const woke = 'woke';
+
+  /// A recurring occurrence moved on without a completion (PRD 9, AT-071).
+  static const skipped = 'skipped';
+
+  /// Undo after skipping. The `skipped` event stays; this one points at it
+  /// (E-011).
+  static const skipUndone = 'skip_undone';
+
+  /// The payload holds the schedule that was cleared (E-011).
+  static const repeatStopped = 'repeat_stopped';
+
+  /// Undo after stopping repeating; points at the `repeat_stopped` event
+  /// (E-011).
+  static const repeatRestored = 'repeat_restored';
 }
+
+// Payload keys for what Undo restores on a recurring item. `due_on` on a
+// `completed` event is also what AT-082 asks for.
+const _dueOnKey = 'due_on';
+const _nextDueOnKey = 'next_due_on';
+const _snoozeKey = 'snooze_until';
+const _overridesKey = 'snooze_overrides_show';
 
 /// Why an item woke, stored in the `woke` event (AT-060).
 abstract final class WakeCause {
@@ -58,6 +82,15 @@ enum RejectReason {
 
   /// Wake now or Change time on something that isn't set aside.
   notSetAside,
+
+  /// A repeat schedule on anything but a TODO stream item (PRD 7).
+  cantRepeat,
+
+  /// Skip or Stop repeating on something with no schedule.
+  notRecurring,
+
+  /// Undo after the occurrence has already moved on.
+  staleUndo,
 }
 
 class ActionRejected implements Exception {
@@ -310,6 +343,7 @@ class NodeActions {
     if (tree.hasTodoChildren(id)) {
       throw const ActionRejected(RejectReason.hasTodoChildren);
     }
+    if (node.isRecurring) return _completeOccurrence(tree, node);
     final now = utcMillis(_clock);
     await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
       NodesCompanion(
@@ -348,6 +382,23 @@ class NodeActions {
     final tree = await loadTree();
     final node = tree[event.nodeId!];
     if (node == null) throw const ActionRejected(RejectReason.notFound);
+    final occurrence = jsonDecode(event.payload) as Map<String, Object?>;
+    if (occurrence.containsKey(_dueOnKey)) {
+      await _restoreOccurrence(occurrence, node);
+      await _log(
+        EventTypes.completionUndone,
+        nodeId: node.id,
+        nodeType: node.type,
+        domainId: tree.domainOf(node.id)?.id,
+        groupId: tree.effectiveGroupOf(node.id),
+        payload: {
+          'undoes_event_id': completedEventId,
+          _dueOnKey: occurrence[_dueOnKey],
+        },
+      );
+      await _syncSummary(suppress: {node.id});
+      return;
+    }
     if (!node.isDone) throw const ActionRejected(RejectReason.notDone);
     final doneAncestors = tree.ancestorsOf(node.id).where((a) => a.isDone);
     final reopened = [node.id, ...doneAncestors.map((a) => a.id)];
@@ -369,6 +420,150 @@ class NodeActions {
         if (reopened.length > 1)
           'reopened_ancestors': reopened.skip(1).toList(),
       },
+    );
+    await _syncSummary(suppress: {node.id});
+  });
+
+  /// Gives a TODO stream item a repeat schedule, or replaces it (PRD 7).
+  /// [dueOn] is the first due date and [leadDays] how many days early it
+  /// shows, the Settings default if null. Not an activity log event in
+  /// PRD 9, like [edit].
+  Future<void> setRecurrence(
+    String id,
+    Schedule schedule, {
+    required DateTime dueOn,
+    int? leadDays,
+  }) => _write(() async {
+    final node = await _requireNode(id);
+    if (node.type != NodeType.streamItem || !node.isTodo) {
+      throw const ActionRejected(RejectReason.cantRepeat);
+    }
+    final settings = await _settings();
+    await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
+      NodesCompanion(
+        recurrence: Value(schedule.toJson()),
+        dueOn: Value(formatDueOn(dueOn)),
+        leadDays: Value(leadDays ?? settings.defaultLeadDays),
+        snoozeOverridesShow: const Value(false),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    await _syncSummary();
+  });
+
+  /// Moves a recurring item to its next occurrence without logging a
+  /// completion (AT-071), and returns the `skipped` event id, the undo
+  /// token for [undoSkip] (E-011). The next one follows the due date
+  /// whatever the schedule repeats from, since nothing was completed.
+  Future<String> skipOccurrence(String id) => _write(() async {
+    final tree = await loadTree();
+    final node = tree[id];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    if (!node.isRecurring) {
+      throw const ActionRejected(RejectReason.notRecurring);
+    }
+    final eventId = _newId();
+    final next = node.schedule!.nextDue(node.dueOn!);
+    await _advanceOccurrence(id, next);
+    await _log(
+      EventTypes.skipped,
+      eventId: eventId,
+      nodeId: id,
+      nodeType: node.type,
+      domainId: tree.domainOf(id)?.id,
+      groupId: tree.effectiveGroupOf(id),
+      payload: _occurrencePayload(node, next),
+    );
+    await _syncSummary();
+    return eventId;
+  });
+
+  /// Undo after skipping (E-011): the occurrence comes back as if the tap
+  /// never happened.
+  Future<void> undoSkip(String skippedEventId) => _write(() async {
+    final event = await _requireEvent(skippedEventId, EventTypes.skipped);
+    final tree = await loadTree();
+    final node = tree[event.nodeId!];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    final occurrence = jsonDecode(event.payload) as Map<String, Object?>;
+    await _restoreOccurrence(occurrence, node);
+    await _log(
+      EventTypes.skipUndone,
+      nodeId: node.id,
+      nodeType: node.type,
+      domainId: tree.domainOf(node.id)?.id,
+      groupId: tree.effectiveGroupOf(node.id),
+      payload: {
+        'undoes_event_id': skippedEventId,
+        _dueOnKey: occurrence[_dueOnKey],
+      },
+    );
+    await _syncSummary(suppress: {node.id});
+  });
+
+  /// Turns a recurring item into a normal stream item and clears its due
+  /// date (PRD 7, AT-080). Returns the `repeat_stopped` event id, the undo
+  /// token for [undoStopRepeating] (E-011).
+  Future<String> stopRepeating(String id) => _write(() async {
+    final tree = await loadTree();
+    final node = tree[id];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    if (!node.isRecurring) {
+      throw const ActionRejected(RejectReason.notRecurring);
+    }
+    await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
+      NodesCompanion(
+        recurrence: const Value(null),
+        dueOn: const Value(null),
+        leadDays: const Value(null),
+        snoozeOverridesShow: const Value(false),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    final eventId = _newId();
+    await _log(
+      EventTypes.repeatStopped,
+      eventId: eventId,
+      nodeId: id,
+      nodeType: node.type,
+      domainId: tree.domainOf(id)?.id,
+      groupId: tree.effectiveGroupOf(id),
+      payload: {
+        'recurrence': node.schedule!.toJson(),
+        _dueOnKey: formatDueOn(node.dueOn!),
+        'lead_days': node.leadDays,
+        if (node.snoozeOverridesShow) _overridesKey: true,
+      },
+    );
+    await _syncSummary();
+    return eventId;
+  });
+
+  /// Undo after stopping repeating (E-011): the schedule and due date are
+  /// back and the card comes back as if the tap never happened.
+  Future<void> undoStopRepeating(String stoppedEventId) => _write(() async {
+    final event = await _requireEvent(stoppedEventId, EventTypes.repeatStopped);
+    final tree = await loadTree();
+    final node = tree[event.nodeId!];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    if (node.isRecurring) throw const ActionRejected(RejectReason.staleUndo);
+    final stopped = jsonDecode(event.payload) as Map<String, Object?>;
+    await (_db.update(_db.nodes)..where((n) => n.id.equals(node.id))).write(
+      NodesCompanion(
+        recurrence: Value(stopped['recurrence']! as String),
+        dueOn: Value(stopped[_dueOnKey]! as String),
+        leadDays: Value(stopped['lead_days'] as int?),
+        snoozeOverridesShow: Value(stopped[_overridesKey] == true),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    await _log(
+      EventTypes.repeatRestored,
+      nodeId: node.id,
+      nodeType: node.type,
+      domainId: tree.domainOf(node.id)?.id,
+      groupId: tree.effectiveGroupOf(node.id),
+      payload: {'undoes_event_id': stoppedEventId},
     );
     await _syncSummary(suppress: {node.id});
   });
@@ -418,13 +613,14 @@ class NodeActions {
 
   /// Moves the wake time of something already set aside (PRD 8.3,
   /// AT-049). Logged as another `set_aside`, keeping Remind me as it was,
-  /// with the time it replaced.
+  /// with the time it replaced. On a recurring item it moves only this
+  /// occurrence's show time, earlier or later (E-005).
   Future<void> changeWakeTime(String id, DateTime until, {Preset? preset}) =>
       _write(() async {
         final tree = await loadTree();
         final node = tree[id];
         if (node == null) throw const ActionRejected(RejectReason.notFound);
-        final previous = node.snoozeUntil;
+        final previous = node.wakeAt(await _settings());
         if (previous == null || !previous.isAfter(_clock.now())) {
           throw const ActionRejected(RejectReason.notSetAside);
         }
@@ -435,6 +631,7 @@ class NodeActions {
         await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
           NodesCompanion(
             snoozeUntil: Value(wakeAt),
+            snoozeOverridesShow: _overridesShow(node),
             updatedAt: Value(utcMillis(_clock)),
           ),
         );
@@ -457,17 +654,20 @@ class NodeActions {
 
   /// Wakes a set-aside item straight away (PRD 7, AT-048): it shows on the
   /// Summary now, if nothing else hides it, and leaves the Set-Aside page.
+  /// A recurring item waiting for its show date comes back with its real
+  /// due label, and its due date and schedule don't change (E-005).
   Future<void> wakeNow(String id) => _write(() async {
     final tree = await loadTree();
     final node = tree[id];
     if (node == null) throw const ActionRejected(RejectReason.notFound);
-    final until = node.snoozeUntil;
+    final until = node.wakeAt(await _settings());
     if (until == null || !until.isAfter(_clock.now())) {
       throw const ActionRejected(RejectReason.notSetAside);
     }
     await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
       NodesCompanion(
         snoozeUntil: const Value(null),
+        snoozeOverridesShow: _overridesShow(node),
         updatedAt: Value(utcMillis(_clock)),
       ),
     );
@@ -572,6 +772,12 @@ class NodeActions {
   /// once its `woke` is logged, `snooze_until` is cleared, so each wake is
   /// logged once and later checks only look at fresh ones. The dates are
   /// worked out before clearing.
+  ///
+  /// A recurring item's show time is computed, not stored, so nothing marks
+  /// it as passed: with any due date in the tree the Summary is always
+  /// compared, and a bill that reached its show date gets `surfaced` dated
+  /// with that time. It gets no `woke`, because that would need a stored
+  /// record of each show time to log it once.
   Future<void> _catchUp() async {
     final tree = await loadTree();
     final now = _clock.now().toUtc();
@@ -579,7 +785,8 @@ class NodeActions {
       for (final node in tree.nodes)
         if (node.snoozeUntil case final until? when !until.isAfter(now)) node,
     ];
-    if (passed.isEmpty) return;
+    if (passed.isEmpty && !tree.nodes.any((n) => n.dueOn != null)) return;
+    final settings = await _settings();
     passed.sort((a, b) => a.snoozeUntil!.compareTo(b.snoozeUntil!));
     for (final node in passed) {
       await _log(
@@ -597,7 +804,7 @@ class NodeActions {
       visibleAt: (id) {
         DateTime? latest;
         for (final n in [tree[id]!, ...tree.ancestorsOf(id)]) {
-          final until = n.snoozeUntil;
+          final until = n.wakeAt(settings);
           if (until == null || until.isAfter(now)) continue;
           if (latest == null || until.isAfter(latest)) latest = until;
         }
@@ -605,10 +812,104 @@ class NodeActions {
         return latest ?? now;
       },
     );
+    if (passed.isEmpty) return;
     await (_db.update(_db.nodes)
           ..where((n) => n.id.isIn(passed.map((p) => p.id))))
         .write(const NodesCompanion(snoozeUntil: Value(null)));
   }
+
+  /// Completes a recurring occurrence (PRD 7): the item stays TODO with its
+  /// next due date (AT-066, AT-077) and the event stores the date it was due
+  /// (AT-082). Repeating from the due date follows the missed date, not the
+  /// payment day (AT-067), so a missed cycle shows straight away (AT-068).
+  Future<String> _completeOccurrence(Tree tree, TreeNode node) async {
+    final schedule = node.schedule!;
+    final settings = await _settings();
+    final next = schedule.nextDue(
+      schedule.repeatFrom == RepeatFrom.dueDate
+          ? node.dueOn!
+          : logicalDate(
+              _clock.now(),
+              dayStartMinutes: settings.dayStartMinutes,
+            ),
+    );
+    await _advanceOccurrence(node.id, next);
+    final eventId = _newId();
+    await _log(
+      EventTypes.completed,
+      eventId: eventId,
+      nodeId: node.id,
+      nodeType: node.type,
+      domainId: tree.domainOf(node.id)?.id,
+      groupId: tree.effectiveGroupOf(node.id),
+      payload: _occurrencePayload(node, next),
+    );
+    await _syncSummary();
+    return eventId;
+  }
+
+  /// Ending an occurrence also ends any set aside or show-time override on
+  /// it, so the next one waits for its own show date (tech plan 4.4).
+  Future<void> _advanceOccurrence(String id, DateTime next) =>
+      (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
+        NodesCompanion(
+          dueOn: Value(formatDueOn(next)),
+          snoozeUntil: const Value(null),
+          snoozeOverridesShow: const Value(false),
+          updatedAt: Value(utcMillis(_clock)),
+        ),
+      );
+
+  /// What an event needs to put [node]'s occurrence back on Undo.
+  Map<String, Object?> _occurrencePayload(TreeNode node, DateTime next) => {
+    _dueOnKey: formatDueOn(node.dueOn!),
+    _nextDueOnKey: formatDueOn(next),
+    if (node.snoozeUntil case final until?)
+      _snoozeKey: until.millisecondsSinceEpoch,
+    if (node.snoozeOverridesShow) _overridesKey: true,
+  };
+
+  /// Puts back what [_occurrencePayload] saved. An Undo that arrives after
+  /// the item has moved on would rewind the wrong occurrence, so it's
+  /// refused.
+  Future<void> _restoreOccurrence(
+    Map<String, Object?> occurrence,
+    TreeNode node,
+  ) async {
+    final dueOn = node.dueOn;
+    if (dueOn == null || formatDueOn(dueOn) != occurrence[_nextDueOnKey]) {
+      throw const ActionRejected(RejectReason.staleUndo);
+    }
+    await (_db.update(_db.nodes)..where((n) => n.id.equals(node.id))).write(
+      NodesCompanion(
+        dueOn: Value(occurrence[_dueOnKey]! as String),
+        snoozeUntil: Value(occurrence[_snoozeKey] as int?),
+        snoozeOverridesShow: Value(occurrence[_overridesKey] == true),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+  }
+
+  /// Wake now and Change time replace the show time on a recurring item
+  /// (E-005); other nodes have none.
+  Value<bool> _overridesShow(TreeNode node) =>
+      node.isRecurring ? const Value(true) : const Value.absent();
+
+  Future<EventRow> _requireEvent(String eventId, String type) async {
+    final event = await (_db.select(
+      _db.events,
+    )..where((e) => e.eventId.equals(eventId))).getSingleOrNull();
+    if (event == null || event.eventType != type || event.nodeId == null) {
+      throw const ActionRejected(RejectReason.notFound);
+    }
+    return event;
+  }
+
+  Future<AppSettings> _settings() async => settingsFromRow(
+    await (_db.select(
+      _db.settingsTable,
+    )..where((s) => s.id.equals(1))).getSingleOrNull(),
+  );
 
   SimpleSelectStatement<$NodesTable, NodeRow> _liveNodes() =>
       _db.select(_db.nodes)..where((n) => n.isDeleted.equals(false));
@@ -662,7 +963,11 @@ class NodeActions {
     DateTime Function(String id)? visibleAt,
   }) async {
     tree ??= await loadTree();
-    final summary = computeSummary(tree, now: _clock.now().toUtc());
+    final summary = computeSummary(
+      tree,
+      now: _clock.now().toUtc(),
+      settings: await _settings(),
+    );
     final previousRows = await (_db.select(
       _db.summaryVisible,
     )..where((v) => v.isDeleted.equals(false))).get();
@@ -767,5 +1072,11 @@ class NodeActions {
         : DateTime.fromMillisecondsSinceEpoch(row.snoozeUntil!, isUtc: true),
     remindOnWake: row.remindOnWake,
     isRecurring: row.recurrence != null,
+    schedule: row.recurrence == null
+        ? null
+        : Schedule.fromJson(row.recurrence!),
+    dueOn: row.dueOn == null ? null : parseDueOn(row.dueOn!),
+    leadDays: row.leadDays,
+    snoozeOverridesShow: row.snoozeOverridesShow,
   );
 }

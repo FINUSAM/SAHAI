@@ -61,4 +61,7 @@ String rejectMessage(RejectReason reason) => switch (reason) {
   RejectReason.notDone => Strings.notDone,
   RejectReason.pastWakeTime => Strings.pastWakeTime,
   RejectReason.notSetAside => Strings.notSetAside,
+  RejectReason.cantRepeat => Strings.cantRepeat,
+  RejectReason.notRecurring => Strings.notRecurring,
+  RejectReason.staleUndo => Strings.staleUndo,
 };

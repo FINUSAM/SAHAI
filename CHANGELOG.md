@@ -12,6 +12,12 @@ followed by v1.0.0 for the public release.
 ### Added
 - Approved M4 Recurring items wireframes in `docs/design/m4-recurring/` (11 frames) and the choices
   made with them; the M4 plan in `docs/plans/0006-m4-recurring.md`.
+- M4 recurrence engine (PR 1 of M4, no screens yet): daily, weekly, monthly and yearly schedules
+  with intervals, month-end handling and repeat from the due date or the completion date; show
+  times and due labels in logical days; recurring cards appear at their show time and wait on the
+  Set-Aside list until then (E-005); complete, skip and stop repeating, each with Undo, logged with
+  the due date; the new log events `skip_undone`, `repeat_stopped` and `repeat_restored` (E-011); a
+  full simulated month of the four PRD 7 bills in the tests.
 
 ## [0.3.0] - 2026-11-06 (M3 Set aside)
 

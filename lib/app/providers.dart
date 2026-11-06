@@ -63,7 +63,11 @@ class RecomputeTick extends Notifier<int> {
 final summaryProvider = Provider<AsyncValue<SummaryResult>>((ref) {
   final clock = ref.watch(clockProvider);
   ref.watch(recomputeTickProvider);
+  final settings = ref.watch(settingsProvider).value ?? const AppSettings();
   return ref
       .watch(treeProvider)
-      .whenData((tree) => computeSummary(tree, now: clock.now().toUtc()));
+      .whenData(
+        (tree) =>
+            computeSummary(tree, now: clock.now().toUtc(), settings: settings),
+      );
 });

@@ -1,4 +1,6 @@
 import 'node_type.dart';
+import 'settings.dart';
+import 'time.dart';
 import 'tree.dart';
 
 /// What kind of card an item is shown as (PRD 5, "Card").
@@ -64,11 +66,12 @@ class SummaryResult {
 
   final List<SummaryCard> cards;
 
-  /// The earliest future set-aside wake time among items that would change
-  /// the Summary, or null when nothing is waiting. The app sets a timer for
-  /// it (AT-034). Items whose waking can't change anything, such as a later
-  /// subtask behind a visible one or anything under a set-aside ancestor,
-  /// don't count; the ancestor's own wake time does.
+  /// The earliest future moment the Summary changes by itself, or null when
+  /// nothing is waiting: a set-aside wake time, a recurring show time, or
+  /// the next day start while a due label is showing (AT-063). The app sets
+  /// a timer for it (AT-034). Items whose waking can't change anything, such
+  /// as a later subtask behind a visible one or anything under a set-aside
+  /// ancestor, don't count; the ancestor's own wake time does.
   final DateTime? nextChangeAt;
 
   Set<String> get visibleIds => {for (final c in cards) c.id};
@@ -78,16 +81,22 @@ class SummaryResult {
 /// state (PRD 6, tech plan 4.2). Cards come out in tree order: domains in
 /// order, then each domain's projects and streams in order (M2 wireframe
 /// choice; M5 adds saved positions and groups).
-SummaryResult computeSummary(Tree tree, {required DateTime now}) {
+SummaryResult computeSummary(
+  Tree tree, {
+  required DateTime now,
+  AppSettings settings = const AppSettings(),
+}) {
   final cards = <SummaryCard>[];
   DateTime? nextChangeAt;
 
+  void changesAt(DateTime at) {
+    if (nextChangeAt == null || at.isBefore(nextChangeAt!)) nextChangeAt = at;
+  }
+
   bool isAwake(TreeNode node) {
-    final until = node.snoozeUntil;
+    final until = node.wakeAt(settings);
     if (until == null || !until.isAfter(now)) return true;
-    if (nextChangeAt == null || until.isBefore(nextChangeAt!)) {
-      nextChangeAt = until;
-    }
+    changesAt(until);
     return false;
   }
 
@@ -230,6 +239,10 @@ SummaryResult computeSummary(Tree tree, {required DateTime now}) {
           break;
       }
     }
+  }
+
+  if (cards.any((c) => c.node.dueOn != null)) {
+    changesAt(nextDayStart(now, dayStartMinutes: settings.dayStartMinutes));
   }
 
   return SummaryResult(cards: cards, nextChangeAt: nextChangeAt);

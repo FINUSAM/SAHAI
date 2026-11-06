@@ -224,3 +224,27 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - Records the intended Phase 2 widget and review flow now, so the v1 Capture section and the `captures` table are designed to grow into it without rework.
 
 **Affects:** none in v1. Phase 2 acceptance tests are written when Phase 2 is planned.
+
+---
+
+## E-011: Skip and Stop repeating have Undo, and the log records them
+
+- **PRD section:** 7 (Recurring items), 9 (Activity Log)
+- **Type:** Addition
+- **Decided by:** FINUSAM, 2026-11-06 (approved with the M4 wireframes and plan 0006, open question 1)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- Skip this occurrence and Stop repeating both offer Undo for 5 seconds, as Complete does.
+- Add three event types to section 9: `skip_undone`, `repeat_stopped` and `repeat_restored`.
+- `repeat_stopped` is logged when the user stops repeating an item. Its payload holds the schedule, due date and lead days that were cleared.
+- Undo of a skip adds `skip_undone`, and Undo of Stop repeating adds `repeat_restored`. The original event stays in the log, and the new event's payload holds the `event_id` of the event it cancels. `skip_undone` also holds the due date that was restored.
+- Undo restores the previous card as if the tap never happened, so a restored card doesn't get a new `surfaced` event (as in E-001).
+
+**Reason**
+
+- PRD 7 says every action can be reversed, but only completions and deletions have Undo, and PRD 9 has no event for these actions.
+- The activity log stays append-only, so an undone action needs its own event, as `completion_undone` (E-001) and `restored` already do.
+
+**Affects:** new automated tests, `E-011 …`. AT-071 and AT-080 are unchanged.

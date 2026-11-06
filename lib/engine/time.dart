@@ -21,6 +21,16 @@ DateTime logicalDate(
   return DateTime(local.year, local.month, local.day - daysBack);
 }
 
+/// The next moment the logical day changes after [instant], when due labels
+/// move on (AT-063).
+DateTime nextDayStart(
+  DateTime instant, {
+  int dayStartMinutes = defaultDayStartMinutes,
+}) {
+  final day = logicalDate(instant, dayStartMinutes: dayStartMinutes);
+  return DateTime(day.year, day.month, day.day + 1, 0, dayStartMinutes);
+}
+
 /// The four default set-aside presets (PRD 7). [logName] is what the
 /// `set_aside` event stores (AT-059); a custom time stores [customLogName].
 enum Preset {

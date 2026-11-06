@@ -198,6 +198,12 @@ abstract final class Strings {
   static String inHours(int n) => 'in $n h';
   static String inDays(int n) => n == 1 ? 'in 1 day' : 'in $n days';
 
+  // Due labels (M4 frame 1).
+  static const dueToday = 'Due today';
+  static String dueOn(String date) => 'Due $date';
+  static String daysOverdue(int n) =>
+      n == 1 ? '1 day overdue' : '$n days overdue';
+
   // Custom time (frame 6).
   static String enterTime(String date) => '$date · Enter time';
   static const hour = 'Hour';
@@ -257,4 +263,7 @@ abstract final class Strings {
   static const notDone = 'That item is not done.';
   static const pastWakeTime = 'Pick a time in the future.';
   static const notSetAside = 'That item is not set aside.';
+  static const cantRepeat = 'Only stream items that are not done can repeat.';
+  static const notRecurring = 'That item does not repeat.';
+  static const staleUndo = 'That item has already moved on.';
 }

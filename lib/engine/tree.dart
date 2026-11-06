@@ -1,4 +1,6 @@
 import 'node_type.dart';
+import 'recurrence.dart';
+import 'settings.dart';
 
 /// The engine's view of one node: only what the rules need.
 class TreeNode {
@@ -14,6 +16,10 @@ class TreeNode {
     this.snoozeUntil,
     this.remindOnWake = true,
     this.isRecurring = false,
+    this.schedule,
+    this.dueOn,
+    this.leadDays,
+    this.snoozeOverridesShow = false,
   });
 
   final String id;
@@ -34,11 +40,37 @@ class TreeNode {
   /// (PRD 7, AT-053).
   final bool remindOnWake;
 
-  /// A stream item with a repeat schedule (PRD 7). Nothing sets it until M4.
+  /// A stream item with a repeat schedule (PRD 7).
   final bool isRecurring;
+  final Schedule? schedule;
+
+  /// The current occurrence's due date, as local midnight (AT-081).
+  final DateTime? dueOn;
+
+  /// How many days early it shows; null means the Settings default.
+  final int? leadDays;
+
+  /// Wake now or Change time on this occurrence: [snoozeUntil] replaces the
+  /// computed show time until the occurrence ends (E-005).
+  final bool snoozeOverridesShow;
 
   bool get isTodo => status == NodeStatus.todo;
   bool get isDone => status == NodeStatus.done;
+
+  /// The moment this node comes back, which may already have passed, or
+  /// null when nothing holds it. A recurring item waits for the later of
+  /// its show time and any set aside (AT-072).
+  DateTime? wakeAt(AppSettings settings) {
+    final due = dueOn;
+    if (due == null || snoozeOverridesShow) return snoozeUntil;
+    final show = showTime(
+      due,
+      leadDays: leadDays ?? settings.defaultLeadDays,
+      dayStartMinutes: settings.dayStartMinutes,
+    );
+    final until = snoozeUntil;
+    return until != null && until.isAfter(show) ? until : show;
+  }
 }
 
 /// An in-memory snapshot of the non-deleted tree (tech plan 4.1).
