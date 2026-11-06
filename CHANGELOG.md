@@ -9,6 +9,40 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-06 (M3 Set aside)
+
+### Added
+- Approved M3 Set aside wireframes in `docs/design/m3-set-aside/` (14 frames) and the choices made
+  with them; the M3 plan in `docs/plans/0005-m3-set-aside.md`.
+- M3 set-aside engine (PR 1 of M3, no screens yet): the logical day ("Day starts at", default
+  4:00 AM) and the four presets, with past ones hidden; the scope choices for each card type;
+  Set aside, Change time and Wake now actions, logged as `set_aside` and `woke` events; automatic
+  wakes logged with their wake time, and items that came back while the app was closed logged as
+  `surfaced` at that time (E-002); the Summary recomputes on start, on resume and when the next item
+  wakes; settings read with the PRD defaults.
+- M3 screens (PR 2 of M3): a clock on every Summary card and Set aside in its sheet open the
+  set-aside picker, with the scope dropdown, the presets showing their real times, Custom date and
+  time (past times refused) and Remind me; a "Set aside until …" snackbar with Undo. The Set-Aside
+  tab lists everything set aside, grouped Today, Tomorrow and Later, with time remaining, what each
+  hides, Wake now, Change time and Open in tree. The Explorer marks set-aside nodes ("Back …"),
+  greys what they hide, and offers Set aside…, Wake now and Change set-aside time.
+- M3 reminders (PR 3 of M3): a notification when set-aside items come back, named for one item
+  ("Draft homepage is back", with its path) or grouped for several at the same moment; none for
+  Remind me off or items still hidden. Tapping one opens the Summary with the card highlighted.
+  Notification permission is asked at the first set aside, never at launch. Reminders are replanned
+  after every change and on resume, and restored after a phone restart. A Settings screen with
+  Notifications and Exact reminders.
+- Packages `flutter_local_notifications` 22.3.3 and `timezone` 0.11.2; Android library desugaring
+  (`desugar_jdk_libs` 2.1.4); permissions `POST_NOTIFICATIONS`, `VIBRATE`, `RECEIVE_BOOT_COMPLETED`
+  and `SCHEDULE_EXACT_ALARM`.
+
+### Changed
+- Version 0.3.0+3.
+- The on-phone test suite leaves out `summary_refresher_test.dart`: its time skips are real waits of
+  hours on a phone. CI still runs it on every PR.
+- The on-phone test command is now `flutter test integration_test --no-uninstall`, with a warning in
+  the README: without the flag, the run uninstalls the app and deletes its data on the phone.
+
 ## [0.2.0] - 2026-11-04 (M2 Core loop)
 
 ### Added

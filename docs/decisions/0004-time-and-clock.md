@@ -16,7 +16,7 @@ Presets, the "Day starts at" hour, due labels, recurring show dates and set-asid
 - Due dates are **local calendar dates** (`YYYY-MM-DD`), read in the phone's current time zone.
 - One function, `logicalDate(instant, dayStartHour)`, decides which day a moment belongs to. Presets, due labels and show dates all use it.
 - Recurring show times are computed when needed, not stored, so they follow time-zone changes.
-- Time-zone-aware scheduling uses `timezone` 0.11.2 (BSD-2, labs.dart.dev) and `flutter_timezone` 5.1.1 (Apache-2.0); both are added in M3.
+- Time-zone-aware scheduling uses `timezone` 0.11.2 (BSD-2, labs.dart.dev), added in M3. (`flutter_timezone` was planned too and dropped on 2026-11-05; see [decision 0005](0005-notifications.md#update-2026-11-05).)
 
 ## Alternatives considered
 

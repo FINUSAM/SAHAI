@@ -17,20 +17,22 @@ void main() {
     }
   });
 
-  testSahai('later tabs show what is coming', (tester) async {
+  testSahai('the Set-Aside tab is real (M3); Capture shows what is coming', (
+    tester,
+  ) async {
     await pumpSahai(tester);
-    final expected = {Strings.setAside: 'M3', Strings.capture: 'M6'};
-    for (final MapEntry(key: tab, value: milestone) in expected.entries) {
-      await goToTab(tester, tab);
-      expect(find.text(Strings.comingIn(milestone)), findsOneWidget);
-    }
+    await goToTab(tester, Strings.setAside);
+    expect(find.text(Strings.nothingSetAside), findsOneWidget);
+    await goToTab(tester, Strings.capture);
+    expect(find.text(Strings.comingIn('M6')), findsOneWidget);
   });
 
   testSahai('the gear opens Settings, and back returns', (tester) async {
     await pumpSahai(tester);
     await tester.tap(find.byTooltip(Strings.settings));
     await tester.pumpAndSettle();
-    expect(find.text(Strings.comingIn('M7')), findsOneWidget);
+    // M3 brings the Reminders section (frame 14).
+    expect(find.text(Strings.notifications), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();

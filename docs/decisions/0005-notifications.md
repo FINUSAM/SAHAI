@@ -31,6 +31,14 @@ Notifications must fire when the app is closed, name the item or group several, 
 | A background job that checks at fire time (e.g. `workmanager`) | Always current | Android delays or kills it; extra package; more battery use | Unreliable timing |
 | Native Kotlin `AlarmManager` code | Full control | Much more code to write and maintain | The plugin already handles boot restore and grouping |
 
+## Update 2026-11-05
+
+Approved by FINUSAM on 2026-11-05 with M3 PR 3:
+
+- **`flutter_timezone` dropped.** Set-aside wake times are fixed moments, so reminders are scheduled in UTC. That needs neither the zone database nor the phone's zone name, and rescheduling on resume handles a time-zone change. Recurring reminders at a local time (M4) will need a fresh look.
+- **Library desugaring added.** `flutter_local_notifications` needs Java 8+ APIs on older Android, so the Android build turns on core library desugaring with `com.android.tools:desugar_jdk_libs` 2.1.4 (GPL-2.0 with Classpath Exception, from Google). It runs at build time and adds no permission.
+- **Permissions added:** `POST_NOTIFICATIONS`, `VIBRATE`, `RECEIVE_BOOT_COMPLETED` and `SCHEDULE_EXACT_ALARM`. No network permission.
+
 ## Consequences
 
 - Correct as long as the app reschedules after every change, which the application layer does automatically.

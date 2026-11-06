@@ -7,6 +7,8 @@ import '../features/explorer/move_screen.dart';
 import '../features/explorer/node_form_screen.dart';
 import '../features/explorer/reorder_screen.dart';
 import '../features/placeholders/coming_later_screen.dart';
+import '../features/set_aside/set_aside_screen.dart';
+import '../features/settings/settings_screen.dart';
 import '../features/summary/summary_screen.dart';
 import '../shared/strings.dart';
 import 'home_shell.dart';
@@ -18,6 +20,10 @@ abstract final class Routes {
   static const explorer = '/explorer';
   static const capture = '/capture';
   static const settings = '/settings';
+
+  /// The Summary with [id]'s card highlighted, from a notification.
+  static String summaryFocus(String id) =>
+      Uri(path: summary, queryParameters: {'focus': id}).toString();
 
   static String newNode(NodeType type, String? parentId) => Uri(
     path: '/nodes/new',
@@ -49,15 +55,17 @@ GoRouter buildRouter() {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),
         branches: [
-          _tab(Routes.summary, const SummaryScreen()),
-          _tab(
-            Routes.setAside,
-            const ComingLaterScreen(
-              title: Strings.setAside,
-              milestone: 'M3',
-              body: Strings.setAsideLater,
-            ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.summary,
+                builder: (context, state) => SummaryScreen(
+                  focusNodeId: state.uri.queryParameters['focus'],
+                ),
+              ),
+            ],
           ),
+          _tab(Routes.setAside, const SetAsideScreen()),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -82,12 +90,7 @@ GoRouter buildRouter() {
       GoRoute(
         path: Routes.settings,
         parentNavigatorKey: rootKey,
-        builder: (context, state) => const ComingLaterScreen(
-          title: Strings.settings,
-          milestone: 'M7',
-          body: Strings.settingsLater,
-          showSettings: false,
-        ),
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/nodes/new',

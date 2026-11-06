@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../engine/node_type.dart';
+import '../../engine/set_aside_list.dart';
 import '../../engine/tree.dart';
 import '../../shared/strings.dart';
+import '../../shared/time_format.dart';
 import 'explorer_rows.dart';
 import 'node_icons.dart';
 
@@ -12,6 +14,9 @@ enum NodeChoice {
   add,
   markDone,
   reopen,
+  setAside,
+  wakeNow,
+  changeTime,
   move,
   moveUp,
   moveDown,
@@ -21,24 +26,32 @@ enum NodeChoice {
 
 /// The "⋮" menu for [node]. It only offers what the rules allow: no Mark done
 /// on domains, streams or locked tasks (AT-003, E-007), and Add only for
-/// types that can hold children (AT-002).
+/// types that can hold children (AT-002). A set-aside node offers Wake now
+/// and Change set-aside time; any other TODO node or container offers Set
+/// aside… (M3 frame 12, AT-041).
 Future<NodeChoice?> showNodeActions(
   BuildContext context,
   Tree tree,
-  TreeNode node,
-) => showModalBottomSheet<NodeChoice>(
+  TreeNode node, {
+  required DateTime now,
+}) => showModalBottomSheet<NodeChoice>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
   showDragHandle: true,
-  builder: (context) => _NodeActionsSheet(tree: tree, node: node),
+  builder: (context) => _NodeActionsSheet(tree: tree, node: node, now: now),
 );
 
 class _NodeActionsSheet extends StatelessWidget {
-  const _NodeActionsSheet({required this.tree, required this.node});
+  const _NodeActionsSheet({
+    required this.tree,
+    required this.node,
+    required this.now,
+  });
 
   final Tree tree;
   final TreeNode node;
+  final DateTime now;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +63,7 @@ class _NodeActionsSheet extends StatelessWidget {
     final path = pathOf(tree, node);
     final mark = markOf(tree, node);
     final parentType = node.type.parentType;
+    final wakeAt = wakeTimeOf(node, now);
     // Reopening a DONE child reopens its DONE ancestors too (PRD 7, AT-027).
     final reopensWith = [
       for (final a in tree.ancestorsOf(node.id))
@@ -75,6 +89,8 @@ class _NodeActionsSheet extends StatelessWidget {
                   [
                     Strings.typeName(node.type),
                     if (path.isNotEmpty) path,
+                    if (wakeAt != null)
+                      Strings.backAt(wakeLabel(wakeAt, now, inSentence: true)),
                   ].join(Strings.separator),
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -103,6 +119,23 @@ class _NodeActionsSheet extends StatelessWidget {
               subtitle: reopensWith.isEmpty
                   ? null
                   : Strings.alsoReopens(reopensWith),
+            ),
+          if (wakeAt != null) ...[
+            _item(
+              Icons.alarm_on,
+              Strings.wakeNow,
+              () => pick(NodeChoice.wakeNow),
+            ),
+            _item(
+              Icons.edit_calendar_outlined,
+              Strings.changeSetAsideTime,
+              () => pick(NodeChoice.changeTime),
+            ),
+          ] else if (!node.isDone)
+            _item(
+              Icons.schedule,
+              Strings.setAsideMenu,
+              () => pick(NodeChoice.setAside),
             ),
           if (parentType != null)
             _item(

@@ -6,14 +6,14 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**M2 Core loop shipped as v0.2.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set aside (M3) is next; Capture arrives in M6.
+**M3 Set aside shipped as v0.3.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set anything aside until later, with a reminder when it comes back; the Set-Aside page lists what's away. Recurring items (M4) are next; Capture arrives in M6.
 
 | | |
 |---|---|
 | Platform | Android (iOS later) |
 | Framework | Flutter |
 | Application ID | `com.finusam.sahai` |
-| Current milestone | M3 Set aside (v0.3.0, planning) |
+| Current milestone | M4 Recurring items (v0.4.0, planning) |
 
 ## Roadmap
 
@@ -68,11 +68,17 @@ Run these from the repo root.
 | Format | `dart format lib test tool integration_test` |
 | Analyze | `flutter analyze` |
 | Run all tests | `flutter test` |
-| Run the tests on a connected phone (uses throwaway databases, never your real data) | `flutter test integration_test` |
+| Run the tests on a connected phone (read the warning below first) | `flutter test integration_test --no-uninstall` |
 | Acceptance test coverage | `dart run tool/at_coverage.dart M2` |
 | Engine benchmark on a 10,000-item tree | `dart run tool/benchmark.dart` |
 | Run on a connected phone | `flutter run` |
 | Release APK (debug-signed until M8) | `flutter build apk --release` |
+
+**Warning about the phone tests:**
+
+- Without `--no-uninstall`, the run uninstalls the app when it finishes, which deletes its data on the phone.
+- The tests use throwaway databases, but the test build still replaces the installed app. Reinstall the release build afterwards with `adb install -r build\app\outputs\flutter-apk\app-release.apk`.
+- Check this again in M8. Once the app has its own signing key, a test build won't install over the release build, and that could trigger an uninstall.
 
 ### Changing the database
 

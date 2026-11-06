@@ -109,6 +109,7 @@ The cost is O(n log n), because sibling lists are sorted. The engine also return
 - **Clock.** Everything gets the time from an injected `Clock` (`package:clock`). Tests use a fixed or advancing fake clock. Nothing calls `DateTime.now()` directly. There's no standard lint rule for this, so a CI step searches `lib/` for it and fails outside the one clock file.
 - **Logical day.** `logicalDate(instant, dayStartHour)` returns the calendar date a moment belongs to. Before the day-start hour (default 4:00 AM), it's still the previous day. This one function drives presets (AT-043, AT-110), due labels (AT-062, AT-063) and recurring show dates (AT-061).
 - **Presets.** Computed from the logical day: Tonight = 8 PM, Tomorrow morning = next logical day 8 AM, 3 days later = logical day + 3 at 8 AM, Next week = next Monday 8 AM. Presets in the past are hidden (AT-044). The times are user-editable (M7).
+- **Where (M3).** `logicalDate` and the presets are in `lib/engine/time.dart`, the set-aside scope in `lib/engine/scope.dart`. They read wall-clock rules in the phone's local zone (`toLocal()`) and return local times; actions store them as UTC.
 - **Storage.** Instants (`snooze_until`, `created_at`, `updated_at`, `completed_at`, event times) are stored as UTC milliseconds. A set-aside time is an absolute moment, so it survives a time-zone change (AT-118). Due dates are stored as local calendar dates (`YYYY-MM-DD`) and read in the phone's *current* time zone (AT-081).
 
 ### 4.4 Recurring items (PRD 7)
@@ -127,6 +128,7 @@ After each recompute, the engine compares the new card set with the previous one
 - **E-002:** `occurred_at` is the moment the item actually became visible. If it came back while the app was closed, that's the wake or show time that caused it, worked out by the engine, not the time the app was opened.
 - **E-001:** for Undo of a completion, the action records `completion_undone` (pointing to the `completed` event) and the restored card gets **no** new `surfaced` event.
 - The last known card set is the `summary_visible` table (schema v2, M2): one row per card on the Summary with the time it surfaced. The action that changed the tree recomputes, diffs, writes the `surfaced` events and updates this table **in the same transaction**, so a crash between the two can never log an appearance twice. (Changed 2026-11-04 from "stored in `settings`".)
+- **Catch-up (M3).** Every write first records what time alone changed since the last one. Items whose wake time has passed get an automatic `woke` event dated with that time. Cards that appeared because of it get `surfaced` dated with the latest wake time on the card or its ancestors. Then `snooze_until` is cleared on those items, so each wake is logged once. `NodeActions.recompute()` runs only this step; the user's next action can't take the credit for a wake that happened while the app was closed.
 
 ### 4.6 Summary order and groups (PRD 8.2, M5)
 
@@ -185,8 +187,11 @@ See [decision 0003](../decisions/0003-state-management-and-navigation.md).
 ### When the Summary recomputes (PRD 6)
 
 - after every action (the action invalidates the snapshot provider)
+- on app start, since items may have woken while the app was closed
 - on app resume (`AppLifecycleListener`), which also re-reads the time zone
 - when `nextChangeAt` arrives (a single `Timer`)
+
+The last three live in `SummaryRefresher` (`lib/app/summary_refresher.dart`, M3). It calls `recompute()`, which logs the wakes, then bumps a tick that `summaryProvider` watches.
 
 ---
 
@@ -207,8 +212,10 @@ The approach is to **plan notifications ahead of time with the engine, and resch
 - **Horizon.** The plan covers the next **60 days**, capped at **100 scheduled notifications**. Android allows 500 alarms per app. If the app isn't opened for over 60 days, later reminders aren't scheduled. This is listed as risk R4.
 - **Inexact by default.** Reminders may arrive a few minutes late (PRD 7). With "Exact reminders" on, the app asks for Android's alarm permission (`SCHEDULE_EXACT_ALARM`; Android 14 and higher deny it by default and send the user to a system screen) and uses exact scheduling (AT-058).
 - **Notification permission.** On Android 13 and higher, `POST_NOTIFICATIONS` is requested the first time the user sets something aside, never at launch (AT-055).
+- **Fixed moments, scheduled in UTC (M3).** A set-aside wake time is a fixed moment, so reminders are scheduled in UTC and need no time-zone database or zone name. Rescheduling on resume covers a time-zone change. Recurring reminders at a local clock time (M4) will be revisited then.
+- **Where it runs.** `ReminderSync` (app layer) replans whenever the tree or the settings change and on resume, then hands the worded messages to `Reminders`, an interface with a plugin version for the phone and a fake for tests.
 
-**Packages:** `flutter_local_notifications` (schedule, group, boot restore, exact alarms), `timezone` (time-zone-aware scheduling) and `flutter_timezone` (the phone's current zone name).
+**Packages:** `flutter_local_notifications` (schedule, group, boot restore, exact alarms) and `timezone` (the scheduling type the plugin requires). `flutter_timezone` was dropped on 2026-11-05 because UTC scheduling doesn't need the zone name. The plugin needs Java 8+ library desugaring (`desugar_jdk_libs` 2.1.4, a build-time Android library, approved 2026-11-05).
 
 ---
 
@@ -219,9 +226,11 @@ The approach is to **plan notifications ahead of time with the engine, and resch
 | Permission | Why | When |
 |---|---|---|
 | `POST_NOTIFICATIONS` | Wake and bill reminders (Android 13+) | Asked at the first set aside |
-| `RECEIVE_BOOT_COMPLETED` | Restore scheduled reminders after a restart | Added by the notifications plugin |
-| `SCHEDULE_EXACT_ALARM` | Only if "Exact reminders" is on | Asked when the setting is turned on |
-| `VIBRATE` | Notification vibration, if the plugin needs it | Added by the plugin |
+| `RECEIVE_BOOT_COMPLETED` | Restore scheduled reminders after a restart, through the plugin's boot receiver (AT-057) | Declared in our manifest (M3) |
+| `SCHEDULE_EXACT_ALARM` | Only used if "Exact reminders" is on | Declared in our manifest; Android's alarm screen opens when the setting is turned on |
+| `VIBRATE` | Notification vibration | Added by the plugin |
+
+The manifest also declares the plugin's two receivers, both not exported: one fires scheduled reminders, the other restores them after a restart or an app update.
 
 **No `INTERNET`, no `ACCESS_NETWORK_STATE`.**
 - Flutter adds `INTERNET` to the **debug and profile** manifests so hot reload works. That's expected, and those builds are never shipped.
@@ -310,13 +319,13 @@ Current versions were checked on pub.dev on 2026-10-30. Each package is added on
 | `flutter_lints` (dev) | 6.0.0 | BSD-3 | flutter.dev | 2025-05-27 | Official lint rules | M1 |
 | `flutter_local_notifications` | 22.3.3 | BSD-3 | dexterx.dev | 2026-10-25 | Scheduled, grouped notifications | M3 |
 | `timezone` | 0.11.2 | BSD-2 | labs.dart.dev | 2026-10-12 | Time-zone-aware schedules | M3 |
-| `flutter_timezone` | 5.1.1 | Apache-2.0 | wolverinebeach.net | 2026-10-03 | Phone's current time zone | M3 |
+| `desugar_jdk_libs` (Android build) | 2.1.4 | GPL-2.0 with Classpath Exception | Google (com.android.tools) | 2024 | Java 8+ APIs the notifications plugin needs on older Android | M3 |
 | `home_widget` | 0.10.0 | BSD-3 | antonborri.es | 2026-09-17 | Home-screen widget (to confirm in an M6 spike) | M6 |
 | `receive_sharing_intent` | 1.9.0 | Apache-2.0 | kasem.dev | 2026-06-24 | Share target (or about 40 lines of our own Kotlin, decided in M6) | M6 |
 
 All of these are actively maintained (released within the last 6 months, except `flutter_lints`, the official and stable Flutter lint set) and score 110–160 out of 160 pub points. `sqlite3`, `path_provider` and `path` come in automatically through drift; the lock file pins them.
 
-**Considered and not chosen:** `sqflite` (hand-written SQL, no generated migration tests), `sqlite3_flutter_libs` (end-of-life), `flutter_bloc` (more boilerplate for a two-person team), `very_good_analysis` (stricter than needed; can be revisited), `url_launcher` (a few lines of Kotlin are enough for one email draft).
+**Considered and not chosen:** `flutter_timezone` (planned for M3, dropped 2026-11-05 because reminders are scheduled in UTC), `sqflite` (hand-written SQL, no generated migration tests), `sqlite3_flutter_libs` (end-of-life), `flutter_bloc` (more boilerplate for a two-person team), `very_good_analysis` (stricter than needed; can be revisited), `url_launcher` (a few lines of Kotlin are enough for one email draft).
 
 ---
 

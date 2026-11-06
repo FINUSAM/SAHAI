@@ -6,73 +6,13 @@ import 'package:sahai/engine/surfaced.dart';
 import 'package:sahai/engine/tree.dart';
 import 'package:sahai/engine/visibility.dart';
 
-/// Builds trees by hand for the engine tests: no database, no clock.
-class TreeBuilder {
-  final List<TreeNode> _nodes = [];
-  final Map<String?, int> _nextOrder = {};
-
-  String add(
-    NodeType type,
-    String id, {
-    String? parent,
-    bool done = false,
-    DateTime? snoozeUntil,
-    bool recurring = false,
-  }) {
-    final order = _nextOrder[parent] ?? 0;
-    _nextOrder[parent] = order + 1;
-    _nodes.add(
-      TreeNode(
-        id: id,
-        parentId: parent,
-        type: type,
-        title: id,
-        status: type.hasStatus
-            ? (done ? NodeStatus.done : NodeStatus.todo)
-            : null,
-        sortOrder: order,
-        snoozeUntil: snoozeUntil,
-        isRecurring: recurring,
-      ),
-    );
-    return id;
-  }
-
-  Tree build() => Tree(_nodes);
-}
-
-final now = DateTime.utc(2026, 11, 3, 15);
+import 'engine_helpers.dart';
 
 List<String> visible(Tree tree) =>
     computeSummary(tree, now: now).cards.map((c) => c.id).toList();
 
 SummaryCard cardFor(Tree tree, String id) =>
     computeSummary(tree, now: now).cards.singleWhere((c) => c.id == id);
-
-/// Biztras › Website relaunch › 1. Write copy (1.1, 1.2), 2. Design pages
-/// (2.1, 2.2), 3. Launch; plus the Client admin stream (A, B, C).
-TreeBuilder sampleTree({
-  bool s11Done = false,
-  bool s12Done = false,
-  bool t1Done = false,
-  bool aDone = false,
-}) {
-  final b = TreeBuilder();
-  b.add(NodeType.domain, 'biztras');
-  b.add(NodeType.project, 'relaunch', parent: 'biztras');
-  b.add(NodeType.task, 't1', parent: 'relaunch', done: t1Done);
-  b.add(NodeType.subtask, 's1.1', parent: 't1', done: s11Done);
-  b.add(NodeType.subtask, 's1.2', parent: 't1', done: s12Done);
-  b.add(NodeType.task, 't2', parent: 'relaunch');
-  b.add(NodeType.subtask, 's2.1', parent: 't2');
-  b.add(NodeType.subtask, 's2.2', parent: 't2');
-  b.add(NodeType.task, 't3', parent: 'relaunch');
-  b.add(NodeType.stream, 'admin', parent: 'biztras');
-  b.add(NodeType.streamItem, 'A', parent: 'admin', done: aDone);
-  b.add(NodeType.streamItem, 'B', parent: 'admin');
-  b.add(NodeType.streamItem, 'C', parent: 'admin');
-  return b;
-}
 
 void main() {
   test('AT-013 only the first subtask shows', () {
@@ -233,7 +173,7 @@ void main() {
     expect(cardFor(tree, 't1').reason, CardReason.taskSignOff);
   });
 
-  group('set aside (always false in M2, ready for M3)', () {
+  group('set aside', () {
     test('a set-aside subtask is skipped and the next one shows', () {
       final b = TreeBuilder();
       b.add(NodeType.domain, 'd');
@@ -300,6 +240,114 @@ void main() {
 
     test('no change is empty', () {
       expect(diffVisible(previous: {'a'}, current: ['a']).isEmpty, isTrue);
+    });
+  });
+
+  group('M3 set aside (PRD 6, 7)', () {
+    // The sheet's reference time is 3:00 PM; "5 PM" is two hours later.
+    final fivePm = now.add(const Duration(hours: 2));
+    final tomorrow8am = now.add(const Duration(hours: 17));
+    final nextWeek = now.add(const Duration(days: 6));
+
+    List<String> visibleAt(Tree tree, DateTime at) =>
+        computeSummary(tree, now: at).cards.map((c) => c.id).toList();
+
+    test('AT-033 setting aside a subtask surfaces the next', () {
+      expect(visible(sampleTree().build()), ['s1.1', 'A']);
+      final tree = sampleTree(setAside: {'s1.1': fivePm}).build();
+      expect(visible(tree), ['s1.2', 'A']);
+    });
+
+    test('AT-034 a waking subtask takes its place back', () {
+      final tree = sampleTree(setAside: {'s1.1': fivePm}).build();
+      final before = computeSummary(tree, now: now);
+      expect(before.cards.map((c) => c.id), ['s1.2', 'A']);
+      expect(before.nextChangeAt, fivePm);
+      expect(visibleAt(tree, fivePm.subtract(const Duration(seconds: 1))), [
+        's1.2',
+        'A',
+      ]);
+      final after = computeSummary(tree, now: fivePm);
+      expect(after.cards.map((c) => c.id), ['s1.1', 'A']);
+      expect(after.nextChangeAt, isNull);
+    });
+
+    test('AT-035 all subtasks set aside darkens the branch', () {
+      final tree = sampleTree(setAside: {'s1.1': fivePm, 's1.2': tomorrow8am})
+          .build();
+      // Nothing from the project, and the task doesn't show for sign-off:
+      // set-aside subtasks still count as TODO (PRD 5).
+      expect(visible(tree), ['A']);
+      expect(computeSummary(tree, now: now).nextChangeAt, fivePm);
+    });
+
+    test('AT-037 scope its task hides the task until it wakes', () {
+      final tree = sampleTree(setAside: {'t1': tomorrow8am}).build();
+      expect(visible(tree), ['A']);
+      expect(visibleAt(tree, tomorrow8am), ['s1.1', 'A']);
+    });
+
+    test('AT-038 scope its project hides the whole project', () {
+      final tree = sampleTree(setAside: {'relaunch': nextWeek}).build();
+      expect(visible(tree), ['A']);
+      expect(visibleAt(tree, nextWeek), ['s1.1', 'A']);
+    });
+
+    test('AT-039 scope its domain hides its projects and streams', () {
+      final b = TreeBuilder();
+      b.add(NodeType.domain, 'freelance', snoozeUntil: nextWeek);
+      for (final p in ['pA', 'pB']) {
+        b.add(NodeType.project, p, parent: 'freelance');
+        b.add(NodeType.task, '$p-t', parent: p);
+      }
+      b.add(NodeType.stream, 'S', parent: 'freelance');
+      b.add(NodeType.streamItem, 'S-1', parent: 'S');
+      b.add(NodeType.domain, 'personal');
+      b.add(NodeType.project, 'home', parent: 'personal');
+      final tree = b.build();
+      expect(visible(tree), ['home']);
+      expect(visibleAt(tree, nextWeek), ['pA-t', 'pB-t', 'S-1', 'home']);
+    });
+
+    test('AT-040 a set-aside current task stalls its project', () {
+      final b = TreeBuilder();
+      b.add(NodeType.domain, 'd');
+      b.add(NodeType.project, 'p', parent: 'd');
+      b.add(NodeType.task, 't1', parent: 'p', snoozeUntil: fivePm);
+      b.add(NodeType.task, 't2', parent: 'p');
+      final tree = b.build();
+      expect(visible(tree), isEmpty);
+      expect(tree.isLocked('t2'), isTrue);
+      expect(visibleAt(tree, fivePm), ['t1']);
+    });
+
+    test('AT-041 a set-aside stream shows none of its items', () {
+      final tree = sampleTree(setAside: {'admin': nextWeek}).build();
+      expect(visible(tree), ['s1.1']);
+      expect(visibleAt(tree, nextWeek), ['s1.1', 'A']);
+    });
+
+    test('nextChangeAt is the earliest wake that would change the Summary', () {
+      final tree = sampleTree(
+        setAside: {
+          // Behind a visible item: waking can't change anything.
+          's1.2': now.add(const Duration(minutes: 30)),
+          // Under a set-aside ancestor: only the ancestor's time counts.
+          'B': now.add(const Duration(minutes: 10)),
+          'admin': tomorrow8am,
+          // In a locked task: never looked at.
+          's2.1': now.add(const Duration(minutes: 5)),
+          'A': fivePm,
+        },
+      ).build();
+      final result = computeSummary(tree, now: now);
+      expect(result.cards.map((c) => c.id), ['s1.1']);
+      expect(result.nextChangeAt, tomorrow8am);
+
+      final withSubtask = sampleTree(
+        setAside: {'s1.1': tomorrow8am, 'A': fivePm},
+      ).build();
+      expect(computeSummary(withSubtask, now: now).nextChangeAt, fivePm);
     });
   });
 }

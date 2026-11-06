@@ -50,6 +50,7 @@ Future<TestApp> pumpSahai(
         clockProvider.overrideWithValue(testApp.clock.clock),
         databaseProvider.overrideWithValue(testApp.db),
         nodeActionsProvider.overrideWithValue(testApp.actions),
+        remindersProvider.overrideWithValue(testApp.reminders),
       ],
       child: const SahaiApp(),
     ),
