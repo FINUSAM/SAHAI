@@ -9,6 +9,10 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+### Added
+- Approved M4 Recurring items wireframes in `docs/design/m4-recurring/` (11 frames) and the choices
+  made with them; the M4 plan in `docs/plans/0006-m4-recurring.md`.
+
 ## [0.3.0] - 2026-11-06 (M3 Set aside)
 
 ### Added
