@@ -80,6 +80,7 @@ Measured in working sessions like the M2 ones (M2 took 2 PRs over about two days
 - 2026-11-05 (PR 3, step 22): the owner approved `flutter_local_notifications` 22.3.3 and `timezone` 0.11.2 but not `flutter_timezone`, since reminders are scheduled in UTC and need no zone name. Library desugaring (`desugar_jdk_libs` 2.1.4) was added because the plugin requires it. Recorded in decision 0005.
 - 2026-11-05 (step 21): the owner's phone check of PR 2 moved into step 30, so both are done on one build.
 - 2026-11-06 (release): `summary_refresher_test.dart`, added to `integration_test/` in PR 2, was taken off the on-phone list. Its `pump` time skips are instant on a computer but real waits of hours on a phone, so the run timed out at AT-034. CI still runs it on every PR.
+- 2026-11-06 (release): the on-phone run uninstalled the app when it finished, which deleted the owner's data on the OnePlus. The README and `integration_test/app_test.dart` had said the run never touches real data, and that was wrong: the tests use throwaway databases, but `flutter test integration_test` uninstalls the app unless given `--no-uninstall`. Reinstalling the release build brought the data back from Android's Google backup, and the owner confirmed it. The documented command now has the flag and a warning. Check it again in M8, when upload signing means a test build won't install over the release build.
 
 ## Notes for whoever picks this up
 

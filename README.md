@@ -68,11 +68,17 @@ Run these from the repo root.
 | Format | `dart format lib test tool integration_test` |
 | Analyze | `flutter analyze` |
 | Run all tests | `flutter test` |
-| Run the tests on a connected phone (uses throwaway databases, never your real data) | `flutter test integration_test` |
+| Run the tests on a connected phone (read the warning below first) | `flutter test integration_test --no-uninstall` |
 | Acceptance test coverage | `dart run tool/at_coverage.dart M2` |
 | Engine benchmark on a 10,000-item tree | `dart run tool/benchmark.dart` |
 | Run on a connected phone | `flutter run` |
 | Release APK (debug-signed until M8) | `flutter build apk --release` |
+
+**Warning about the phone tests:**
+
+- Without `--no-uninstall`, the run uninstalls the app when it finishes, which deletes its data on the phone.
+- The tests use throwaway databases, but the test build still replaces the installed app. Reinstall the release build afterwards with `adb install -r build\app\outputs\flutter-apk\app-release.apk`.
+- Check this again in M8. Once the app has its own signing key, a test build won't install over the release build, and that could trigger an uninstall.
 
 ### Changing the database
 

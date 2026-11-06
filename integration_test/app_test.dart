@@ -10,7 +10,13 @@
 // is instant on a computer but a real wait on a phone. CI runs it on every PR.
 //
 // With the phone connected over USB:
-//   flutter test integration_test
+//   flutter test integration_test --no-uninstall
+//
+// Without --no-uninstall the run uninstalls the app when it finishes, which
+// deletes its data on the phone. The test build still replaces the installed
+// app, so reinstall the release build afterwards with `adb install -r`.
+// Check this again in M8: once the app has its own signing key, a test build
+// won't install over the release build, and that could trigger an uninstall.
 import 'package:integration_test/integration_test.dart';
 
 import '../test/app/home_shell_test.dart' as home_shell;
