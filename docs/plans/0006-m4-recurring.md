@@ -1,9 +1,9 @@
 # M4 Recurring items
 
-- **Status:** In progress
+- **Status:** Done (v0.4.0)
 - **Approved by:** FINUSAM on 2026-11-06 (wireframes and plan)
-- **Branches / PRs:** plan and wireframes `docs/m4-plan` (#36, #75); PR 1 `feat/m4-engine` (#37); PR 2 `feat/m4-screens` (#38)
-- **PRD sections:** 5, 6, 7 (Recurring items, Notifications), 8.2, 8.3, 8.4, 9, 16 (plus E-001, E-005, E-011)
+- **Branches / PRs:** plan and wireframes `docs/m4-plan` (#36, #75); PR 1 `feat/m4-engine` (#37); PR 2 `feat/m4-screens` (#38); close-out `docs/m4-close-out` (#40)
+- **PRD sections:** 5, 6, 7 (Recurring items, Notifications), 8.2, 8.3, 8.4, 9, 16 (plus E-001, E-005, E-011, E-012)
 - **Acceptance tests:** AT-061 to AT-082 (22 rows: 17 Must, 5 Should), plus the E-001, E-005 and E-011 tests
 - **Wireframes:** [`docs/design/m4-recurring/`](../design/m4-recurring/) (approved 2026-11-06)
 - **Test devices:** OnePlus Nord 5 (OxygenOS 16 / Android 16)
@@ -87,6 +87,8 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 - 2026-11-07 (PR 2, step 13): `create` takes an optional schedule. Creating the item and then calling `setRecurrence` would have logged a false `surfaced` for a moment on a bill still waiting for its show date.
 - 2026-11-07 (PR 2): the approved checklist had a fix for Undo of a set aside on a waiting bill. No fix was needed: the Explorer offers Wake now rather than Set aside on a waiting bill, so that Undo can't be reached, and Undo from a Summary card leaves the bill on the Summary. Tests now hold both in place.
 - 2026-11-07 (PR 2): the owner chose to fix #77, so the fix was added to this PR. It couldn't wait for the close-out PR, which comes after the phone checks, and a PR of its own would have made four for M4. The owner approved replacing the test that recorded the bug.
+- 2026-11-07 (close-out): the owner moved the phone check (step 22) from PR 2 to the close-out PR, after merging PR 2. That PR is M4's third and last: it stays open during the check and merges once the check passes.
+- 2026-11-07 (close-out): the owner answered #81, and PRD 7's "a few minutes late" became "late, usually within an hour" (E-012). #80, a new reminder replacing an uncleared one in the shade, waits until after M4 by the owner's choice.
 
 ## Notes for whoever picks this up
 
@@ -112,7 +114,8 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
   - A reminder shown on a later day gives the date rather than "is due today".
   - If Android delivers a reminder at the moment the app reads the pending list, it can arrive twice. That's rare and harmless, so nothing guards against it.
   - A late reminder is hard to force on a phone, so the proof is automated tests against a fake. The plugin calls themselves (`pendingNotificationRequests`, `show`) have only been read, not run.
-  - Android's limit for a late reminder is an hour or more, not the few minutes PRD 7 says.
+  - Android's limit for a late reminder is an hour or more, not the few minutes PRD 7 said (E-012).
+- **Known gap:** a scheduled reminder can replace an older one still in the shade, because ids change on each replan. Tracked in #80, for after M4.
 
 - PRD 16's gate for M4 is that the four credit card bills behave correctly through a full month.
 - The show-day reminder arrives at 9:00 AM but the card appears at the start of the day (4:00 AM), so the card can be on the Summary for hours before its reminder. That's what PRD 7 asks for.

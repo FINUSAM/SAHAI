@@ -248,3 +248,22 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - The activity log stays append-only, so an undone action needs its own event, as `completion_undone` (E-001) and `restored` already do.
 
 **Affects:** new automated tests, `E-011 …`. AT-071 and AT-080 are unchanged.
+
+---
+
+## E-012: Reminders may arrive late, usually within an hour
+
+- **PRD section:** 7 (Notifications)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-11-07 (answer to PRD question #81)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- In section 7, "Reminders use inexact scheduling by default and may arrive a few minutes late" becomes "Reminders use inexact scheduling by default and may arrive late, usually within an hour". The sentence on Exact reminders stays as it is.
+
+**Reason**
+
+- On Android 12 and higher, Android delivers an inexact alarm within an hour of its time, and possibly later under Doze or battery saver. The app can't promise a few minutes.
+
+**Affects:** none. No acceptance test relies on the old wording.
