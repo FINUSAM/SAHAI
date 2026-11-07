@@ -86,6 +86,7 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 - 2026-11-07 (PR 2): #77's check was added to this PR, with the owner's approval.
 - 2026-11-07 (PR 2, step 13): `create` takes an optional schedule. Creating the item and then calling `setRecurrence` would have logged a false `surfaced` for a moment on a bill still waiting for its show date.
 - 2026-11-07 (PR 2): the approved checklist had a fix for Undo of a set aside on a waiting bill. No fix was needed: the Explorer offers Wake now rather than Set aside on a waiting bill, so that Undo can't be reached, and Undo from a Summary card leaves the bill on the Summary. Tests now hold both in place.
+- 2026-11-07 (PR 2): the owner chose to fix #77, so the fix was added to this PR. It couldn't wait for the close-out PR, which comes after the phone checks, and a PR of its own would have made four for M4. The owner approved replacing the test that recorded the bug.
 
 ## Notes for whoever picks this up
 
@@ -104,10 +105,17 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
   - The sheet from a reminder tap leaves out Set aside and Stop repeating, as frame 11 does.
   - A domain that wakes on a bill's show day before 9:00 AM gives "is back" and then the show-day reminder.
   - A crossed-out bell can still show on a waiting bill that was once set aside with Remind me off, though its reminders do arrive. It's cosmetic, and left as it is.
-- **#77 (2026-11-07):** the test confirms the gap. Opening the app after a reminder's time but before Android delivers it cancels that reminder, and the new schedule leaves it out, because past times are skipped. The plugin's code shows the alarm really is cancelled. The test records today's behaviour, and any fix waits for the owner.
+- **#77 (2026-11-07):** the test confirms the gap. Opening the app after a reminder's time but before Android delivers it cancels that reminder, and the new schedule leaves it out, because past times are skipped. The plugin's code shows the alarm really is cancelled.
+- **#77 fix (2026-11-07):** a late recurring reminder now shows at once when its item isn't on the Summary. The rest of the design is in tech plan 7. Small choices, all open to change:
+  - Only hidden items get one, by the owner's choice. A late reminder for a card on the Summary is still dropped, because the app is open and the card is in view.
+  - "Is back" is never shown late: its item is on the Summary, or it's hidden again and so doesn't notify (PRD 7).
+  - A reminder shown on a later day gives the date rather than "is due today".
+  - If Android delivers a reminder at the moment the app reads the pending list, it can arrive twice. That's rare and harmless, so nothing guards against it.
+  - A late reminder is hard to force on a phone, so the proof is automated tests against a fake. The plugin calls themselves (`pendingNotificationRequests`, `show`) have only been read, not run.
+  - Android's limit for a late reminder is an hour or more, not the few minutes PRD 7 says.
 
 - PRD 16's gate for M4 is that the four credit card bills behave correctly through a full month.
 - The show-day reminder arrives at 9:00 AM but the card appears at the start of the day (4:00 AM), so the card can be on the Summary for hours before its reminder. That's what PRD 7 asks for.
-- An open-the-app-late gap carries over from M3: opening the app before a late inexact reminder fires may drop that reminder, since the schedule is replaced and past times are skipped. Tracked in #77.
+- An open-the-app-late gap carried over from M3: opening the app before a late inexact reminder fires dropped that reminder, since the schedule is replaced and past times are skipped. Fixed in PR 2 for items not on the Summary (#77).
 - Notifications were tested on the OnePlus only in M3 (accepted by the owner, 2026-11-06). AT-078 and AT-079 have the same gap.
 - The frames were rendered from the canvas pages with headless Chrome, because the canvas can't export PNGs. All 11 PNGs were viewed in their final form before committing; the live canvas itself was never seen rendering (it froze the browser tab), so the PNGs are the reference if the two differ.

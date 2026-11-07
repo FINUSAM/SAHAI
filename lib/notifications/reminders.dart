@@ -35,35 +35,65 @@ class ReminderMessage {
   final String? nodeId;
 }
 
+/// Where the ids of late reminders start, clear of the scheduled ones
+/// (at most [maxPlanned]). Android replaces a notification that reuses an id,
+/// so a scheduled reminder would otherwise overwrite one shown late.
+const firstLateId = 1000;
+
+/// What a reminder carries for when it's tapped or found still undelivered:
+/// its time, because Android's pending list gives no time, and its item.
+String reminderPayload(ReminderMessage m) =>
+    '${m.at.millisecondsSinceEpoch}|${m.nodeId ?? ''}';
+
+/// The time in [payload]. Null for one saved before reminders carried it.
+DateTime? timeOfPayload(String? payload) {
+  final bar = payload?.indexOf('|') ?? -1;
+  if (bar < 0) return null;
+  final millis = int.tryParse(payload!.substring(0, bar));
+  if (millis == null) return null;
+  return DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true);
+}
+
+/// The item in [payload], or null for a grouped reminder. A notification
+/// already in the shade from an older version holds only the item id.
+String? nodeIdOfPayload(String? payload) {
+  if (payload == null) return null;
+  final id = payload.substring(payload.indexOf('|') + 1);
+  return id.isEmpty ? null : id;
+}
+
 /// Words the plan (frame 13): one item is "<title> is back" with its path;
 /// several are "3 items are back", expanding to list them. Recurring
 /// reminders read "<title> is due Nov 5" or "<title> is due today", and "2
 /// items are due today" (M4 frame 10). When a group's dates differ it says
 /// "2 items are due", and each line gives its own date.
-List<ReminderMessage> messagesFor(Tree tree, List<PlannedNotification> plan) =>
-    [
-      for (final (i, n) in plan.indexed)
-        if (n.dueToday case final dueToday?)
-          _dueMessage(tree, i, n, dueToday)
-        else if (n.grouped)
-          ReminderMessage(
-            id: i,
-            at: n.at,
-            title: Strings.itemsBack(n.cards.length),
-            body: n.cards.map((c) => displayTitle(tree, c.node)).join(', '),
-            lines: [for (final c in n.cards) displayTitle(tree, c.node)],
-            nodeId: null,
-          )
-        else
-          ReminderMessage(
-            id: i,
-            at: n.at,
-            title: Strings.isBack(displayTitle(tree, n.cards.single.node)),
-            body: _pathOf(tree, n.cards.single),
-            lines: const [],
-            nodeId: n.cards.single.id,
-          ),
-    ];
+List<ReminderMessage> messagesFor(
+  Tree tree,
+  List<PlannedNotification> plan, {
+  int firstId = 0,
+}) => [
+  for (final (i, n) in plan.indexed)
+    if (n.dueToday case final dueToday?)
+      _dueMessage(tree, firstId + i, n, dueToday)
+    else if (n.grouped)
+      ReminderMessage(
+        id: firstId + i,
+        at: n.at,
+        title: Strings.itemsBack(n.cards.length),
+        body: n.cards.map((c) => displayTitle(tree, c.node)).join(', '),
+        lines: [for (final c in n.cards) displayTitle(tree, c.node)],
+        nodeId: null,
+      )
+    else
+      ReminderMessage(
+        id: firstId + i,
+        at: n.at,
+        title: Strings.isBack(displayTitle(tree, n.cards.single.node)),
+        body: _pathOf(tree, n.cards.single),
+        lines: const [],
+        nodeId: n.cards.single.id,
+      ),
+];
 
 ReminderMessage _dueMessage(
   Tree tree,
@@ -128,6 +158,13 @@ abstract interface class Reminders {
     required bool exact,
   });
 
+  /// The times of the reminders Android hasn't delivered yet. Read before
+  /// [replaceAll], which cancels them: any whose time has passed is late.
+  Future<List<DateTime>> undelivered();
+
+  /// Shows [messages] now rather than at their time.
+  Future<void> showNow(List<ReminderMessage> messages);
+
   /// Asks for notification permission on Android 13 and higher. Android
   /// shows nothing when it's already granted or refused for good.
   Future<void> askPermission();
@@ -152,19 +189,31 @@ class PluginReminders implements Reminders {
 
   @override
   Future<void> init(void Function(String? nodeId) onOpen) async {
-    String? idOf(String? payload) =>
-        payload == null || payload.isEmpty ? null : payload;
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_sahai'),
       ),
-      onDidReceiveNotificationResponse: (r) => onOpen(idOf(r.payload)),
+      onDidReceiveNotificationResponse: (r) =>
+          onOpen(nodeIdOfPayload(r.payload)),
     );
     final launch = await _plugin.getNotificationAppLaunchDetails();
     if (launch?.didNotificationLaunchApp ?? false) {
-      onOpen(idOf(launch!.notificationResponse?.payload));
+      onOpen(nodeIdOfPayload(launch!.notificationResponse?.payload));
     }
   }
+
+  NotificationDetails _detailsOf(ReminderMessage m) => NotificationDetails(
+    android: AndroidNotificationDetails(
+      _channelId,
+      Strings.remindersChannel,
+      channelDescription: Strings.remindersChannelDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+      styleInformation: m.lines.isEmpty
+          ? BigTextStyleInformation(m.body)
+          : InboxStyleInformation(m.lines, contentTitle: m.title),
+    ),
+  );
 
   @override
   Future<void> replaceAll(
@@ -186,26 +235,47 @@ class PluginReminders implements Reminders {
           id: m.id,
           // Set-aside times are fixed moments, so UTC needs no zone data.
           scheduledDate: tz.TZDateTime.from(m.at, tz.UTC),
-          notificationDetails: NotificationDetails(
-            android: AndroidNotificationDetails(
-              _channelId,
-              Strings.remindersChannel,
-              channelDescription: Strings.remindersChannelDescription,
-              importance: Importance.high,
-              priority: Priority.high,
-              styleInformation: m.lines.isEmpty
-                  ? BigTextStyleInformation(m.body)
-                  : InboxStyleInformation(m.lines, contentTitle: m.title),
-            ),
-          ),
+          notificationDetails: _detailsOf(m),
           androidScheduleMode: mode,
           title: m.title,
           body: m.body,
-          payload: m.nodeId ?? '',
+          payload: reminderPayload(m),
         );
       } on Exception catch (e) {
         // The type only: messages hold item titles, which are never logged.
         debugPrint('Reminder not scheduled: ${e.runtimeType}');
+      }
+    }
+  }
+
+  @override
+  Future<List<DateTime>> undelivered() async {
+    try {
+      // The plugin takes a one-off reminder off this list when it fires, so
+      // whatever is here hasn't reached the phone's shade.
+      final pending = await _plugin.pendingNotificationRequests();
+      return [for (final p in pending) ?timeOfPayload(p.payload)];
+    } on Exception catch (e) {
+      // Scheduling matters more than a late reminder, so it carries on.
+      debugPrint('Pending reminders not read: ${e.runtimeType}');
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> showNow(List<ReminderMessage> messages) async {
+    for (final m in messages) {
+      try {
+        await _plugin.show(
+          id: m.id,
+          title: m.title,
+          body: m.body,
+          notificationDetails: _detailsOf(m),
+          payload: reminderPayload(m),
+        );
+      } on Exception catch (e) {
+        // The type only: messages hold item titles, which are never logged.
+        debugPrint('Reminder not shown: ${e.runtimeType}');
       }
     }
   }

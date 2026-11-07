@@ -33,6 +33,11 @@ class FakeReminders implements Reminders {
   bool? lastExact;
   var replaceCalls = 0;
 
+  /// What Android hasn't delivered yet. A test sets this to leave a reminder
+  /// late; [replaceAll] cancels them, as on the phone.
+  List<DateTime> undeliveredTimes = const [];
+  final shownNow = <ReminderMessage>[];
+
   @override
   Future<void> init(void Function(String? nodeId) onOpen) async {
     initCalls++;
@@ -46,8 +51,16 @@ class FakeReminders implements Reminders {
   }) async {
     replaceCalls++;
     scheduled = messages;
+    undeliveredTimes = [for (final m in messages) m.at];
     lastExact = exact;
   }
+
+  @override
+  Future<List<DateTime>> undelivered() async => undeliveredTimes;
+
+  @override
+  Future<void> showNow(List<ReminderMessage> messages) async =>
+      shownNow.addAll(messages);
 
   @override
   Future<void> askPermission() async => permissionRequests++;

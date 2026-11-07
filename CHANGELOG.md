@@ -30,6 +30,10 @@ followed by v1.0.0 for the public release.
 - Version 0.4.0+4.
 - The Reminders notification channel and the Notifications setting now mention recurring items.
 
+### Fixed
+- A recurring reminder Android hadn't delivered yet was lost if the app opened after its time (#77).
+  It now shows at once when its item isn't on the Summary, such as a bill in a paused domain.
+
 ## [0.3.0] - 2026-11-06 (M3 Set aside)
 
 ### Added

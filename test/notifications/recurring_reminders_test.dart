@@ -190,6 +190,180 @@ void main() {
     expect(reminders(b), isEmpty);
   });
 
+  group('#77 late reminders', () {
+    /// Two minutes after the 9:00 AM reminder on Nov 5.
+    final justAfter = DateTime(2026, 11, 5, 9, 2);
+
+    /// "5 9:00 due: HDFC", for what's shown now.
+    List<String> late(
+      TreeBuilder b,
+      List<DateTime> undelivered, {
+      DateTime? now,
+      AppSettings settings = on,
+    }) => [
+      for (final n in lateReminders(
+        b.build(),
+        undelivered: undelivered,
+        now: now ?? justAfter,
+        settings: settings,
+      ))
+        '${n.at.toLocal().day} ${n.at.toLocal().hour}:00 ${kindOf(n)}: '
+            '${n.cards.map((c) => c.id).join(', ')}',
+    ];
+
+    test('a due reminder inside a paused domain shows late', () {
+      expect(late(bills(personalUntil: nov(10, 8)), [nov(5)]), [
+        '5 9:00 due: HDFC',
+      ]);
+    });
+
+    test('times arrive from Android in UTC and still match', () {
+      expect(late(bills(personalUntil: nov(10, 8)), [nov(5).toUtc()]), [
+        '5 9:00 due: HDFC',
+      ]);
+    });
+
+    test('a bill set aside itself gets its show-day reminder late', () {
+      expect(
+        late(bills(hdfcUntil: nov(4, 8)), [
+          nov(2),
+        ], now: DateTime(2026, 11, 2, 9, 5)),
+        ['2 9:00 show: HDFC'],
+      );
+    });
+
+    test('nothing shows for a bill on the Summary', () {
+      expect(late(bills(), [nov(5)]), isEmpty);
+    });
+
+    test('nothing repeats once Android has delivered it', () {
+      expect(late(bills(personalUntil: nov(10, 8)), []), isEmpty);
+    });
+
+    test('a reminder still ahead is not late', () {
+      expect(
+        late(bills(personalUntil: nov(10, 8)), [
+          nov(5),
+        ], now: DateTime(2026, 11, 4, 10)),
+        isEmpty,
+      );
+    });
+
+    test('a show-day reminder stays silent while an ancestor hides it '
+        '(PRD 7)', () {
+      expect(
+        late(bills(personalUntil: nov(10, 8)), [
+          nov(2),
+        ], now: DateTime(2026, 11, 2, 9, 5)),
+        isEmpty,
+      );
+    });
+
+    test('"is back" is never shown late: the item is on the Summary', () {
+      expect(
+        late(bills(hdfcUntil: nov(4, 8)), [
+          nov(4, 8),
+        ], now: DateTime(2026, 11, 4, 8, 5)),
+        isEmpty,
+      );
+    });
+
+    test('AT-056 nothing shows with notifications off', () {
+      expect(
+        late(bills(personalUntil: nov(10, 8)), [
+          nov(5),
+        ], settings: const AppSettings(notificationsEnabled: false)),
+        isEmpty,
+      );
+    });
+
+    test('a group keeps only the items the Summary can\'t show', () {
+      final b = bills(personalUntil: nov(10, 8))
+        ..add(NodeType.domain, 'home')
+        ..add(NodeType.stream, 'house', parent: 'home')
+        ..add(
+          NodeType.streamItem,
+          'Rent',
+          parent: 'house',
+          dueOn: DateTime(2026, 11, 5),
+        );
+      expect(late(b, [nov(5)]), ['5 9:00 due: HDFC']);
+    });
+
+    test('several hidden bills share one notification', () {
+      final b = bills(personalUntil: nov(10, 8))
+        ..add(
+          NodeType.streamItem,
+          'SBI',
+          parent: 'finance',
+          dueOn: DateTime(2026, 11, 5),
+        );
+      expect(late(b, [nov(5)]), ['5 9:00 due: HDFC, SBI']);
+    });
+
+    test('shown on a later day, it gives the date rather than "today"', () {
+      final tree = bills(personalUntil: nov(10, 8)).build();
+      final [message] = messagesFor(
+        tree,
+        lateReminders(
+          tree,
+          undelivered: [nov(5)],
+          now: DateTime(2026, 11, 7, 10),
+          settings: on,
+        ),
+      );
+      expect(message.title, 'HDFC is due Nov 5');
+    });
+
+    test('late reminders use ids clear of the scheduled ones', () {
+      final tree = bills(personalUntil: nov(10, 8)).build();
+      final [message] = messagesFor(
+        tree,
+        lateReminders(
+          tree,
+          undelivered: [nov(5)],
+          now: justAfter,
+          settings: on,
+        ),
+        firstId: firstLateId,
+      );
+      expect(message.id, firstLateId);
+      expect(firstLateId, greaterThanOrEqualTo(maxPlanned));
+    });
+  });
+
+  group('payload', () {
+    ReminderMessage message(String? nodeId) => ReminderMessage(
+      id: 0,
+      at: nov(5).toUtc(),
+      title: 'title',
+      body: 'body',
+      lines: const [],
+      nodeId: nodeId,
+    );
+
+    test('carries the time and the item', () {
+      final payload = reminderPayload(message('abc-123'));
+      expect(timeOfPayload(payload), nov(5).toUtc());
+      expect(nodeIdOfPayload(payload), 'abc-123');
+    });
+
+    test('a group carries the time and no item', () {
+      final payload = reminderPayload(message(null));
+      expect(timeOfPayload(payload), nov(5).toUtc());
+      expect(nodeIdOfPayload(payload), isNull);
+    });
+
+    test('a notification from an older version still opens its item', () {
+      expect(nodeIdOfPayload('abc-123'), 'abc-123');
+      expect(timeOfPayload('abc-123'), isNull);
+      expect(nodeIdOfPayload(''), isNull);
+      expect(timeOfPayload(''), isNull);
+      expect(nodeIdOfPayload(null), isNull);
+      expect(timeOfPayload(null), isNull);
+    });
+  });
+
   group('wording (frame 10)', () {
     /// HDFC due Nov 5; [more] adds bills as title and due day.
     List<ReminderMessage> messages([Map<String, int> more = const {}]) {

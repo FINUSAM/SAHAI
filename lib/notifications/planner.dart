@@ -1,6 +1,7 @@
 import '../engine/recurrence.dart';
 import '../engine/set_aside_list.dart';
 import '../engine/settings.dart';
+import '../engine/time.dart';
 import '../engine/tree.dart';
 import '../engine/visibility.dart';
 import '../features/explorer/explorer_rows.dart';
@@ -87,6 +88,60 @@ List<PlannedNotification> planNotifications(
   plan.addAll(recurring);
   plan.sort((a, b) => a.at.compareTo(b.at));
   return plan.take(maxPlanned).toList();
+}
+
+/// The reminders to show now because replacing the schedule would otherwise
+/// lose them (#77): Android can deliver inexact ones up to an hour late, or
+/// more, and [undelivered] holds the times it still hadn't reached.
+///
+/// Only recurring reminders qualify, for items the Summary can't show. With
+/// the app open a card on the Summary needs no reminder, which also rules
+/// out "is back": its item is on the Summary, or is hidden again and so
+/// doesn't notify (PRD 7). The reminders are worked out again from today's
+/// data, so a bill since done, skipped or stopped has none to show.
+List<PlannedNotification> lateReminders(
+  Tree tree, {
+  required List<DateTime> undelivered,
+  required DateTime now,
+  required AppSettings settings,
+}) {
+  if (!settings.notificationsEnabled) return const [];
+  final late = undelivered.where((at) => !at.isAfter(now)).toList();
+  if (late.isEmpty) return const [];
+  final moments = {for (final at in late) at.millisecondsSinceEpoch};
+  final earliest = late.reduce((a, b) => a.isBefore(b) ? a : b);
+  final onSummary = computeSummary(
+    tree,
+    now: now,
+    settings: settings,
+  ).visibleIds;
+  final today = logicalDate(now, dayStartMinutes: settings.dayStartMinutes);
+  final reminders = _recurringReminders(
+    tree,
+    // That function looks strictly after this time.
+    now: earliest.subtract(const Duration(milliseconds: 1)),
+    end: now,
+    settings: settings,
+  )..sort((a, b) => a.at.compareTo(b.at));
+  return [
+    for (final n in reminders)
+      if (moments.contains(n.at.millisecondsSinceEpoch))
+        if ([
+              for (final c in n.cards)
+                if (!onSummary.contains(c.id)) c,
+            ]
+            case final hidden when hidden.isNotEmpty)
+          PlannedNotification(
+            at: n.at,
+            cards: hidden,
+            // Today's rather than the planned day's: it may be shown days
+            // later, and "is due today" would then be wrong.
+            dueToday: {
+              for (final c in hidden)
+                if (daysUntilDue(c.node.dueOn!, today) == 0) c.id,
+            },
+          ),
+  ];
 }
 
 /// Whether what woke at [at] to bring [card] back asked to be reminded.

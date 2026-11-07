@@ -534,16 +534,77 @@ void main() {
       await closeSheet(tester);
     });
 
-    testSahai('#77 opening the app after a reminder time drops a late '
-        'reminder', (tester) async {
+    group('#77 a reminder still undelivered when the app opens', () {
       // The reminder was for 9:00 AM and Android hasn't delivered it yet.
-      // Opening the app replaces the schedule, and the new one leaves it out.
-      // This records what happens today, so a fix has to change it.
-      final app = newApp(DateTime(2026, 11, 5, 9, 2));
-      await addBill(app);
-      await pumpSahai(tester, app: app);
-      expect(app.reminders.replaceCalls, greaterThan(0));
-      expect(app.reminders.scheduled, isEmpty);
+      // Opening the app cancels it along with the rest of the schedule.
+      final nineAm = DateTime(2026, 11, 5, 9);
+      TestApp lateApp() => newApp(DateTime(2026, 11, 5, 9, 2));
+
+      testSahai('shows at once for a bill the Summary hides, and opens it', (
+        tester,
+      ) async {
+        final app = lateApp();
+        final bill = await addBill(app);
+        await app.actions.setAside(bill.personal, DateTime(2026, 11, 10, 8));
+        app.reminders.undeliveredTimes = [nineAm];
+        await pumpSahai(tester, app: app);
+        expect(find.text('Pay HDFC card'), findsNothing);
+        final shown = app.reminders.shownNow.single;
+        expect(shown.title, 'Pay HDFC card is due today');
+        expect(shown.nodeId, bill.hdfc);
+        app.reminders.tap(shown.nodeId);
+        await tester.pumpAndSettle();
+        expect(
+          find.text(Strings.notOnSummary('Personal', 'Tue, Nov 10')),
+          findsOneWidget,
+        );
+        await closeSheet(tester);
+      });
+
+      testSahai('shows only once', (tester) async {
+        final app = lateApp();
+        final bill = await addBill(app);
+        await app.actions.setAside(bill.personal, DateTime(2026, 11, 10, 8));
+        app.reminders.undeliveredTimes = [nineAm];
+        await pumpSahai(tester, app: app);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpAndSettle();
+        expect(app.reminders.shownNow, hasLength(1));
+      });
+
+      testSahai('stays quiet for a bill on the Summary', (tester) async {
+        final app = lateApp();
+        await addBill(app);
+        app.reminders.undeliveredTimes = [nineAm];
+        await pumpSahai(tester, app: app);
+        expect(find.text('Pay HDFC card'), findsOneWidget);
+        expect(app.reminders.replaceCalls, greaterThan(0));
+        expect(app.reminders.scheduled, isEmpty);
+        expect(app.reminders.shownNow, isEmpty);
+      });
+
+      for (final (name, act)
+          in <(String, Future<String> Function(TestApp, String))>[
+            ('done', (app, id) => app.actions.markDone(id)),
+            ('skipped', (app, id) => app.actions.skipOccurrence(id)),
+            ('stopped', (app, id) => app.actions.stopRepeating(id)),
+          ]) {
+        testSahai('stays quiet for a bill already $name', (tester) async {
+          final app = lateApp();
+          final bill = await addBill(app);
+          await app.actions.setAside(bill.personal, DateTime(2026, 11, 10, 8));
+          await act(app, bill.hdfc);
+          app.reminders.undeliveredTimes = [nineAm];
+          await pumpSahai(tester, app: app);
+          expect(app.reminders.replaceCalls, greaterThan(0));
+          expect(app.reminders.shownNow, isEmpty);
+        });
+      }
     });
   });
 
