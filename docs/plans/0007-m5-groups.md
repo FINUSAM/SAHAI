@@ -2,7 +2,7 @@
 
 - **Status:** In progress (plan and wireframes; no app code yet)
 - **Approved by:** FINUSAM on 2026-11-07 (wireframes and their decisions). The checklist below still needs the owner's "Proceed" before PR 1 starts
-- **Branches / PRs:** plan and wireframes `docs/m5-plan` (#41); PR 1 `feat/m5-engine` (#42, #44); PR 2 `feat/m5-screens` (#43); close-out `docs/m5-close-out` (#46); release (#45)
+- **Branches / PRs:** plan and wireframes `docs/m5-plan` (#41, #83); PR 1 `feat/m5-engine` (#42, #44); PR 2 `feat/m5-screens` (#43); close-out `docs/m5-close-out` (#46); release (#45)
 - **PRD sections:** 6, 8.2, 8.4, 8.6, 9, 10, 13, 16 (plus E-013, E-014, E-015)
 - **Acceptance tests:** AT-083 to AT-094 (12 rows: 9 Must, 3 Should), plus the button alternatives of AT-116 (tagged M7) and the E-013, E-014 and E-015 tests
 - **Wireframes:** [`docs/design/m5-groups/`](../design/m5-groups/) (approved 2026-11-07)
@@ -45,7 +45,7 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 1. [x] Read PRD 6, 8.2, 8.4, 8.6, 9, 10, 13, 16, tech plan 4.6 and AT-083 to AT-094, AT-116
 2. [x] Wireframes (14 frames) approved by the owner; PNGs in `docs/design/m5-groups/`, choices in the design README
 3. [x] Approved answers added to `PRD_Edits.md` (E-013 to E-015)
-4. [ ] This plan; PR for #41. Tick #41 and correct #42, #43 and #44 to match the decisions
+4. [x] This plan; PR for #41 (#83). Tick #41 and correct #42, #43 and #44 to match the decisions
 
 **Before any M5 code merges**
 
