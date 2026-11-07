@@ -89,6 +89,7 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 - 2026-11-07 (PR 2): the owner chose to fix #77, so the fix was added to this PR. It couldn't wait for the close-out PR, which comes after the phone checks, and a PR of its own would have made four for M4. The owner approved replacing the test that recorded the bug.
 - 2026-11-07 (close-out): the owner moved the phone check (step 22) from PR 2 to the close-out PR, after merging PR 2. That PR is M4's third and last: it stays open during the check and merges once the check passes.
 - 2026-11-07 (close-out): the owner answered #81, and PRD 7's "a few minutes late" became "late, usually within an hour" (E-012). #80, a new reminder replacing an uncleared one in the shade, waits until after M4 by the owner's choice.
+- 2026-11-07 (close-out): the owner made `dev` the default branch, so issues close when their PR merges into `dev` rather than at release. #36 and #37 were closed by hand, and the close-out PR closes #38, #40, #77 and #81. The release PR no longer closes anything, so #39 and the milestone are closed by hand after tagging (step 23).
 
 ## Notes for whoever picks this up
 
