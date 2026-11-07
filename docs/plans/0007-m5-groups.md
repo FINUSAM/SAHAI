@@ -8,10 +8,6 @@
 - **Wireframes:** [`docs/design/m5-groups/`](../design/m5-groups/) (approved 2026-11-07)
 - **Test devices:** OnePlus Nord 5 (OxygenOS 16 / Android 16)
 
-## Wait for v0.4.0 before merging M5 code
-
-**No M5 app code merges into `dev` until `v0.4.0` is tagged.** A release merges all of `dev` into `main`, so M5 code on `dev` would ship inside the M4 release. Branches can be started and PRs opened before the tag, but they stay unmerged. This plan's docs PR changes no app code, so it can merge now.
-
 ## Owner decisions for M5
 
 Settled on 2026-11-07, with the wireframes.
@@ -49,7 +45,7 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 
 **Before any M5 code merges**
 
-5. [ ] `v0.4.0` is tagged (#39). Then bring the M5 branches up to date with `dev`
+5. [x] `v0.4.0` is tagged (#39, 2026-11-08). Then bring the M5 branches up to date with `dev`
 
 **PR 1: engine, actions, log** (`feat/m5-engine`, #42 and #44)
 
@@ -82,7 +78,7 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 
 ## Changes to the plan
 
-- None yet.
+- 2026-11-08: `v0.4.0` was tagged before this plan merged, so the warning that M5 code must wait for it was removed and step 5 ticked. `dev` was merged into this branch.
 
 ## Notes for whoever picks this up
 
@@ -95,4 +91,4 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 - **AT-116 is tagged M7.** M5 adds the button alternatives and their labels; the TalkBack pass on the phone stays with #56.
 - **The frames were rendered with headless Chrome,** as in M4, and all 14 were checked as images. The final images are the reference if they differ from the live canvas, which hasn't been opened since it was published.
 - #80 (a new reminder replacing one in the shade) has no milestone and isn't part of M5.
-- The M4 docs are ahead of reality until the owner's phone check is done: plan 0006 steps 22 and 23 aren't ticked, the test sheet's M4 rows are Not run, and the release date isn't recorded. That's a small docs PR of its own, after the check.
+- **#84** (finishing a repeat-from-completion item early can give back the same due date) is in the M5 milestone but is its own bug-fix PR, not one of M5's three. It needs the owner's answer to its question first, and a failing test before the fix.
