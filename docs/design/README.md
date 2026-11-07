@@ -13,6 +13,7 @@ Wireframes for each milestone's screens. PRD 16 makes approved wireframes a gate
 | M2 Core loop | Summary, card sheet, Explorer Mark done and Reopen (10 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m2-summary/`](m2-summary/) | [Sahai wireframes: M2 Summary](https://claude.ai/artifact/5mT1TddXtf8N6TvygZgTLV) (private to the owner until shared) |
 | M3 Set aside | Set-aside picker, Set-Aside page, Explorer set aside, notifications, reminder settings (14 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m3-set-aside/`](m3-set-aside/) | [Sahai wireframes: M3 Set aside](https://claude.ai/artifact/Pyxg2E37pU7pYzF3KhPB12) (private to the owner until shared) |
 | M4 Recurring items | Due labels, schedule form, Skip and Stop repeating, waiting bills, recurring reminders (11 frames) | **Approved** by FINUSAM, 2026-11-06 | [`m4-recurring/`](m4-recurring/) | [Sahai wireframes: M4 Recurring items](https://claude.ai/artifact/JqARsT6vEsGqa2uMZZEunt) (private to the owner until shared) |
+| M5 Groups and order | Grouped Summary, drag and button moves, group picker, Explorer groups, Context groups settings (14 frames) | **Approved** by FINUSAM, 2026-11-07 | [`m5-groups/`](m5-groups/) | [Sahai wireframes: M5 Groups and order](https://claude.ai/artifact/SA1DfAVLoFVkS1njswWto5) (private to the owner until shared) |
 
 ## Brand
 
@@ -169,3 +170,46 @@ The owner approved these on 2026-11-07, for cases the frames don't show.
 - **Weekly schedules** can have no weekdays chosen, which simply counts weeks.
 - **Grouped reminders with different dates** read "2 items are due", and each line gives its own date. "2 items are due today" stays for when they all are.
 - **A bill's own set aside** doesn't stop its reminders. Tapping one opens the sheet from frame 11, naming the bill.
+
+## M5 Groups and order
+
+Same style and sample tree as M1 to M4, with three sample groups: At laptop, Errands and At home. Unless a frame says otherwise it is Monday, Nov 9, 2026. Dashed boxes in Settings mark settings from later milestones. Due lines in these frames leave out M4's small repeat mark; the real cards keep it.
+
+| # | Frame | Shows | Acceptance tests |
+|---|---|---|---|
+| 1 | [Summary, no groups](m5-groups/01-summary-no-groups.png) | No groups exist, so the Summary looks as it does today, with no headers | AT-083 |
+| 2 | [Summary with groups](m5-groups/02-summary-groups.png) | A header with icon, name and count for each group, and No group last | AT-085, AT-086 |
+| 3 | [Dragging a card](m5-groups/03-drag-card.png) | The card lifted; every group, including an empty one, is a place to drop it | AT-087, AT-092 |
+| 4 | [Moved, with Undo](m5-groups/04-moved-undo.png) | The card at the end of its new group; "Moved to At laptop" snackbar with Undo | AT-087, AT-094 |
+| 5 | [Next card keeps the place](m5-groups/05-next-card.png) | After Mark done, the next subtask takes the same position | AT-088 |
+| 6 | [Card sheet](m5-groups/06-card-sheet.png) | Context group, Move up and Move down, "Position 1 of 3 in At laptop": everything drag does, without dragging | AT-116 |
+| 7 | [Group picker](m5-groups/07-group-picker.png) | Same as the parent, each group, No group, New group | E-013 |
+| 8 | [Form with Context group](m5-groups/08-form-group.png) | A Context group row in the create and edit forms, for every node type | AT-085, AT-090 |
+| 9 | [Explorer rows](m5-groups/09-explorer-groups.png) | The group shows only where it's set on that node, or "No group" when that's set | AT-085, AT-086 |
+| 10 | [Explorer item menu](m5-groups/10-explorer-menu.png) | A Context group line that says where the group comes from | AT-085 |
+| 11 | [Settings](m5-groups/11-settings.png) | A new Summary section with Context groups | AT-084 |
+| 12 | [Context groups list](m5-groups/12-groups-list.png) | Groups in Summary order, up and down buttons, how many items each is set on, New group | AT-084 |
+| 13 | [Edit group](m5-groups/13-edit-group.png) | Name, optional icon, Delete group. New group is the same without Delete | AT-084 |
+| 14 | [Group deleted, with Undo](m5-groups/14-delete-undo.png) | "Deleted At laptop" snackbar with Undo | E-014 |
+
+AT-089, AT-091 and AT-093 have no frame of their own: they are about logic and restarts, and use the screens above.
+
+### Choices approved with these wireframes
+
+The PRD doesn't specify these. The owner approved them along with the wireframes on 2026-11-07. Three change or add to what the PRD says, so they are also PRD edits: "No group" as a real choice is [E-013](../PRD_Edits.md#e-013-no-group-can-override-an-inherited-group), deleting a group is [E-014](../PRD_Edits.md#e-014-deleting-a-context-group) and logging Explorer reorders is [E-015](../PRD_Edits.md#e-015-every-order-change-is-logged).
+
+- **Dragging:** press and hold anywhere on a card to lift it. There is no separate drag handle.
+- **No group:** the PRD's "default list". It always comes last, and its header shows only when at least one other group is on the Summary. With no groups showing, the Summary has no headers.
+- **Group order:** set only in the Context groups list in Settings, with up and down buttons. Headers on the Summary don't drag.
+- **Empty groups:** hidden at rest (AT-084), and shown as dashed drop zones during a drag.
+- **Moving to another group:** the card goes to the end of that group, with "Moved to At laptop" and Undo for 5 seconds. Reordering within a group shows no snackbar, because moving the card back undoes it.
+- **Undo in the log:** Undo of a move writes the same events the other way round, so M5 needs no new event types.
+- **No-drag controls:** Move up and Move down are in the card sheet, and the sheet stays open between taps. The Context group line opens the group picker, which is how a card changes group without dragging.
+- **Context group in forms and menus:** a row in the create and edit forms for every node type, and a line in the Explorer item menu.
+- **Group picker:** "Same as <parent>" and "No group" appear only when an ancestor has a group. Otherwise there's a single "No group" row that clears the setting. New group is at the bottom.
+- **Explorer rows:** a group shows only on the node it's set on, or "No group" when that's set. An inherited group isn't repeated down the tree.
+- **Settings:** a new Summary section holds Context groups.
+- **Group icons:** a fixed set of nine plus None, drawn in the app, so no new package.
+- **Deleting a group:** no "Are you sure?" step, like Delete elsewhere. The Delete row says what happens to the items.
+- **Recurring cards:** their sheets keep Skip this occurrence and Stop repeating from M4, alongside the new rows.
+- **Collapsing groups:** not in M5. A collapsed group could hide an overdue bill, and neither the PRD nor the acceptance tests ask for it.
