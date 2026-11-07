@@ -8,7 +8,7 @@ Read at the start of every Claude Code session in this repo. These rules apply t
 
 - Android application ID: `com.finusam.sahai`
 - Owner: FINUSAM (founder and product owner). Only the owner approves changes to the PRD, these rules, dependencies and permissions.
-- Status: M3 Set aside shipped as `v0.3.0` (2026-11-06). M4 Recurring items is next. Architecture and packages are decided in the technical plan (`docs/tech-plan/`), not ad hoc.
+- Status: M4 Recurring items shipped as `v0.4.0`. M5 Groups and order is next. Architecture and packages are decided in the technical plan (`docs/tech-plan/`), not ad hoc.
 
 ### Never break these
 

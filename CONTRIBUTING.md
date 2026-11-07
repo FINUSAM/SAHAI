@@ -24,7 +24,7 @@ docs/... chore/... ─────┘
 ```
 
 - **`main`** is always releasable. It changes only when the owner merges `dev` into it for a release. No direct pushes.
-- **`dev`** is the integration branch. All work arrives through pull requests. No direct pushes.
+- **`dev`** is the integration branch and the repo's default branch. All work arrives through pull requests. No direct pushes.
 - **Both are protected on GitHub:** changes only through a PR, no force pushes, no deletion, and the rules apply to admins too. Approvals are set to 0 because the owner's merge is the review (GitHub doesn't let an account approve its own PR). CI must pass before merging once CI exists.
 - **Work branches** are short-lived, created from the latest `dev`, and deleted after merging. GitHub deletes the branch on GitHub automatically when its PR is merged (the repo's "Automatically delete head branches" setting); protected branches such as `dev` are never deleted this way:
 
@@ -101,7 +101,7 @@ Work is tracked on GitHub so the owner can see progress without reading the plan
 - **Milestones** mirror PRD 16, one per milestone (`M3 Set aside (v0.3.0)` and so on). Each milestone's page shows its open and closed issues and a percentage. A milestone is closed when its version is tagged.
 - **Issues** are work packages, not single tasks: a milestone's wireframes and plan, each of its PRs, the owner's phone tests and release, and the close-out docs. Each issue lists the PRD sections and acceptance test IDs it covers, a task list that is ticked as work lands, and a "Done when".
 - **Labels** say what kind of work it is (`type: feature`, `type: bug`, `type: chore`, `type: docs`, `type: design`, `type: release`, `type: test`) and who acts: `owner-action` marks things only the owner can do (approvals, phone tests, tagging, Play Console), `prd-question` marks a PRD question for the owner, `blocked` marks waiting.
-- **Every PR links its issue** with `Closes #N` in the description, so merging closes the issue. A PR that delivers part of an issue says `Part of #N` and ticks the tasks it covered.
+- **Every PR links its issue** with `Closes #N` in the description, so merging into `dev` closes the issue. GitHub only acts on `Closes` for the default branch, so a closed issue means merged, not yet released. A PR that delivers part of an issue says `Part of #N` and ticks the tasks it covered.
 - **Bugs** found on the phone are opened with the bug report template, named with the acceptance test if there is one, and put in the milestone they affect.
 - The saved checklists in `docs/plans/` stay the detailed record for a milestone; the issues are the overview.
 
@@ -125,6 +125,8 @@ The owner releases at the end of each milestone:
 | M7 Polish and safety | v0.7.0 |
 | M8 Release prep | v0.8.0 |
 | Public release | v1.0.0 |
+
+5. Close the release issue and the milestone by hand. A release PR goes into `main`, so `Closes` does nothing there.
 
 ## Working with Claude Code
 

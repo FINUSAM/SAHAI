@@ -29,6 +29,7 @@ followed by v1.0.0 for the public release.
 ### Changed
 - Version 0.4.0+4.
 - The Reminders notification channel and the Notifications setting now mention recurring items.
+- PRD edit E-012: reminders may arrive late, usually within an hour, not "a few minutes".
 
 ### Fixed
 - A recurring reminder Android hadn't delivered yet was lost if the app opened after its time (#77).
