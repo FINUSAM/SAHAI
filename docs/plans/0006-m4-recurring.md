@@ -24,6 +24,14 @@ Both were open when the plan merged, and the owner accepted the recommendations 
 1. **Log events for the new Undos.** Undo on Skip and Undo on Stop repeating were approved with the frames, but PRD 9 had no event for them, and none for Stop repeating itself. Recorded as [E-011](../PRD_Edits.md#e-011-skip-and-stop-repeating-have-undo-and-the-log-records-them): `skip_undone`, `repeat_stopped` and `repeat_restored`, each undo pointing at the event it cancels.
 2. **How a month is tested.** The simulated month in automated tests (step 11), plus spot checks on the phone with its date changed, and the real bills carrying on as daily use after the release. v0.4.0 doesn't wait for a real month. #38's "done when" now says this.
 
+Five more came up while planning PR 2, and the owner settled them on 2026-11-07:
+
+1. **A bill set aside past its show day** keeps its show-day reminder at 9:00 AM, and gets "is back" when it wakes if Remind me is on. I recommended dropping the show-day reminder; the owner chose to keep it. While an ancestor hides the bill, the show-day reminder still doesn't fire, because PRD 7 makes only the due-date reminder the exception.
+2. **A bill set aside past its due date** still gets the due-day reminder. Tapping it opens the sheet from frame 11.
+3. **No lead days:** the show day and due day are the same, so there is one reminder, "is due today".
+4. **A group with different dates** reads "2 items are due", and each line gives its own date.
+5. **Screens with no frame:** yearly has In month and On day; daily has no extra field; weekly can have no weekdays chosen, which simply counts weeks.
+
 ## Estimate
 
 Measured in working sessions like the M3 ones (M3 took 3 PRs over about three days of sessions).
@@ -56,15 +64,15 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 
 **PR 2: screens and reminders** (`feat/m4-screens`, #38, after PR 1 merges)
 
-13. [ ] Repeat switch and schedule fields in the create and edit forms, stream items only, per frames 2 to 4; first due date filled in with the next matching date and editable; turning Repeat off on a recurring item does the same as Stop repeating
-14. [ ] Due line on Summary cards, overdue in bold (frame 1); Skip this occurrence, showing the next date, and Stop repeating in the card sheet (frame 5); snackbars with Undo (frames 6 and 9)
-15. [ ] Set-Aside page: waiting bills with show time and due date (frame 7)
-16. [ ] Explorer: repeat mark, schedule, due date and "back" date; never shown as DONE (frame 8, AT-077)
-17. [ ] Planner: two reminders at the reminder time, on the show day and on the due day if still not done (AT-078); the due-day reminder ignores set-aside ancestors (AT-079); wording and grouping per frame 10; unit tests with the fake clock
-18. [ ] Reminder taps: open the card, or the item's sheet with the note when the item isn't on the Summary (frame 11, AT-079)
-19. [ ] Accessibility: labels on every new action, 48 dp targets, large-text check
-20. [ ] Widget tests for the AT rows the matrix marks W; integration flows in `integration_test/`; list the device-only checks in the PR
-21. [ ] Version 0.4.0+4 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #38; open PR 2
+13. [x] Repeat switch and schedule fields in the create and edit forms, stream items only, per frames 2 to 4; first due date filled in with the next matching date and editable; turning Repeat off on a recurring item does the same as Stop repeating
+14. [x] Due line on Summary cards, overdue in bold (frame 1); Skip this occurrence, showing the next date, and Stop repeating in the card sheet (frame 5); snackbars with Undo (frames 6 and 9)
+15. [x] Set-Aside page: waiting bills with show time and due date (frame 7)
+16. [x] Explorer: repeat mark, schedule, due date and "back" date; never shown as DONE (frame 8, AT-077)
+17. [x] Planner: two reminders at the reminder time, on the show day and on the due day if still not done (AT-078); the due-day reminder ignores set-aside ancestors (AT-079); wording and grouping per frame 10; unit tests with the fake clock
+18. [x] Reminder taps: open the card, or the item's sheet with the note when the item isn't on the Summary (frame 11, AT-079)
+19. [x] Accessibility: labels on every new action, 48 dp targets, large-text check
+20. [x] Widget tests for the AT rows the matrix marks W; integration flows in `integration_test/`; list the device-only checks in the PR
+21. [x] Version 0.4.0+4 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #38; open PR 2
 22. [ ] Owner: release build on the phone; AT-061 to AT-081 Founder rows as spot checks with the phone's date changed (question 2). The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner
 
 **Release** (owner)
@@ -75,6 +83,10 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 
 - 2026-11-06 (PR 1): the owner accepted both open questions. E-011 was added, and #38's "done when" changed to the simulated month plus spot checks.
 - 2026-11-06 (PR 1, step 9): added a `setRecurrence` action, which the plan didn't list. The tests and PR 2's form both need a way to give an item a schedule. Like `edit`, it isn't an activity log event in PRD 9.
+- 2026-11-07 (PR 2): #77's check was added to this PR, with the owner's approval.
+- 2026-11-07 (PR 2, step 13): `create` takes an optional schedule. Creating the item and then calling `setRecurrence` would have logged a false `surfaced` for a moment on a bill still waiting for its show date.
+- 2026-11-07 (PR 2): the approved checklist had a fix for Undo of a set aside on a waiting bill. No fix was needed: the Explorer offers Wake now rather than Set aside on a waiting bill, so that Undo can't be reached, and Undo from a Summary card leaves the bill on the Summary. Tests now hold both in place.
+- 2026-11-07 (PR 2): the owner chose to fix #77, so the fix was added to this PR. It couldn't wait for the close-out PR, which comes after the phone checks, and a PR of its own would have made four for M4. The owner approved replacing the test that recorded the bug.
 
 ## Notes for whoever picks this up
 
@@ -85,13 +97,25 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
   - Monthly and yearly schedules step from the month of their base date, so "monthly on the 5th" completed on Nov 3 or Nov 7 from completion both give Dec 5.
   - A card that stays on the Summary across a completion, as in AT-068, gets no new `surfaced`, because it never left. The time from surfaced to done for that occurrence will read long.
   - Undo is refused with `staleUndo` if the occurrence has already moved on.
-- **For PR 2:**
-  - `wakeTimeOf` and `setAsideEntries` take `settings`, and the Explorer, its sheet and the Set-Aside screen don't pass it yet. They use the PRD defaults, which is only wrong once Day starts at is editable, but the waiting-bill screens should pass it.
-  - Undo of a set aside is `wakeNow`. On a bill set aside from the Explorer while it's waiting for its show date, that would bring it onto the Summary instead of putting it back. Handle this before Set aside is offered there.
+- **PR 2 (2026-11-07):** the screens and reminders. `dart run tool/at_coverage.dart M4` reports 22 of 22. Small choices, all open to change:
+  - A new schedule's Next due is the first matching date on or after today. Daily and plain "every N weeks" schedules have no fixed day, so they start today.
+  - Next due follows the schedule fields until the user picks a date, and then stays.
+  - Saving an edit only rewrites the schedule if it changed, because saving one ends any Wake now or Change time on this occurrence.
+  - A bill woken early by Wake now still gets its reminders on its real show day and due day.
+  - The sheet from a reminder tap leaves out Set aside and Stop repeating, as frame 11 does.
+  - A domain that wakes on a bill's show day before 9:00 AM gives "is back" and then the show-day reminder.
+  - A crossed-out bell can still show on a waiting bill that was once set aside with Remind me off, though its reminders do arrive. It's cosmetic, and left as it is.
+- **#77 (2026-11-07):** the test confirms the gap. Opening the app after a reminder's time but before Android delivers it cancels that reminder, and the new schedule leaves it out, because past times are skipped. The plugin's code shows the alarm really is cancelled.
+- **#77 fix (2026-11-07):** a late recurring reminder now shows at once when its item isn't on the Summary. The rest of the design is in tech plan 7. Small choices, all open to change:
+  - Only hidden items get one, by the owner's choice. A late reminder for a card on the Summary is still dropped, because the app is open and the card is in view.
+  - "Is back" is never shown late: its item is on the Summary, or it's hidden again and so doesn't notify (PRD 7).
+  - A reminder shown on a later day gives the date rather than "is due today".
+  - If Android delivers a reminder at the moment the app reads the pending list, it can arrive twice. That's rare and harmless, so nothing guards against it.
+  - A late reminder is hard to force on a phone, so the proof is automated tests against a fake. The plugin calls themselves (`pendingNotificationRequests`, `show`) have only been read, not run.
+  - Android's limit for a late reminder is an hour or more, not the few minutes PRD 7 says.
 
 - PRD 16's gate for M4 is that the four credit card bills behave correctly through a full month.
 - The show-day reminder arrives at 9:00 AM but the card appears at the start of the day (4:00 AM), so the card can be on the Summary for hours before its reminder. That's what PRD 7 asks for.
-- Not decided yet, to settle in step 17: which reminder a bill gets when the user has set it aside past its show day, for example AT-072's Nov 4 at 8 AM. M3's "is back" rule and the recurring rule both seem to apply. Raise it with the owner if the PRD doesn't answer it by then.
-- An open-the-app-late gap carries over from M3: opening the app before a late inexact reminder fires may drop that reminder, since the schedule is replaced and past times are skipped. Tracked in #77.
+- An open-the-app-late gap carried over from M3: opening the app before a late inexact reminder fires dropped that reminder, since the schedule is replaced and past times are skipped. Fixed in PR 2 for items not on the Summary (#77).
 - Notifications were tested on the OnePlus only in M3 (accepted by the owner, 2026-11-06). AT-078 and AT-079 have the same gap.
 - The frames were rendered from the canvas pages with headless Chrome, because the canvas can't export PNGs. All 11 PNGs were viewed in their final form before committing; the live canvas itself was never seen rendering (it froze the browser tab), so the PNGs are the reference if the two differ.

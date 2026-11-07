@@ -60,23 +60,29 @@ class _ReminderSyncState extends ConsumerState<ReminderSync> {
     try {
       do {
         _again = false;
+        final reminders = ref.read(remindersProvider);
+        // Before replacing them, which cancels any that are late (#77). And
+        // before reading the tree, so nothing below works from stale data.
+        final undelivered = await reminders.undelivered();
         // The current values; a `.future` would give the first one loaded.
         // Until both have loaded there is nothing to plan, and their first
         // values call this again.
         final tree = ref.read(treeProvider).value;
         final settings = ref.read(settingsProvider).value;
         if (tree == null || settings == null) return;
-        final plan = planNotifications(
+        final now = ref.read(clockProvider).now();
+        final late = lateReminders(
           tree,
-          now: ref.read(clockProvider).now(),
+          undelivered: undelivered,
+          now: now,
           settings: settings,
         );
-        await ref
-            .read(remindersProvider)
-            .replaceAll(
-              messagesFor(tree, plan),
-              exact: settings.exactReminders,
-            );
+        final plan = planNotifications(tree, now: now, settings: settings);
+        await reminders.replaceAll(
+          messagesFor(tree, plan),
+          exact: settings.exactReminders,
+        );
+        await reminders.showNow(messagesFor(tree, late, firstId: firstLateId));
       } while (_again && mounted);
     } on Exception catch (e) {
       debugPrint('Reminders not scheduled: ${e.runtimeType}');

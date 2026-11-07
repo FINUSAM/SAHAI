@@ -35,6 +35,17 @@ class SummaryCard {
     this.unlocks,
   });
 
+  /// A recurring item as a card whether or not it's on the Summary, for the
+  /// reminders and the sheet that reach it anyway (AT-079).
+  factory SummaryCard.ofRecurring(Tree tree, TreeNode node) => SummaryCard(
+    node: node,
+    kind: CardKind.streamItem,
+    reason: CardReason.next,
+    path: tree.ancestorsOf(node.id).reversed.toList(),
+    ownerId: node.id,
+    groupId: tree.effectiveGroupOf(node.id),
+  );
+
   final TreeNode node;
   final CardKind kind;
   final CardReason reason;

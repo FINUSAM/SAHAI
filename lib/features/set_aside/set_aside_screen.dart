@@ -9,11 +9,13 @@ import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
+import '../../engine/settings.dart';
 import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
 import '../explorer/explorer_rows.dart';
 import '../explorer/node_icons.dart';
+import '../summary/due_line.dart';
 import 'set_aside_flow.dart';
 
 /// The Set-Aside page (PRD 8.3, frames 8 to 10): everything set aside,
@@ -49,6 +51,7 @@ class _SetAsideScreenState extends ConsumerState<SetAsideScreen> {
     final tree = ref.watch(treeProvider);
     ref.watch(recomputeTickProvider);
     final now = ref.watch(clockProvider).now();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     return Scaffold(
       appBar: AppBar(
         title: const Text(Strings.setAside),
@@ -57,7 +60,7 @@ class _SetAsideScreenState extends ConsumerState<SetAsideScreen> {
       body: switch (tree) {
         AsyncData(:final value) => _Body(
           tree: value,
-          entries: setAsideEntries(value, now: now),
+          entries: setAsideEntries(value, now: now, settings: settings),
           now: now,
         ),
         AsyncError() => const Center(child: Text(Strings.loadError)),
@@ -165,8 +168,9 @@ String? hidesLine(List<TreeNode> hidden) {
   );
 }
 
-/// One card (frame 8): type, title, path, wake time and time remaining,
-/// what it hides, and Wake now. Tapping it opens its sheet (frame 9).
+/// One card (frame 8): type, title, path, wake time and time remaining, the
+/// due date of a waiting bill (M4 frame 7), what it hides, and Wake now.
+/// Tapping it opens its sheet (frame 9).
 class SetAsideCard extends ConsumerWidget {
   const SetAsideCard({
     super.key,
@@ -226,6 +230,7 @@ class SetAsideCard extends ConsumerWidget {
                       now: now,
                       remind: node.remindOnWake,
                     ),
+                    if (node.dueOn != null) DueLine(node: node),
                     if (hides != null)
                       Row(
                         children: [

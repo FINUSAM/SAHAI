@@ -159,3 +159,13 @@ The PRD doesn't specify these. The owner approved them along with the wireframes
 - **Explorer:** a recurring item shows a repeat mark and "Monthly · due Dec 5 · back Dec 2". After it's completed it shows as TODO with its next due date.
 - **Reminder wording:** "<title> is due Nov 5" on the show day, "<title> is due today" on the due day, and "2 items are due today" when several arrive at once. Taps work as in M3: a single one opens its card, a grouped one opens the Summary.
 - **Reminder tap inside a paused domain:** the item isn't on the Summary, so the app opens its sheet directly, with Mark done and a note such as "Personal is set aside until Tue, Nov 10, so this isn't on the Summary."
+
+### Choices added while building the screens
+
+The owner approved these on 2026-11-07, for cases the frames don't show.
+
+- **Yearly schedules** have In month and On day fields, in the style of On day.
+- **Daily schedules** have no extra field.
+- **Weekly schedules** can have no weekdays chosen, which simply counts weeks.
+- **Grouped reminders with different dates** read "2 items are due", and each line gives its own date. "2 items are due today" stays for when they all are.
+- **A bill's own set aside** doesn't stop its reminders. Tapping one opens the sheet from frame 11, naming the bill.

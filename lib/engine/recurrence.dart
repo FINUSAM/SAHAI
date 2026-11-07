@@ -108,6 +108,33 @@ class Schedule {
     Frequency.yearly => _dayIn(from.year + interval, month!, days.first),
   };
 
+  /// The first date this schedule falls on, on or after the logical date
+  /// [today]: what a new schedule's Next due starts as (M4 frame 3). Daily
+  /// and plain "every N weeks" schedules have no fixed day, so that's today.
+  DateTime firstDue(DateTime today) {
+    switch (frequency) {
+      case Frequency.daily:
+        return today;
+      case Frequency.weekly:
+        if (days.isEmpty) return today;
+        for (var i = 0; i < DateTime.daysPerWeek; i++) {
+          final date = DateTime(today.year, today.month, today.day + i);
+          if (days.contains(date.weekday)) return date;
+        }
+        return today;
+      case Frequency.monthly:
+        final date = _dayIn(today.year, today.month, days.first);
+        return date.isBefore(today)
+            ? _dayIn(today.year, today.month + 1, days.first)
+            : date;
+      case Frequency.yearly:
+        final date = _dayIn(today.year, month!, days.first);
+        return date.isBefore(today)
+            ? _dayIn(today.year + 1, month!, days.first)
+            : date;
+    }
+  }
+
   DateTime _nextWeekly(DateTime from) {
     if (days.isEmpty) {
       return DateTime(from.year, from.month, from.day + 7 * interval);
@@ -148,6 +175,21 @@ DateTime showTime(
   required int dayStartMinutes,
 }) =>
     DateTime(dueOn.year, dueOn.month, dueOn.day - leadDays, 0, dayStartMinutes);
+
+/// When a recurring reminder for the logical day [date] arrives (PRD 7). A
+/// reminder time earlier than the day start belongs to the end of that
+/// logical day, so it falls on the next calendar date.
+DateTime reminderTime(
+  DateTime date, {
+  required int reminderMinutes,
+  required int dayStartMinutes,
+}) => DateTime(
+  date.year,
+  date.month,
+  date.day + (reminderMinutes < dayStartMinutes ? 1 : 0),
+  0,
+  reminderMinutes,
+);
 
 /// Whole days from the logical date [today] to [dueOn]: 0 on the due date,
 /// negative once overdue.

@@ -122,12 +122,19 @@ class NodeActions {
       _liveNodes().watch().map((rows) => Tree(rows.map(_toTreeNode)));
 
   /// Creates a node at the end of its parent's children (AT-001, AT-002).
+  /// A stream item can start with a repeat [schedule], first due on [dueOn],
+  /// in the same step, so it never shows as a normal item first. [leadDays]
+  /// is the Settings default if null, as in [setRecurrence].
   Future<String> create({
     required NodeType type,
     String? parentId,
     required String title,
     String notes = '',
+    Schedule? schedule,
+    DateTime? dueOn,
+    int? leadDays,
   }) {
+    assert((schedule == null) == (dueOn == null), 'A schedule needs a date.');
     final cleanTitle = title.trim();
     if (cleanTitle.isEmpty) {
       throw const ActionRejected(RejectReason.emptyTitle);
@@ -140,6 +147,9 @@ class NodeActions {
       }
       if (!canHaveChild(parent?.type, type)) {
         throw const ActionRejected(RejectReason.invalidParent);
+      }
+      if (schedule != null && type != NodeType.streamItem) {
+        throw const ActionRejected(RejectReason.cantRepeat);
       }
       final id = _newId();
       final now = utcMillis(_clock);
@@ -154,6 +164,13 @@ class NodeActions {
               notes: Value(notes),
               status: Value(type.hasStatus ? NodeStatus.todo.dbName : null),
               sortOrder: await _nextSortOrder(parentId),
+              recurrence: Value(schedule?.toJson()),
+              dueOn: Value(dueOn == null ? null : formatDueOn(dueOn)),
+              leadDays: Value(
+                schedule == null
+                    ? null
+                    : leadDays ?? (await _settings()).defaultLeadDays,
+              ),
               createdAt: now,
               updatedAt: now,
             ),

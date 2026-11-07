@@ -18,6 +18,21 @@ followed by v1.0.0 for the public release.
   Set-Aside list until then (E-005); complete, skip and stop repeating, each with Undo, logged with
   the due date; the new log events `skip_undone`, `repeat_stopped` and `repeat_restored` (E-011); a
   full simulated month of the four PRD 7 bills in the tests.
+- M4 screens and reminders (PR 2 of M4): a Repeat switch and schedule fields in the stream item
+  forms, with the next due date filled in and editable; a due line on Summary cards, overdue in
+  bold; the schedule, Skip this occurrence and Stop repeating in the card sheet, each with Undo;
+  "Done. Next due Dec 5" after completing; waiting bills on the Set-Aside page with their due date;
+  a repeat mark and "Monthly · due Dec 5 · back Dec 2" in the Explorer. Recurring reminders at
+  9:00 AM on the show day and the due day, named or grouped; the due-day one fires even inside a
+  paused domain, and tapping it opens the item with a note saying why it isn't on the Summary.
+
+### Changed
+- Version 0.4.0+4.
+- The Reminders notification channel and the Notifications setting now mention recurring items.
+
+### Fixed
+- A recurring reminder Android hadn't delivered yet was lost if the app opened after its time (#77).
+  It now shows at once when its item isn't on the Summary, such as a bill in a paused domain.
 
 ## [0.3.0] - 2026-11-06 (M3 Set aside)
 
