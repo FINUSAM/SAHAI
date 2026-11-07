@@ -94,7 +94,8 @@ o.append("| E-002 | M3 | U | An item that wakes while the app is closed gets a `
 o.append("| E-003 | M1 | U | Undo of a project delete restores only rows flagged by that delete; a task deleted earlier on its own stays deleted |")
 o.append("| E-004 | M7 | U | Compaction moves events older than 12 months into `event_daily_summaries` with correct counts, in one transaction |")
 o.append("| E-005 | M4 | U, W | A paid bill is listed on the Set-Aside page until its show date; Wake now shows it with its real due label and leaves the schedule unchanged |")
-o.append("| E-007 | M1 | U, W | A locked task offers no checkmark or Mark done action until the task before it is done |\n")
+o.append("| E-007 | M1 | U, W | A locked task offers no checkmark or Mark done action until the task before it is done |")
+o.append("| E-011 | M4 | U | Stopping repeating writes `repeat_stopped`; Undo of a skip or a stop writes `skip_undone` or `repeat_restored` linking the event it cancels, and the card gets no new `surfaced` event |\n")
 cur = None
 for r in rows:
     tid, m, area, sec, scen, prio, by = r[0], r[1], r[2], r[3], r[4], r[8], r[9]

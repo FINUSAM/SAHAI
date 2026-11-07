@@ -29,6 +29,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | E-004 | M7 | U | Compaction moves events older than 12 months into `event_daily_summaries` with correct counts, in one transaction |
 | E-005 | M4 | U, W | A paid bill is listed on the Set-Aside page until its show date; Wake now shows it with its real due label and leaves the schedule unchanged |
 | E-007 | M1 | U, W | A locked task offers no checkmark or Mark done action until the task before it is done |
+| E-011 | M4 | U | Stopping repeating writes `repeat_stopped`; Undo of a skip or a stop writes `skip_undone` or `repeat_restored` linking the event it cancels, and the card gets no new `surfaced` event |
 
 
 ## M1 Foundations

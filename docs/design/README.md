@@ -12,6 +12,7 @@ Wireframes for each milestone's screens. PRD 16 makes approved wireframes a gate
 | M1 Foundations | Explorer (9 frames) | **Approved** by FINUSAM, 2026-10-30 | [`m1-explorer/`](m1-explorer/) | [Sahai wireframes: M1 Explorer](https://claude.ai/artifact/Md4TXCHV3iJ7GG9d3s7kFi) (private to the owner until shared) |
 | M2 Core loop | Summary, card sheet, Explorer Mark done and Reopen (10 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m2-summary/`](m2-summary/) | [Sahai wireframes: M2 Summary](https://claude.ai/artifact/5mT1TddXtf8N6TvygZgTLV) (private to the owner until shared) |
 | M3 Set aside | Set-aside picker, Set-Aside page, Explorer set aside, notifications, reminder settings (14 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m3-set-aside/`](m3-set-aside/) | [Sahai wireframes: M3 Set aside](https://claude.ai/artifact/Pyxg2E37pU7pYzF3KhPB12) (private to the owner until shared) |
+| M4 Recurring items | Due labels, schedule form, Skip and Stop repeating, waiting bills, recurring reminders (11 frames) | **Approved** by FINUSAM, 2026-11-06 | [`m4-recurring/`](m4-recurring/) | [Sahai wireframes: M4 Recurring items](https://claude.ai/artifact/JqARsT6vEsGqa2uMZZEunt) (private to the owner until shared) |
 
 ## Brand
 
@@ -122,3 +123,49 @@ The PRD doesn't specify these. The owner approved them along with the wireframes
 - **Explorer:** a set-aside node shows a clock and "Back Mon, Nov 9 8:00 AM", and everything under it is greyed. Its menu offers Wake now and Change set-aside time; any other node offers Set aside…, which opens the picker without the scope dropdown, since the node is chosen directly.
 - **Notifications:** one item reads "<title> is back" with its path; several at the same moment read "3 items are back" and expand to list them. Tapping a single one opens the Summary with that card highlighted; tapping a grouped one opens the Summary.
 - **Settings** gets its first content: a Reminders section with Notifications and Exact reminders switches. Turning on Exact reminders sends the user to Android's alarm permission screen. Day starts at, the preset times and the bill reminder time keep the PRD defaults until M7 and M4.
+
+## M4 Recurring items
+
+Same style and sample tree as M1 to M3, with the four PRD 7 bills in Finance & Bills. Unless a frame says otherwise it is Monday, Nov 9, 2026, with HDFC due Nov 5 and unpaid.
+
+| # | Frame | Shows | Acceptance tests |
+|---|---|---|---|
+| 1 | [Summary with recurring cards](m4-recurring/01-summary.png) | A due line under the path, with overdue in bold; an unpaid bill doesn't hide the next, and recurring cards don't block normal items | AT-061 to AT-065 |
+| 2 | [Create form, Repeat off](m4-recurring/02-form-repeat-off.png) | A Repeat switch, on stream items only | — |
+| 3 | [Schedule, monthly](m4-recurring/03-schedule-monthly.png) | Every, period, day, next due, repeat from, show before due, and when it will appear | AT-061, AT-067, AT-069, AT-073 |
+| 4 | [Schedule, weekly](m4-recurring/04-schedule-weekly.png) | Weekday buttons | AT-074, AT-075 |
+| 5 | [Card sheet](m4-recurring/05-card-sheet.png) | The schedule, Skip this occurrence with the next date, Stop repeating | AT-071, AT-080 |
+| 6 | [Done with Undo](m4-recurring/06-done-undo.png) | "Done. Next due Dec 5" snackbar with Undo | AT-066, AT-070 |
+| 7 | [Set-Aside page, waiting bills](m4-recurring/07-set-aside-waiting.png) | Waiting bills with their show time and due date | E-005 |
+| 8 | [Explorer](m4-recurring/08-explorer-recurring.png) | Repeat mark, schedule, due date and "back" date; never DONE | AT-077 |
+| 9 | [Stop repeating](m4-recurring/09-stop-repeating.png) | The card loses its due line; "no longer repeats" snackbar with Undo | AT-080 |
+| 10 | [Reminders](m4-recurring/10-notifications.png) | The show-day and due-day reminders, and several at once | AT-078 |
+| 11 | [Reminder tap, paused domain](m4-recurring/11-reminder-paused-domain.png) | The item's sheet opens directly, with a note saying why it isn't on the Summary | AT-079 |
+
+AT-068, AT-072, AT-076, AT-081 and AT-082 have no frame of their own: they are about dates and logging, and use the labels and sheets above.
+
+### Choices approved with these wireframes
+
+The PRD doesn't specify these. The owner approved them along with the wireframes on 2026-11-06. None changes what the PRD asks for, except that Undo on Skip and on Stop repeating needed log events PRD 9 didn't have: that is [E-011](../PRD_Edits.md#e-011-skip-and-stop-repeating-have-undo-and-the-log-records-them).
+
+- **Repeat** is a switch in the create and edit forms, on stream items only. Turning it on opens the schedule fields below it.
+- **Schedule fields:** Every, Period, then On day or weekday buttons, Next due, Repeat from, Show before due, and a line saying when the item appears ("Appears Wed, Dec 2").
+- **First due date:** filled in with the next matching date, and the user can change it.
+- **Due line:** under the path on the card, with a repeat mark; overdue is in bold. It's a label, not a status.
+- **Done snackbar:** "Done. Next due Dec 5" with Undo for 5 seconds.
+- **Skip this occurrence** is in the card sheet and shows the date it moves to. It has the same 5-second Undo as Done, worded "Skipped. Next due Dec 5". That snackbar has no frame of its own, because it's frame 6 with different words.
+- **Stop repeating** is in the card sheet, with no "Are you sure?" step and a 5-second Undo instead, like Delete: "Pay HDFC card no longer repeats". Turning Repeat off in the edit form does the same thing.
+- **Waiting bills on the Set-Aside page** show the day-start time, such as "Sun, Nov 15 4:00 AM", because that's when they really come back, plus their due date. The reminder still arrives at 9:00 AM.
+- **Explorer:** a recurring item shows a repeat mark and "Monthly · due Dec 5 · back Dec 2". After it's completed it shows as TODO with its next due date.
+- **Reminder wording:** "<title> is due Nov 5" on the show day, "<title> is due today" on the due day, and "2 items are due today" when several arrive at once. Taps work as in M3: a single one opens its card, a grouped one opens the Summary.
+- **Reminder tap inside a paused domain:** the item isn't on the Summary, so the app opens its sheet directly, with Mark done and a note such as "Personal is set aside until Tue, Nov 10, so this isn't on the Summary."
+
+### Choices added while building the screens
+
+The owner approved these on 2026-11-07, for cases the frames don't show.
+
+- **Yearly schedules** have In month and On day fields, in the style of On day.
+- **Daily schedules** have no extra field.
+- **Weekly schedules** can have no weekdays chosen, which simply counts weeks.
+- **Grouped reminders with different dates** read "2 items are due", and each line gives its own date. "2 items are due today" stays for when they all are.
+- **A bill's own set aside** doesn't stop its reminders. Tapping one opens the sheet from frame 11, naming the bill.

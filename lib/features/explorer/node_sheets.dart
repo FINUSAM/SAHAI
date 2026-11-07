@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
+import '../../engine/settings.dart';
 import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
@@ -34,12 +35,14 @@ Future<NodeChoice?> showNodeActions(
   Tree tree,
   TreeNode node, {
   required DateTime now,
+  required AppSettings settings,
 }) => showModalBottomSheet<NodeChoice>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
   showDragHandle: true,
-  builder: (context) => _NodeActionsSheet(tree: tree, node: node, now: now),
+  builder: (context) =>
+      _NodeActionsSheet(tree: tree, node: node, now: now, settings: settings),
 );
 
 class _NodeActionsSheet extends StatelessWidget {
@@ -47,11 +50,13 @@ class _NodeActionsSheet extends StatelessWidget {
     required this.tree,
     required this.node,
     required this.now,
+    required this.settings,
   });
 
   final Tree tree;
   final TreeNode node;
   final DateTime now;
+  final AppSettings settings;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +68,7 @@ class _NodeActionsSheet extends StatelessWidget {
     final path = pathOf(tree, node);
     final mark = markOf(tree, node);
     final parentType = node.type.parentType;
-    final wakeAt = wakeTimeOf(node, now);
+    final wakeAt = wakeTimeOf(node, now, settings: settings);
     // Reopening a DONE child reopens its DONE ancestors too (PRD 7, AT-027).
     final reopensWith = [
       for (final a in tree.ancestorsOf(node.id))

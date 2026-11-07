@@ -1,4 +1,5 @@
 import 'package:sahai/engine/node_type.dart';
+import 'package:sahai/engine/recurrence.dart';
 import 'package:sahai/engine/tree.dart';
 
 /// Builds trees by hand for the engine tests: no database, no clock.
@@ -14,6 +15,8 @@ class TreeBuilder {
     DateTime? snoozeUntil,
     bool remind = true,
     bool recurring = false,
+    DateTime? dueOn,
+    int? leadDays,
   }) {
     final order = _nextOrder[parent] ?? 0;
     _nextOrder[parent] = order + 1;
@@ -29,7 +32,10 @@ class TreeBuilder {
         sortOrder: order,
         snoozeUntil: snoozeUntil,
         remindOnWake: remind,
-        isRecurring: recurring,
+        isRecurring: recurring || dueOn != null,
+        schedule: dueOn == null ? null : Schedule.monthly(day: dueOn.day),
+        dueOn: dueOn,
+        leadDays: leadDays,
       ),
     );
     return id;
