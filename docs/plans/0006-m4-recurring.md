@@ -1,6 +1,6 @@
 # M4 Recurring items
 
-- **Status:** Done (v0.4.0)
+- **Status:** Done (v0.4.0, 2026-11-07)
 - **Approved by:** FINUSAM on 2026-11-06 (wireframes and plan)
 - **Branches / PRs:** plan and wireframes `docs/m4-plan` (#36, #75); PR 1 `feat/m4-engine` (#37); PR 2 `feat/m4-screens` (#38); close-out `docs/m4-close-out` (#40)
 - **PRD sections:** 5, 6, 7 (Recurring items, Notifications), 8.2, 8.3, 8.4, 9, 16 (plus E-001, E-005, E-011, E-012)
@@ -73,7 +73,7 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 19. [x] Accessibility: labels on every new action, 48 dp targets, large-text check
 20. [x] Widget tests for the AT rows the matrix marks W; integration flows in `integration_test/`; list the device-only checks in the PR
 21. [x] Version 0.4.0+4 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #38; open PR 2
-22. [ ] Owner: release build on the phone; AT-061 to AT-081 Founder rows as spot checks with the phone's date changed (question 2). The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner
+22. [x] Owner: release build on the phone; AT-061 to AT-081 Founder rows as spot checks with the phone's date changed (question 2). The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner
 
 **Release** (owner)
 
@@ -90,6 +90,8 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 - 2026-11-07 (close-out): the owner moved the phone check (step 22) from PR 2 to the close-out PR, after merging PR 2. That PR is M4's third and last: it stays open during the check and merges once the check passes.
 - 2026-11-07 (close-out): the owner answered #81, and PRD 7's "a few minutes late" became "late, usually within an hour" (E-012). #80, a new reminder replacing an uncleared one in the shade, waits until after M4 by the owner's choice.
 - 2026-11-07 (close-out): the owner made `dev` the default branch, so issues close when their PR merges into `dev` rather than at release. #36 and #37 were closed by hand, and the close-out PR closes #38, #40, #77 and #81. The release PR no longer closes anything, so #39 and the milestone are closed by hand after tagging (step 23).
+- 2026-11-07 (release date): the close-out PR merged before the phone check, so it couldn't carry the release date or the results. The owner approved a fourth M4 PR for them, one over the limit of three.
+- 2026-11-07 (phone check): testing raised four points, all left out of v0.4.0 by the owner's choice: #84 (M5), #85, #86 and #87 (M7).
 
 ## Notes for whoever picks this up
 
@@ -117,6 +119,8 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
   - A late reminder is hard to force on a phone, so the proof is automated tests against a fake. The plugin calls themselves (`pendingNotificationRequests`, `show`) have only been read, not run.
   - Android's limit for a late reminder is an hour or more, not the few minutes PRD 7 said (E-012).
 - **Known gap:** a scheduled reminder can replace an older one still in the shade, because ids change on each replan. Tracked in #80, for after M4.
+- **Known gap:** finishing a repeat-from-completion item early can give back the same due date. Repeat from Due date avoids it. Tracked in #84.
+- **Close-out (2026-11-07):** the owner reported that everything on the phone check passed, on the release build from `059ff63`. All 22 M4 rows of the acceptance sheet (AT-061 to AT-082) are recorded as Pass, dated 2026-11-07: 21 Founder rows from that check, and the Developer row AT-082 from its automated test. The on-phone suite (`flutter test integration_test --no-uninstall`) wasn't run for M4. A truly late reminder (#77) is hard to force on a phone, so it may not have run on real hardware.
 
 - PRD 16's gate for M4 is that the four credit card bills behave correctly through a full month.
 - The show-day reminder arrives at 9:00 AM but the card appears at the start of the day (4:00 AM), so the card can be on the Summary for hours before its reminder. That's what PRD 7 asks for.
