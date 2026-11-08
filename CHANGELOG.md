@@ -27,11 +27,15 @@ followed by v1.0.0 for the public release.
   a repeat mark and "Monthly · due Dec 5 · back Dec 2" in the Explorer. Recurring reminders at
   9:00 AM on the show day and the due day, named or grouped; the due-day one fires even inside a
   paused domain, and tapping it opens the item with a note saying why it isn't on the Summary.
+- Approved M5 Groups and order wireframes in `docs/design/m5-groups/` (14 frames) and the choices
+  made with them; the M5 plan in `docs/plans/0007-m5-groups.md`.
 
 ### Changed
 - Version 0.4.0+4.
 - The Reminders notification channel and the Notifications setting now mention recurring items.
 - PRD edit E-012: reminders may arrive late, usually within an hour, not "a few minutes".
+- PRD edits E-013 to E-015: "No group" can override an inherited group; what deleting a context
+  group does; every order change is logged, in the Explorer too.
 
 ### Fixed
 - A recurring reminder Android hadn't delivered yet was lost if the app opened after its time (#77).

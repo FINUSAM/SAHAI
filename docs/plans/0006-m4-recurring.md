@@ -77,7 +77,7 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
 
 **Release** (owner)
 
-23. [ ] When the M4 Must tests pass on the phone and #38's "done when" is met: close-out docs PR (#40), release PR `dev` → `main` (#39, merge commit), tag `v0.4.0`. Tick #39 and #40
+23. [x] When the M4 Must tests pass on the phone and #38's "done when" is met: close-out docs PR (#40), release PR `dev` → `main` (#39, merge commit), tag `v0.4.0`. Tick #39 and #40. Done 2026-11-08: release PR #89 merged, `v0.4.0` tagged on `main` at `ad98896`, #39 and the M4 milestone closed
 
 ## Changes to the plan
 
