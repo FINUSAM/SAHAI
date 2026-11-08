@@ -99,7 +99,7 @@ Measured in working sessions like the M3 ones (M3 took 3 PRs over about three da
   - `TreeNode.wakeAt` is the one rule for when a node comes back, so the Summary, `nextChangeAt`, the Set-Aside list and Wake now all agree.
   - A show time is computed, not stored, so `_catchUp` compares the Summary on every write once any item has a due date. A bill reaching its show date gets `surfaced` dated at that time, as E-002 does, but no `woke`: logging each one exactly once would need a stored record of it.
   - Skip always follows the due date, even when repeating from completion, because nothing was completed.
-  - Monthly and yearly schedules step from the month of their base date, so "monthly on the 5th" completed on Nov 3 or Nov 7 from completion both give Dec 5.
+  - Monthly and yearly schedules step from the month of their base date, so "monthly on the 5th" completed on Nov 3 or Nov 7 from completion both give Dec 5. **Replaced 2026-11-08 by [E-016](../PRD_Edits.md#e-016-repeating-from-completion-counts-from-the-finish-day) (#84):** repeating from completion now counts from the finish day, so those give Dec 3 and Dec 7, and the next due date is always after the one finished.
   - A card that stays on the Summary across a completion, as in AT-068, gets no new `surfaced`, because it never left. The time from surfaced to done for that occurrence will read long.
   - Undo is refused with `staleUndo` if the occurrence has already moved on.
 - **PR 2 (2026-11-07):** the screens and reminders. `dart run tool/at_coverage.dart M4` reports 22 of 22. Small choices, all open to change:

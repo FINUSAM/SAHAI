@@ -134,7 +134,14 @@ class ScheduleDraft {
 
   ScheduleDraft withLeadDays(int? value) => _copy(leadDays: () => value);
 
-  ScheduleDraft withRepeatFrom(RepeatFrom value) => _copy(repeatFrom: value);
+  /// Switching to or from completion can change what Next due starts as
+  /// (E-016), so it follows the schedule until the user picks a date.
+  ScheduleDraft withRepeatFrom(RepeatFrom value, {required DateTime today}) {
+    final draft = _copy(repeatFrom: value);
+    return duePicked
+        ? draft
+        : draft._copy(dueOn: draft.schedule.firstDue(today));
+  }
 
   ScheduleDraft withPickedDue(DateTime value) =>
       _copy(dueOn: value, duePicked: true);
@@ -235,6 +242,7 @@ class _ScheduleFieldsState extends State<ScheduleFields> {
     );
     final draft = _draft;
     final interval = draft.interval ?? 0;
+    final countsFromFinish = draft.schedule.countsFromFinish;
     const gap = SizedBox(height: 16);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -276,7 +284,9 @@ class _ScheduleFieldsState extends State<ScheduleFields> {
           ),
           gap,
         ],
-        if (draft.frequency == Frequency.yearly) ...[
+        // Repeating from completion counts from the finish day, so the day
+        // and month don't apply (E-016).
+        if (draft.frequency == Frequency.yearly && !countsFromFinish) ...[
           _Dropdown<int>(
             label: Strings.inMonth,
             value: draft.month,
@@ -285,8 +295,9 @@ class _ScheduleFieldsState extends State<ScheduleFields> {
           ),
           gap,
         ],
-        if (draft.frequency == Frequency.monthly ||
-            draft.frequency == Frequency.yearly) ...[
+        if ((draft.frequency == Frequency.monthly ||
+                draft.frequency == Frequency.yearly) &&
+            !countsFromFinish) ...[
           _Dropdown<int>(
             label: Strings.onDay,
             value: draft.day,
@@ -335,8 +346,9 @@ class _ScheduleFieldsState extends State<ScheduleFields> {
             ),
           ],
           selected: {draft.repeatFrom},
-          onSelectionChanged: (s) =>
-              widget.onChanged(draft.withRepeatFrom(s.single)),
+          onSelectionChanged: (s) => widget.onChanged(
+            draft.withRepeatFrom(s.single, today: widget.today),
+          ),
         ),
         const SizedBox(height: 8),
         Text(

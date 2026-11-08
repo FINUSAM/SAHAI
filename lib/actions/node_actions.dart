@@ -842,13 +842,9 @@ class NodeActions {
   Future<String> _completeOccurrence(Tree tree, TreeNode node) async {
     final schedule = node.schedule!;
     final settings = await _settings();
-    final next = schedule.nextDue(
-      schedule.repeatFrom == RepeatFrom.dueDate
-          ? node.dueOn!
-          : logicalDate(
-              _clock.now(),
-              dayStartMinutes: settings.dayStartMinutes,
-            ),
+    final next = schedule.nextAfterCompletion(
+      node.dueOn!,
+      logicalDate(_clock.now(), dayStartMinutes: settings.dayStartMinutes),
     );
     await _advanceOccurrence(node.id, next);
     final eventId = _newId();

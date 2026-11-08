@@ -91,6 +91,12 @@ class Schedule {
   final int? month;
   final RepeatFrom repeatFrom;
 
+  /// A monthly or yearly schedule that repeats from completion: it counts
+  /// from the finish day, so its chosen day and month don't apply (E-016).
+  bool get countsFromFinish =>
+      repeatFrom == RepeatFrom.completionDate &&
+      (frequency == Frequency.monthly || frequency == Frequency.yearly);
+
   String toJson() => jsonEncode({
     'frequency': frequency.name,
     'interval': interval,
@@ -99,19 +105,45 @@ class Schedule {
     'repeat_from': repeatFrom.jsonName,
   });
 
-  /// The next occurrence after [from], which is the due date, or the logical
-  /// date of the completion when repeating from completion (AT-067, AT-069).
-  DateTime nextDue(DateTime from) => switch (frequency) {
-    Frequency.daily => DateTime(from.year, from.month, from.day + interval),
-    Frequency.weekly => _nextWeekly(from),
-    Frequency.monthly => _dayIn(from.year, from.month + interval, days.first),
-    Frequency.yearly => _dayIn(from.year + interval, month!, days.first),
-  };
+  /// One step on from [from] (AT-067, AT-069). Repeating from the due date
+  /// keeps the chosen day and month. Repeating from completion counts from
+  /// [from] itself, so monthly from Nov 5 is Dec 5 (E-016).
+  DateTime nextDue(DateTime from) {
+    final fromFinish = repeatFrom == RepeatFrom.completionDate;
+    return switch (frequency) {
+      Frequency.daily => DateTime(from.year, from.month, from.day + interval),
+      Frequency.weekly => _nextWeekly(from),
+      Frequency.monthly => _dayIn(
+        from.year,
+        from.month + interval,
+        fromFinish ? from.day : days.first,
+      ),
+      Frequency.yearly => _dayIn(
+        from.year + interval,
+        fromFinish ? from.month : month!,
+        fromFinish ? from.day : days.first,
+      ),
+    };
+  }
+
+  /// The next due date once the occurrence due [dueOn] is finished on the
+  /// logical date [finishedOn] (PRD 7). It's always later than [dueOn], so
+  /// an item finished early still moves on (E-016, #84).
+  DateTime nextAfterCompletion(DateTime dueOn, DateTime finishedOn) {
+    if (repeatFrom == RepeatFrom.dueDate) return nextDue(dueOn);
+    var next = nextDue(finishedOn);
+    while (!next.isAfter(dueOn)) {
+      next = nextDue(next);
+    }
+    return next;
+  }
 
   /// The first date this schedule falls on, on or after the logical date
   /// [today]: what a new schedule's Next due starts as (M4 frame 3). Daily
-  /// and plain "every N weeks" schedules have no fixed day, so that's today.
+  /// and plain "every N weeks" schedules have no fixed day, so that's today,
+  /// and so do monthly and yearly ones that repeat from completion (E-016).
   DateTime firstDue(DateTime today) {
+    if (countsFromFinish) return today;
     switch (frequency) {
       case Frequency.daily:
         return today;

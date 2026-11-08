@@ -30,6 +30,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | E-005 | M4 | U, W | A paid bill is listed on the Set-Aside page until its show date; Wake now shows it with its real due label and leaves the schedule unchanged |
 | E-007 | M1 | U, W | A locked task offers no checkmark or Mark done action until the task before it is done |
 | E-011 | M4 | U | Stopping repeating writes `repeat_stopped`; Undo of a skip or a stop writes `skip_undone` or `repeat_restored` linking the event it cancels, and the card gets no new `surfaced` event |
+| E-016 | M4 | U, W | Repeating from completion: monthly and yearly count from the finish day (Nov 5 gives Dec 5); the next due date is always after the one finished, for every schedule; the form hides the day and month for these schedules (#84) |
 
 
 ## M1 Foundations

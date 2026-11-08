@@ -9,6 +9,12 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+### Fixed
+- An item repeating from completion could come back with the same due date when finished early, so
+  it never moved on (#84). The next due date is now always after the one finished. Monthly and
+  yearly items repeating from completion count from the day they're finished, so finishing on Nov 5
+  gives Dec 5, and the form no longer asks for their day or month (E-016).
+
 ## [0.4.0] - 2026-11-07 (M4 Recurring items)
 
 ### Added

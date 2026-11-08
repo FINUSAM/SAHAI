@@ -103,18 +103,22 @@ String scheduleName(Schedule schedule) => schedule.interval == 1
 /// "Repeats monthly on the 5th", "Repeats every 2 weeks on Mon, Thu" (M4
 /// frame 5).
 String repeatsLine(Schedule schedule) {
-  final on = switch (schedule.frequency) {
-    Frequency.daily => null,
-    Frequency.weekly when schedule.days.isEmpty => null,
-    Frequency.weekly => ([
-      ...schedule.days,
-    ]..sort()).map(Strings.weekdayAbbreviation).join(', '),
-    Frequency.monthly => Strings.theDay(schedule.days.first),
-    // A leap year, so Feb 29 stays Feb 29.
-    Frequency.yearly => monthDay(
-      DateTime(2024, schedule.month!, schedule.days.first),
-    ),
-  };
+  // The chosen day and month don't apply when counting from the finish day
+  // (E-016).
+  final on = schedule.countsFromFinish
+      ? null
+      : switch (schedule.frequency) {
+          Frequency.daily => null,
+          Frequency.weekly when schedule.days.isEmpty => null,
+          Frequency.weekly => ([
+            ...schedule.days,
+          ]..sort()).map(Strings.weekdayAbbreviation).join(', '),
+          Frequency.monthly => Strings.theDay(schedule.days.first),
+          // A leap year, so Feb 29 stays Feb 29.
+          Frequency.yearly => monthDay(
+            DateTime(2024, schedule.month!, schedule.days.first),
+          ),
+        };
   return Strings.repeats(
     scheduleName(schedule).toLowerCase(),
     on: on,
