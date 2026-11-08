@@ -116,4 +116,6 @@ String rejectMessage(RejectReason reason) => switch (reason) {
   RejectReason.cantRepeat => Strings.cantRepeat,
   RejectReason.notRecurring => Strings.notRecurring,
   RejectReason.staleUndo => Strings.staleUndo,
+  RejectReason.noSuchGroup => Strings.noSuchGroup,
+  RejectReason.notOnSummary => Strings.cardNotShowing,
 };

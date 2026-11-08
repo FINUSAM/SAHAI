@@ -136,6 +136,14 @@ After each recompute, the engine compares the new card set with the previous one
 
 `summary_slots` stores one position per owner: each project, each stream (its non-recurring card), and each recurring item. The next card for the same owner takes the same slot (AT-088). A card that moves to another group goes to the end (AT-089), and new slots go to the end (AT-090). Dragging changes only slots and group settings, never the tree (AT-092).
 
+How it works (M5 PR 1):
+
+- **Group settings.** `nodes.group_id` is null (follow the parent), `none` for "No group", or a group id ([decision 0006](../decisions/0006-no-group-setting.md), E-013). `Tree.effectiveGroupOf` walks up from the node: it stops at `none`, skips a deleted group (E-014), and returns the first live group it finds. The tree is loaded with the live group ids, and `watchTree` emits again when groups change.
+- **Slots follow the Summary.** Every write that recomputes the Summary also checks each card's slot, in the same transaction as the `surfaced` events. A slot already in the card's group keeps its position. A missing slot, or one in another group, moves to the end of the card's group. Slots of owners with no card now are kept, so a recurring item or a set-aside project comes back to its place (AT-091). Positions only need to be in order, so gaps are normal.
+- **Layout.** `arrangeSummary` is pure: groups in their order, the default list last, empty groups left out, and cards by slot position. A card without a slot in its group yet goes last in tree order, which is where the next write puts it.
+- **Moving a card** within its group renumbers that group's slots, hidden owners' slots included, so they keep their order. The card goes just before the next visible card, or just after the previous one when it's last.
+- **Log.** A move within a group logs `reordered`. A move to another group logs `group_changed` and `reordered` (AT-094). Positions in the payload are places in the list the user saw, counted from 0, and groups are effective groups. Undo of a move logs the same events the other way round, each with `undoes_event_id`. Explorer reorders log `reordered` with the group unchanged; the Reorder screen logs only the items that moved, found as those outside the longest run that kept its order (E-015). A group setting on a node whose own card doesn't move logs `group_changed` only. Group create, edit, order and delete log nothing (E-014).
+
 ---
 
 ## 5. Data
