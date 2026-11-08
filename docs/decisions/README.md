@@ -23,3 +23,4 @@ A decision record captures a significant technical decision: what was decided, w
 | [0003](0003-state-management-and-navigation.md) | Riverpod for state, go_router for navigation | Accepted |
 | [0004](0004-time-and-clock.md) | Injected clock, UTC storage and one logical-day function | Accepted |
 | [0005](0005-notifications.md) | Plan notifications ahead with the engine, using flutter_local_notifications | Accepted |
+| [0006](0006-no-group-setting.md) | Store "No group" as a fixed value in `nodes.group_id` | Accepted |

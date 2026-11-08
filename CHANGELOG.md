@@ -9,6 +9,20 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+### Added
+- Approved M5 Groups and order wireframes in `docs/design/m5-groups/` (14 frames) and the choices
+  made with them; the M5 plan in `docs/plans/0007-m5-groups.md`.
+- M5 groups and order engine (PR 1 of M5, no screens yet): context groups that can be created,
+  renamed, given an icon, put in order and deleted with Undo; a group set on any node, inherited
+  down the tree, with "No group" to override it (E-013); a deleted group counts as unset (E-014);
+  saved Summary positions per project, stream and recurring item, so the next card takes the same
+  place and a card that changes group goes to the end; moving cards within and between groups, with
+  Undo; `reordered` and `group_changed` in the activity log, including Explorer reorders (E-015).
+
+### Changed
+- PRD edits E-013 to E-015: "No group" can override an inherited group; what deleting a context
+  group does; every order change is logged, in the Explorer too.
+
 ## [0.4.0] - 2026-11-07 (M4 Recurring items)
 
 ### Added
@@ -27,15 +41,11 @@ followed by v1.0.0 for the public release.
   a repeat mark and "Monthly · due Dec 5 · back Dec 2" in the Explorer. Recurring reminders at
   9:00 AM on the show day and the due day, named or grouped; the due-day one fires even inside a
   paused domain, and tapping it opens the item with a note saying why it isn't on the Summary.
-- Approved M5 Groups and order wireframes in `docs/design/m5-groups/` (14 frames) and the choices
-  made with them; the M5 plan in `docs/plans/0007-m5-groups.md`.
 
 ### Changed
 - Version 0.4.0+4.
 - The Reminders notification channel and the Notifications setting now mention recurring items.
 - PRD edit E-012: reminders may arrive late, usually within an hour, not "a few minutes".
-- PRD edits E-013 to E-015: "No group" can override an inherited group; what deleting a context
-  group does; every order change is logged, in the Explorer too.
 
 ### Fixed
 - A recurring reminder Android hadn't delivered yet was lost if the app opened after its time (#77).

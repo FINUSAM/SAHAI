@@ -13,7 +13,7 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 | Platform | Android (iOS later) |
 | Framework | Flutter |
 | Application ID | `com.finusam.sahai` |
-| Current milestone | M5 Groups and order (v0.5.0, next) |
+| Current milestone | M5 Groups and order (v0.5.0, in progress) |
 
 ## Roadmap
 

@@ -49,14 +49,14 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 
 **PR 1: engine, actions, log** (`feat/m5-engine`, #42 and #44)
 
-6. [ ] Confirm that the existing tables are enough and the database stays at version 2. Write the decision record for the "No group" stored value in `docs/decisions/`
-7. [ ] `effectiveGroupOf`: stop at the "No group" value and return nothing; treat a deleted group as unset, so the search carries on up the tree (AT-085, AT-086, E-013, E-014)
-8. [ ] Slots: one per project, stream and recurring item. The next card for an owner takes the same position when it's in the same group, and goes to the end of the new group when it isn't (AT-088, AT-089); a new slot goes to the end of its group (AT-090); a recurring item returns to its position (AT-091)
-9. [ ] Summary cards come out in group order and slot order, with No group last (AT-083). Slots never touch `sort_order` (AT-092)
-10. [ ] Group actions, each in one transaction: create, edit, change order, delete with Undo (AT-084, E-014)
-11. [ ] Card actions, each in one transaction: set a group on a node, move a card between groups and within one, each with `group_changed` and `reordered` as AT-094 asks; Undo of a move
-12. [ ] `reordered` from `reorder`, `moveUp`, `moveDown` and `setChildOrder` in the Explorer (#44, E-015)
-13. [ ] Unit tests named by AT ID with the fake clock, including the E-013, E-014 and E-015 tests. Arrangement survives completing items
+6. [x] Confirm that the existing tables are enough and the database stays at version 2. Write the decision record for the "No group" stored value in `docs/decisions/`
+7. [x] `effectiveGroupOf`: stop at the "No group" value and return nothing; treat a deleted group as unset, so the search carries on up the tree (AT-085, AT-086, E-013, E-014)
+8. [x] Slots: one per project, stream and recurring item. The next card for an owner takes the same position when it's in the same group, and goes to the end of the new group when it isn't (AT-088, AT-089); a new slot goes to the end of its group (AT-090); a recurring item returns to its position (AT-091)
+9. [x] Summary cards come out in group order and slot order, with No group last (AT-083). Slots never touch `sort_order` (AT-092)
+10. [x] Group actions, each in one transaction: create, edit, change order, delete with Undo (AT-084, E-014)
+11. [x] Card actions, each in one transaction: set a group on a node, move a card between groups and within one, each with `group_changed` and `reordered` as AT-094 asks; Undo of a move
+12. [x] `reordered` from `reorder`, `moveUp`, `moveDown` and `setChildOrder` in the Explorer (#44, E-015)
+13. [x] Unit tests named by AT ID with the fake clock, including the E-013, E-014 and E-015 tests. Arrangement survives completing items
 14. [ ] Update tech plan 4.6, matrix, `CHANGELOG.md` and this plan; tick #42 and #44; open PR 1
 
 **PR 2: screens** (`feat/m5-screens`, #43, after PR 1 merges)
@@ -79,11 +79,22 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 ## Changes to the plan
 
 - 2026-11-08: `v0.4.0` was tagged before this plan merged, so the warning that M5 code must wait for it was removed and step 5 ticked. `dev` was merged into this branch.
+- 2026-11-08 (PR 1): the owner's "Proceed" after merging #83 was taken as approval of steps 6 to 14 as written.
+- 2026-11-08 (PR 1, step 11): `create` takes an optional group setting, so a new project with a group set starts at the end of that group (AT-090) instead of passing through the default list first. M4 did the same for schedules.
+- 2026-11-08 (PR 1): two refusal reasons were added, a missing group and a card that isn't on the Summary, with a message each, because the Explorer's message list must cover every reason. `watchTree` now also emits when groups change, so a deleted group updates every screen.
+- 2026-11-08 (PR 1): the M5 plan lines in `CHANGELOG.md` had landed under 0.4.0 when #83 merged after the release. They were moved to Unreleased.
 
 ## Notes for whoever picks this up
 
-- **Nothing here has been built.** The ideas below are starting points, not decisions, and are open to change.
-- **"No group" stored value:** a fixed value in `nodes.group_id` that can't clash with a real group's UUID. The column has no foreign key, so this needs no schema change. Anything that looks up a group by this id must expect it.
+- **PR 1 (2026-11-08):** the engine and actions, with no screens, so nothing changes on the phone. The database stays at version 2. "No group" is stored as `none` ([decision 0006](../decisions/0006-no-group-setting.md)). How slots work is in tech plan 4.6. `dart run tool/at_coverage.dart M5` reports 11 of 12; the missing one is AT-093, the integration test for PR 2. Small choices, all open to change:
+  - Setting a group on a node whose own card is on the Summary also logs `reordered` when the card changes group, whether it came from a drag, the card sheet or the Explorer.
+  - Dragging a card to the group it would inherit anyway changes nothing. Dragging it to its parent's group when it has its own setting sets that group on the card explicitly, as "that item only" says.
+  - Undo of a group change is refused if the setting has changed again since.
+  - Undo of a group delete keeps where the cards were in memory, not in the database. It works for the 5 seconds of the snackbar, not after a restart.
+  - Cards moved by a group delete go to the end of their new group in tree order.
+  - Group names don't have to be unique, and the engine doesn't check icon names. PR 2 defines the nine icons.
+  - Moving a node to another parent in the Explorer logs nothing new; its card goes to the end of its group if the group changes.
+- **Ideas for PR 2, not decisions:**
 - **Drag:** either one flat `ReorderableListView` with the headers as rows, which gives auto-scroll for free, or `LongPressDraggable` with `DragTarget`, which is more work but gives finer control over the drop zones. Try the first one.
 - **AT-087 is the case to get right early.** Dragging 1.1 to Errands sets Errands on 1.1 only; the project's slot then follows it. When 1.2 appears under At laptop, it's in a different group from the slot, so it goes to the end of At laptop.
 - **`summary_slots` is one row per owner,** so a slot holds one position and one group. Recurring items each have their own, so a stream's normal card and its bills move separately.
