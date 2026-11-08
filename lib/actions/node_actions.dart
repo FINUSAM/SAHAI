@@ -5,7 +5,9 @@ import 'package:drift/drift.dart';
 
 import '../data/database.dart';
 import '../data/settings.dart';
+import '../engine/groups.dart';
 import '../engine/node_type.dart';
+import '../engine/order.dart';
 import '../engine/recurrence.dart';
 import '../engine/scope.dart';
 import '../engine/settings.dart';
@@ -15,6 +17,8 @@ import '../engine/tree.dart';
 import '../engine/visibility.dart';
 import '../shared/ids.dart';
 import '../shared/time.dart';
+
+part 'summary_order_actions.dart';
 
 /// Activity log event types written by these actions (PRD 9).
 abstract final class EventTypes {
@@ -51,6 +55,14 @@ abstract final class EventTypes {
   /// Undo after stopping repeating; points at the `repeat_stopped` event
   /// (E-011).
   static const repeatRestored = 'repeat_restored';
+
+  /// An order change, on the Summary or in the Explorer (E-015). The payload
+  /// holds the old and new position and group (PRD 9).
+  static const reordered = 'reordered';
+
+  /// A node's group setting changed (PRD 9). The payload holds the old and
+  /// new setting and the old and new effective group.
+  static const groupChanged = 'group_changed';
 }
 
 // Payload keys for what Undo restores on a recurring item. `due_on` on a
@@ -91,6 +103,12 @@ enum RejectReason {
 
   /// Undo after the occurrence has already moved on.
   staleUndo,
+
+  /// A group that doesn't exist, or was deleted.
+  noSuchGroup,
+
+  /// A Summary action on a node that isn't a card on the Summary.
+  notOnSummary,
 }
 
 class ActionRejected implements Exception {
@@ -112,19 +130,25 @@ class NodeActions {
   final Clock _clock;
   final IdGenerator _newId;
 
-  /// The non-deleted tree.
-  Future<Tree> loadTree() async =>
-      Tree((await _liveNodes().get()).map(_toTreeNode));
+  /// The non-deleted tree, with the groups that still exist (E-014).
+  Future<Tree> loadTree() async => Tree(
+    (await _liveNodes().get()).map(_toTreeNode),
+    groupIds: {for (final g in await _liveGroupRows()) g.id},
+  );
 
-  /// The non-deleted tree, emitted again after every change, so screens
-  /// stay up to date without refreshing by hand.
-  Stream<Tree> watchTree() =>
-      _liveNodes().watch().map((rows) => Tree(rows.map(_toTreeNode)));
+  /// The non-deleted tree, emitted again after every change to the nodes or
+  /// the groups, so screens stay up to date without refreshing by hand.
+  Stream<Tree> watchTree() => _db
+      .customSelect('SELECT 1', readsFrom: {_db.nodes, _db.contextGroups})
+      .watch()
+      .asyncMap((_) => loadTree());
 
   /// Creates a node at the end of its parent's children (AT-001, AT-002).
   /// A stream item can start with a repeat [schedule], first due on [dueOn],
   /// in the same step, so it never shows as a normal item first. [leadDays]
-  /// is the Settings default if null, as in [setRecurrence].
+  /// is the Settings default if null, as in [setRecurrence]. [group] is the
+  /// node's group setting, as in [setGroup], so a new card starts in its
+  /// group (AT-090).
   Future<String> create({
     required NodeType type,
     String? parentId,
@@ -133,6 +157,7 @@ class NodeActions {
     Schedule? schedule,
     DateTime? dueOn,
     int? leadDays,
+    String? group,
   }) {
     assert((schedule == null) == (dueOn == null), 'A schedule needs a date.');
     final cleanTitle = title.trim();
@@ -151,6 +176,10 @@ class NodeActions {
       if (schedule != null && type != NodeType.streamItem) {
         throw const ActionRejected(RejectReason.cantRepeat);
       }
+      final inherited = parentId == null
+          ? null
+          : tree.effectiveGroupOf(parentId);
+      final setting = _cleanSetting(tree, group, inherited: inherited);
       final id = _newId();
       final now = utcMillis(_clock);
       await _db
@@ -171,6 +200,7 @@ class NodeActions {
                     ? null
                     : leadDays ?? (await _settings()).defaultLeadDays,
               ),
+              groupId: Value(setting),
               createdAt: now,
               updatedAt: now,
             ),
@@ -180,7 +210,11 @@ class NodeActions {
         nodeId: id,
         nodeType: type,
         domainId: type == NodeType.domain ? id : tree.domainOf(parentId!)?.id,
-        groupId: parentId == null ? null : tree.effectiveGroupOf(parentId),
+        groupId: switch (setting) {
+          null => inherited,
+          noGroup => null,
+          _ => setting,
+        },
       );
       if (parentId != null && type.hasStatus) {
         await _reopenDoneChain(tree, parentId, cause: 'created', childId: id);
@@ -208,7 +242,8 @@ class NodeActions {
     });
   }
 
-  /// Moves a node to [newIndex] among its siblings (AT-004, AT-005).
+  /// Moves a node to [newIndex] among its siblings (AT-004, AT-005), and
+  /// logs `reordered` if it moved (E-015).
   Future<void> reorder(String id, int newIndex) => _write(() async {
     final tree = await loadTree();
     final node = tree[id];
@@ -216,13 +251,18 @@ class NodeActions {
     final siblings = [
       ...(node.parentId == null ? tree.roots : tree.childrenOf(node.parentId!)),
     ];
-    siblings.removeWhere((s) => s.id == id);
-    siblings.insert(newIndex.clamp(0, siblings.length), node);
+    final oldIndex = siblings.indexWhere((s) => s.id == id);
+    siblings.removeAt(oldIndex);
+    final target = newIndex.clamp(0, siblings.length);
+    siblings.insert(target, node);
     final now = utcMillis(_clock);
     for (var i = 0; i < siblings.length; i++) {
       if (siblings[i].sortOrder == i) continue;
       await (_db.update(_db.nodes)..where((n) => n.id.equals(siblings[i].id)))
           .write(NodesCompanion(sortOrder: Value(i), updatedAt: Value(now)));
+    }
+    if (target != oldIndex) {
+      await _logTreeReorder(tree, node, oldIndex, target);
     }
     await _syncSummary();
   });
@@ -260,7 +300,9 @@ class NodeActions {
 
   /// Saves a whole new order for [parentId]'s children (null for domains) in
   /// one step, so the Reorder screen saves all of it or none (AT-004,
-  /// AT-005). [orderedIds] must be exactly the current children.
+  /// AT-005). [orderedIds] must be exactly the current children. Each node
+  /// the user moved gets a `reordered` event (E-015): the fewest that explain
+  /// the new order, so the ones that only shifted to make room get none.
   Future<void> setChildOrder(
     String? parentId,
     List<String> orderedIds,
@@ -279,8 +321,42 @@ class NodeActions {
       await (_db.update(_db.nodes)..where((n) => n.id.equals(orderedIds[i])))
           .write(NodesCompanion(sortOrder: Value(i), updatedAt: Value(now)));
     }
+    final before = [for (final s in siblings) s.id];
+    for (final id in movedIds(before, orderedIds)) {
+      await _logTreeReorder(
+        tree,
+        tree[id]!,
+        before.indexOf(id),
+        orderedIds.indexOf(id),
+      );
+    }
     await _syncSummary();
   });
+
+  /// One `reordered` event for an Explorer move. The group doesn't change,
+  /// so old and new group are the same (E-015).
+  Future<void> _logTreeReorder(
+    Tree tree,
+    TreeNode node,
+    int oldIndex,
+    int newIndex,
+  ) {
+    final group = tree.effectiveGroupOf(node.id);
+    return _log(
+      EventTypes.reordered,
+      nodeId: node.id,
+      nodeType: node.type,
+      domainId: tree.domainOf(node.id)?.id,
+      groupId: group,
+      payload: {
+        _viewKey: _explorerView,
+        _oldPositionKey: oldIndex,
+        _newPositionKey: newIndex,
+        _oldGroupKey: group,
+        _newGroupKey: group,
+      },
+    );
+  }
 
   /// Soft-deletes a node and everything under it, and returns the `deleted`
   /// event id that [undoDelete] needs (AT-008, AT-009, E-003).
@@ -1035,6 +1111,94 @@ class NodeActions {
         ),
       );
     }
+    await _syncSlots(summary.cards);
+  }
+
+  /// Gives every card's owner a slot in the card's group (tech plan 4.6). A
+  /// slot already in that group keeps its position, so the next card for
+  /// the same owner takes the same place (AT-088, AT-091). A new slot, or
+  /// one whose card is now in another group, goes to the end of that group
+  /// (AT-089, AT-090). Slots of owners with no card stay as they are, ready
+  /// for when a card comes back.
+  Future<void> _syncSlots(List<SummaryCard> cards) async {
+    final slots = await _liveSlots();
+    final ends = <String?, int>{};
+    for (final card in cards) {
+      final slot = slots[card.ownerId];
+      if (slot != null && slot.groupId == card.groupId) continue;
+      final position = ends[card.groupId] ??= _endOf(slots, card.groupId);
+      ends[card.groupId] = position + 1;
+      await _writeSlot(card.ownerId, card.groupId, position);
+      slots[card.ownerId] = SummarySlot(
+        ownerId: card.ownerId,
+        groupId: card.groupId,
+        position: position,
+      );
+    }
+  }
+
+  /// One past the last position in [groupId].
+  static int _endOf(Map<String, SummarySlot> slots, String? groupId) {
+    var end = 0;
+    for (final slot in slots.values) {
+      if (slot.groupId == groupId && slot.position >= end) {
+        end = slot.position + 1;
+      }
+    }
+    return end;
+  }
+
+  Future<void> _writeSlot(String ownerId, String? groupId, int position) {
+    final now = utcMillis(_clock);
+    return _db
+        .into(_db.summarySlots)
+        .insert(
+          SummarySlotsCompanion.insert(
+            ownerId: ownerId,
+            groupId: Value(groupId),
+            position: position,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          onConflict: DoUpdate(
+            (old) => SummarySlotsCompanion(
+              groupId: Value(groupId),
+              position: Value(position),
+              isDeleted: const Value(false),
+              updatedAt: Value(now),
+            ),
+          ),
+        );
+  }
+
+  Future<Map<String, SummarySlot>> _liveSlots() async {
+    final rows = await (_db.select(
+      _db.summarySlots,
+    )..where((s) => s.isDeleted.equals(false))).get();
+    return {
+      for (final r in rows)
+        r.ownerId: SummarySlot(
+          ownerId: r.ownerId,
+          groupId: r.groupId,
+          position: r.position,
+        ),
+    };
+  }
+
+  Future<List<ContextGroupRow>> _liveGroupRows() => (_db.select(
+    _db.contextGroups,
+  )..where((g) => g.isDeleted.equals(false))).get();
+
+  /// [setting] made safe to store on a node whose parent's group is
+  /// [inherited]: null (follow the parent), [noGroup], or a group that
+  /// exists. "No group" with nothing to override is the same as following
+  /// the parent, so it's stored as null (E-013).
+  String? _cleanSetting(Tree tree, String? setting, {String? inherited}) {
+    if (setting == null) return null;
+    if (!tree.hasGroup(setting)) {
+      throw const ActionRejected(RejectReason.noSuchGroup);
+    }
+    return setting == noGroup && inherited == null ? null : setting;
   }
 
   Future<void> _log(

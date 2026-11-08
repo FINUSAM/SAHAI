@@ -383,4 +383,6 @@ abstract final class Strings {
   static const cantRepeat = 'Only stream items that are not done can repeat.';
   static const notRecurring = 'That item does not repeat.';
   static const staleUndo = 'That item has already moved on.';
+  static const noSuchGroup = 'That group no longer exists.';
+  static const cardNotShowing = 'That item is not on the Summary right now.';
 }
