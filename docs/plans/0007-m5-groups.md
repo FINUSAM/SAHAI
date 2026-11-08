@@ -2,7 +2,7 @@
 
 - **Status:** In progress (plan and wireframes; no app code yet)
 - **Approved by:** FINUSAM on 2026-11-07 (wireframes and their decisions). The checklist below still needs the owner's "Proceed" before PR 1 starts
-- **Branches / PRs:** plan and wireframes `docs/m5-plan` (#41, #83); PR 1 `feat/m5-engine` (#42, #44); PR 2 `feat/m5-screens` (#43); close-out `docs/m5-close-out` (#46); release (#45)
+- **Branches / PRs:** plan and wireframes `docs/m5-plan` (#41, #83); PR 1 `feat/m5-engine` (#42, #44, #90); PR 2 `feat/m5-screens` (#43); close-out `docs/m5-close-out` (#46); release (#45)
 - **PRD sections:** 6, 8.2, 8.4, 8.6, 9, 10, 13, 16 (plus E-013, E-014, E-015)
 - **Acceptance tests:** AT-083 to AT-094 (12 rows: 9 Must, 3 Should), plus the button alternatives of AT-116 (tagged M7) and the E-013, E-014 and E-015 tests
 - **Wireframes:** [`docs/design/m5-groups/`](../design/m5-groups/) (approved 2026-11-07)
@@ -57,7 +57,7 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 11. [x] Card actions, each in one transaction: set a group on a node, move a card between groups and within one, each with `group_changed` and `reordered` as AT-094 asks; Undo of a move
 12. [x] `reordered` from `reorder`, `moveUp`, `moveDown` and `setChildOrder` in the Explorer (#44, E-015)
 13. [x] Unit tests named by AT ID with the fake clock, including the E-013, E-014 and E-015 tests. Arrangement survives completing items
-14. [ ] Update tech plan 4.6, matrix, `CHANGELOG.md` and this plan; tick #42 and #44; open PR 1
+14. [x] Update tech plan 4.6, matrix, `CHANGELOG.md` and this plan; tick #42 and #44; open PR 1 (#90)
 
 **PR 2: screens** (`feat/m5-screens`, #43, after PR 1 merges)
 
