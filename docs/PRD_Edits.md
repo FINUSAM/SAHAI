@@ -331,3 +331,24 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - PRD 9 lists `reordered` without saying where it applies, and M1's Explorer reorder doesn't log it. Logging every order change gives the Phase 2 planner the full picture.
 
 **Affects:** new automated tests, `E-015 …`. AT-094 is unchanged.
+
+---
+
+## E-016: Repeating from completion counts from the finish day
+
+- **PRD section:** 7 (Recurring items)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-11-08 (answer to #84)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- For monthly and yearly items that repeat from the completion date, the next due date counts from the day the item is finished. Monthly, finished on Nov 5, gives Dec 5. Yearly, finished on Nov 5, 2026, gives Nov 5, 2027. A day the month doesn't have falls on its last day, so monthly finished on Jan 31 gives Feb 28.
+- The schedule form doesn't ask for a day of the month, or a month, for these schedules, because they don't apply.
+- For every schedule, the next due date is always later than the one just finished. If the count lands on or before it, as when an item is finished early, it moves on one more step.
+
+**Reason**
+
+- The app used the chosen day of the month and took only the month from the finish date, so "repeat from completion" didn't count from completion. Finishing early could also give back the same due date, so the item never moved on (#84).
+
+**Affects:** new automated tests, `E-016 …`. AT-067 to AT-069 are unchanged.

@@ -195,6 +195,40 @@ void main() {
       expect(tester.widget<FilledButton>(save).onPressed, isNull);
     });
 
+    testSahai('E-016 repeating from completion hides the day and month, and '
+        'starts today', (tester) async {
+      final app = newApp();
+      final bill = await addBill(app);
+      await pumpExplorer(tester, app: app);
+      await openNewItemForm(tester);
+      await turnRepeatOn(tester);
+      await pickFrom<int>(tester, Strings.onDay, '5');
+      expect(find.text('Sat, Dec 5'), findsOneWidget);
+      await tapInView(tester, find.text(Strings.completionDate));
+      expect(find.text(Strings.onDay), findsNothing);
+      expect(find.text(Strings.fromCompletionHint), findsOneWidget);
+      expect(find.text('Mon, Nov 9'), findsOneWidget);
+      await pickFrom<Frequency>(
+        tester,
+        Strings.periodName(Frequency.monthly, interval: 1),
+        Strings.periodName(Frequency.yearly, interval: 1),
+      );
+      expect(find.text(Strings.inMonth), findsNothing);
+      expect(find.text(Strings.onDay), findsNothing);
+      await tapInView(tester, find.text(Strings.dueDate));
+      expect(find.text(Strings.inMonth), findsOneWidget);
+      expect(find.text(Strings.onDay), findsOneWidget);
+      await tapInView(tester, find.text(Strings.completionDate));
+      await fillForm(tester, 'Service the bike');
+
+      final bike = (await app.actions.loadTree())
+          .childrenOf(bill.finance)
+          .firstWhere((n) => n.title == 'Service the bike');
+      expect(bike.schedule!.frequency, Frequency.yearly);
+      expect(bike.schedule!.repeatFrom, RepeatFrom.completionDate);
+      expect(bike.dueOn, DateTime(2026, 11, 9));
+    });
+
     testSahai('a date the user picked stays when the schedule changes', (
       tester,
     ) async {

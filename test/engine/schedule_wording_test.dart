@@ -130,4 +130,24 @@ void main() {
       );
     });
   });
+
+  test('E-016 a schedule that counts from the finish day names no day', () {
+    expect(
+      repeatsLine(
+        Schedule.monthly(day: 8, repeatFrom: RepeatFrom.completionDate),
+      ),
+      'Repeats monthly from completion',
+    );
+    expect(
+      repeatsLine(
+        Schedule.yearly(
+          month: 3,
+          day: 1,
+          interval: 2,
+          repeatFrom: RepeatFrom.completionDate,
+        ),
+      ),
+      'Repeats every 2 years from completion',
+    );
+  });
 }

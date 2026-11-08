@@ -199,4 +199,83 @@ void main() {
       DateTime(2026, 11, 6, 6),
     );
   });
+
+  group('E-016 repeating from completion', () {
+    const fromFinish = RepeatFrom.completionDate;
+
+    test('E-016 monthly and yearly count from the finish day', () {
+      final monthly = Schedule.monthly(day: 8, repeatFrom: fromFinish);
+      expect(monthly.countsFromFinish, isTrue);
+      expect(
+        monthly.nextAfterCompletion(
+          DateTime(2026, 11, 8),
+          DateTime(2026, 11, 5),
+        ),
+        DateTime(2026, 12, 5),
+      );
+      final yearly = Schedule.yearly(month: 3, day: 1, repeatFrom: fromFinish);
+      expect(
+        yearly.nextAfterCompletion(DateTime(2027, 3, 1), DateTime(2026, 11, 5)),
+        DateTime(2027, 11, 5),
+      );
+    });
+
+    test('E-016 the next due date is always after the one finished', () {
+      const weekly = Schedule.weekly(
+        weekdays: [DateTime.thursday],
+        repeatFrom: fromFinish,
+      );
+      expect(weekly.countsFromFinish, isFalse);
+      expect(
+        weekly.nextAfterCompletion(
+          DateTime(2026, 11, 12),
+          DateTime(2026, 11, 11),
+        ),
+        DateTime(2026, 11, 19),
+      );
+      const daily = Schedule.daily(interval: 2, repeatFrom: fromFinish);
+      expect(
+        daily.nextAfterCompletion(
+          DateTime(2026, 11, 10),
+          DateTime(2026, 11, 5),
+        ),
+        DateTime(2026, 11, 11),
+      );
+    });
+
+    test('E-016 repeating from the due date ignores the finish day', () {
+      final monthly = Schedule.monthly(day: 5);
+      expect(monthly.countsFromFinish, isFalse);
+      expect(
+        monthly.nextAfterCompletion(
+          DateTime(2026, 11, 5),
+          DateTime(2026, 11, 20),
+        ),
+        DateTime(2026, 12, 5),
+      );
+    });
+
+    test('E-016 skipping steps from the due date day', () {
+      // The chosen day (8) no longer applies; the due date was Dec 5.
+      final monthly = Schedule.monthly(day: 8, repeatFrom: fromFinish);
+      expect(monthly.nextDue(DateTime(2026, 12, 5)), DateTime(2027, 1, 5));
+    });
+
+    test('E-016 a new schedule like this starts today', () {
+      final today = DateTime(2026, 11, 9);
+      expect(
+        Schedule.monthly(day: 20, repeatFrom: fromFinish).firstDue(today),
+        today,
+      );
+      expect(
+        Schedule.yearly(
+          month: 1,
+          day: 2,
+          repeatFrom: fromFinish,
+        ).firstDue(today),
+        today,
+      );
+      expect(Schedule.monthly(day: 20).firstDue(today), DateTime(2026, 11, 20));
+    });
+  });
 }
