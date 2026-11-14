@@ -112,3 +112,5 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
   - Group icons look right in the headers, the picker and the Explorer.
   - Large system text on the phone, not only the test's 2×.
   - TalkBack stays with M7 (AT-116), but the buttons it needs are here: Move up and Move down in the card sheet, and the group picker.
+- **On-phone suite (2026-11-15), 0.5.0+5 on the owner's phone:** 113 passed and 4 failed, all M5 tests among the passes. The 4 were repeat-form tests. The phone's keyboard opens with the new-item form, so the open "On day" menu showed only some days, and at 2× text the Repeat row wasn't built yet. Two of the 4 fail the same way at `v0.4.0` with a simulated keyboard; M5's Context group row added the 2× one. The app wasn't at fault. The fix is tests only: the repeat-form tests now simulate the keyboard and scroll to what they tap.
+- **Never run the on-phone suite from an older version than the one installed.** Android refuses the downgrade, and Flutter then uninstalls the app to install the test build, even with `--no-uninstall`, which deletes the data.

@@ -61,10 +61,34 @@ void main() {
     await expandAll(tester);
     await openActions(tester, 'Finance & Bills');
     await choose(tester, Strings.addChild([NodeType.streamItem]));
+    // The new form puts the cursor in Title, so on a phone the keyboard
+    // opens and takes about a third of the screen. Without it here, these
+    // tests passed on the computer but missed their taps on the phone.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300 * 2.625);
+    await tester.pumpAndSettle();
+  }
+
+  /// Scrolls the form down to [finder] and taps it. Unlike [tapInView], this
+  /// also reaches a row the list hasn't built yet, which happens with the
+  /// keyboard open and large text.
+  Future<void> tapInForm(WidgetTester tester, Finder finder) async {
+    await tester.scrollUntilVisible(
+      finder,
+      100,
+      scrollable: find
+          .ancestor(
+            of: find.byType(TextField).first,
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(finder);
+    await tester.pumpAndSettle();
   }
 
   Future<void> turnRepeatOn(WidgetTester tester) async {
-    await tapInView(tester, find.text(Strings.repeat));
+    await tapInForm(tester, find.text(Strings.repeat));
   }
 
   Future<void> pickFrom<T>(
@@ -72,14 +96,22 @@ void main() {
     String label,
     String choice,
   ) async {
-    await tapInView(
+    await tapInForm(
       tester,
       find.ancestor(
         of: find.text(label),
         matching: find.byType(DropdownButtonFormField<T>),
       ),
     );
-    await tester.tap(find.text(choice).last);
+    // The open menu starts at the current choice and builds only what
+    // fits, so scroll it from the top until the choice shows, as a person
+    // would.
+    final menu = find.byType(Scrollable).last;
+    tester.state<ScrollableState>(menu).position.jumpTo(0);
+    await tester.pumpAndSettle();
+    final item = find.text(choice).last;
+    await tester.scrollUntilVisible(item, 48, scrollable: menu);
+    await tester.tap(item);
     await tester.pumpAndSettle();
   }
 
