@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../actions/node_actions.dart';
 import '../../app/providers.dart';
+import '../../engine/groups.dart';
 import '../../engine/node_type.dart';
 import '../../engine/settings.dart';
 import '../../engine/time.dart';
 import '../../engine/tree.dart';
 import '../../shared/strings.dart';
+import '../groups/group_picker.dart';
 import 'action_feedback.dart';
+import 'explorer_rows.dart';
 import 'explorer_state.dart';
 import 'schedule_fields.dart';
 
 /// Creates a node, or edits one: the same screen does both (frame 5,
-/// AT-001, AT-010). A TODO stream item can repeat (M4 frames 2 to 4).
+/// AT-001, AT-010). A TODO stream item can repeat (M4 frames 2 to 4). Every
+/// type has a Context group row (M5 frame 8, AT-090).
 class NodeFormScreen extends ConsumerStatefulWidget {
   const NodeFormScreen.create({
     super.key,
@@ -42,6 +47,11 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
   var _saving = false;
   var _repeat = false;
   ScheduleDraft? _draft;
+
+  /// The group setting chosen here: null to follow the parent, [noGroup],
+  /// or a group id (E-013).
+  String? _group;
+  var _groupChanged = false;
 
   bool get _isEdit => widget.id != null;
 
@@ -77,6 +87,7 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
     if (node != null && !_filled) {
       _title.text = node.title;
       _notes.text = node.notes;
+      _group = liveSetting(tree!, node.groupId, parentId: node.parentId);
       if (node.isRecurring) {
         _repeat = true;
         _draft = ScheduleDraft.of(
@@ -164,8 +175,17 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
               border: OutlineInputBorder(),
             ),
           ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          if (tree != null)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(Strings.contextGroup),
+              subtitle: Text(_groupSummary(tree, parentId)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _pickGroup(tree, parentId),
+            ),
           if (canRepeat) ...[
-            const SizedBox(height: 16),
             const Divider(height: 1),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -196,6 +216,7 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
       final node = tree?[id];
       final done = await runAction(context, () async {
         await actions.edit(id, title: _title.text, notes: _notes.text);
+        if (_groupChanged) await actions.setGroup(id, _group);
         if (draft != null && _scheduleChanged(node, draft)) {
           await actions.setRecurrence(
             id,
@@ -223,6 +244,7 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
           schedule: draft?.schedule,
           dueOn: draft?.dueOn,
           leadDays: draft?.leadDays,
+          group: _group,
         ),
       );
       if (id == null) return _failed();
@@ -238,6 +260,40 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
       ]);
     }
     if (mounted) Navigator.of(context).pop();
+  }
+
+  /// "At laptop · its cards appear here", "Same as Website relaunch · At
+  /// laptop" or "No group" (frame 8).
+  String _groupSummary(Tree tree, String? parentId) {
+    final groups = ref.watch(groupsProvider).value ?? const <ContextGroup>[];
+    final setting = _group;
+    if (setting != null && setting != noGroup) {
+      return Strings.cardsAppearHere(groupName(groups, setting));
+    }
+    final source = parentId == null ? null : tree.groupSourceOf(parentId);
+    if (setting == null && source != null) {
+      return [
+        Strings.sameAs(displayTitle(tree, source)),
+        groupName(groups, source.groupId),
+      ].join(Strings.separator);
+    }
+    return Strings.noGroup;
+  }
+
+  Future<void> _pickGroup(Tree tree, String? parentId) async {
+    final pick = await chooseGroup(
+      context,
+      tree: tree,
+      groups: ref.read(groupsProvider).value ?? const [],
+      title: _title.text.trim(),
+      parentId: parentId,
+      current: _group,
+    );
+    if (pick == null || !mounted) return;
+    setState(() {
+      _group = pick.setting;
+      _groupChanged = true;
+    });
   }
 
   /// Saving a schedule ends any Wake now or Change time on this occurrence,

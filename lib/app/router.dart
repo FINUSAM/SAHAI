@@ -6,6 +6,8 @@ import '../features/explorer/explorer_screen.dart';
 import '../features/explorer/move_screen.dart';
 import '../features/explorer/node_form_screen.dart';
 import '../features/explorer/reorder_screen.dart';
+import '../features/groups/group_form_screen.dart';
+import '../features/groups/groups_screen.dart';
 import '../features/placeholders/coming_later_screen.dart';
 import '../features/set_aside/set_aside_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -20,6 +22,9 @@ abstract final class Routes {
   static const explorer = '/explorer';
   static const capture = '/capture';
   static const settings = '/settings';
+  static const groups = '/settings/groups';
+  static const newGroup = '/settings/groups/new';
+  static String editGroup(String id) => '/settings/groups/$id';
 
   /// The Summary with [id]'s card highlighted, from a notification.
   static String summaryFocus(String id) =>
@@ -91,6 +96,23 @@ GoRouter buildRouter() {
         path: Routes.settings,
         parentNavigatorKey: rootKey,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: Routes.groups,
+        parentNavigatorKey: rootKey,
+        builder: (context, state) => const GroupsScreen(),
+      ),
+      // Before the :id route, which would otherwise match "new".
+      GoRoute(
+        path: Routes.newGroup,
+        parentNavigatorKey: rootKey,
+        builder: (context, state) => const GroupFormScreen.create(),
+      ),
+      GoRoute(
+        path: '/settings/groups/:id',
+        parentNavigatorKey: rootKey,
+        builder: (context, state) =>
+            GroupFormScreen.edit(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/nodes/new',

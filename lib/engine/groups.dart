@@ -1,3 +1,5 @@
+import 'settings.dart';
+import 'tree.dart';
 import 'visibility.dart';
 
 /// The group setting that stops inheritance: the node and everything that
@@ -41,6 +43,29 @@ class SummarySlot {
 
   /// Order within the group. Gaps are normal: only the order matters.
   final int position;
+}
+
+/// Everything the Summary Page is laid out from, read at one moment.
+class SummaryLayout {
+  const SummaryLayout({
+    required this.tree,
+    required this.groups,
+    required this.slots,
+  });
+
+  final Tree tree;
+
+  /// The groups that exist, in their order.
+  final List<ContextGroup> groups;
+  final Map<String, SummarySlot> slots;
+
+  /// The Summary at [now], in groups and saved order.
+  List<SummarySection> arrange(DateTime now, AppSettings settings) =>
+      arrangeSummary(
+        computeSummary(tree, now: now, settings: settings).cards,
+        groups: groups,
+        slots: slots,
+      );
 }
 
 /// One group's cards on the Summary, in their saved order.

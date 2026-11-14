@@ -6,13 +6,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/home_shell.dart';
 import '../../app/providers.dart';
+import '../../actions/node_actions.dart';
 import '../../app/router.dart';
+import '../../engine/groups.dart';
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
 import '../../engine/settings.dart';
 import '../../engine/tree.dart';
+import '../../shared/group_icons.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
+import '../groups/group_picker.dart';
 import '../set_aside/set_aside_flow.dart';
 import 'action_feedback.dart';
 import 'explorer_rows.dart';
@@ -240,6 +244,8 @@ class _NodeTile extends ConsumerWidget {
         ? setAsideAncestor(tree, node.id, now)
         : null;
     final subtitle = theme.textTheme.bodySmall;
+    final groups = ref.watch(groupsProvider).value ?? const <ContextGroup>[];
+    final tag = groupTag(tree, groups, node);
     return InkWell(
       onTap: () => _openActions(context, ref, tree, node, now),
       child: AnimatedContainer(
@@ -310,6 +316,7 @@ class _NodeTile extends ConsumerWidget {
                         ),
                         if (node.isRecurring && hiddenBy == null)
                           _RepeatLine(
+                            tag: tag,
                             node: node,
                             wakeAt: wakeAt,
                             now: now,
@@ -344,7 +351,10 @@ class _NodeTile extends ConsumerWidget {
                             style: subtitle,
                           )
                         else
-                          Text(line.subtitle, style: subtitle),
+                          Text.rich(
+                            TextSpan(text: line.subtitle, children: tag),
+                            style: subtitle,
+                          ),
                       ],
                     ),
                   ),
@@ -363,16 +373,43 @@ class _NodeTile extends ConsumerWidget {
   }
 }
 
+/// " · [icon] At laptop" after a row's grey line when a group is set on that
+/// node, or " · No group" when that is (M5 frame 9). An inherited group
+/// isn't repeated down the tree.
+List<InlineSpan> groupTag(Tree tree, List<ContextGroup> groups, TreeNode node) {
+  final setting = node.groupId;
+  if (setting == null || !tree.hasGroup(setting)) return const [];
+  ContextGroup? group;
+  for (final g in groups) {
+    if (g.id == setting) group = g;
+  }
+  final icon = groupIcon(group?.icon);
+  return [
+    const TextSpan(text: Strings.separator),
+    if (icon != null)
+      WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: Icon(icon, size: 16),
+        ),
+      ),
+    TextSpan(text: group?.name ?? Strings.noGroup),
+  ];
+}
+
 /// "Monthly · due Dec 5 · back Dec 2" with the repeat mark (M4 frame 8). A
 /// recurring item is never DONE: it shows its next date instead (AT-077).
 class _RepeatLine extends StatelessWidget {
   const _RepeatLine({
+    required this.tag,
     required this.node,
     required this.wakeAt,
     required this.now,
     required this.dayStartMinutes,
   });
 
+  final List<InlineSpan> tag;
   final TreeNode node;
   final DateTime? wakeAt;
   final DateTime now;
@@ -384,18 +421,21 @@ class _RepeatLine extends StatelessWidget {
       const Icon(Icons.repeat, size: 16, semanticLabel: Strings.repeatsLabel),
       const SizedBox(width: 4),
       Flexible(
-        child: Text(
-          [
-            scheduleName(node.schedule!),
-            dueLabel(
-              node.dueOn!,
-              now,
-              dayStartMinutes: dayStartMinutes,
-              inSentence: true,
-            ),
-            if (wakeAt case final back?)
-              Strings.backAt(monthDay(back.toLocal())),
-          ].join(Strings.separator),
+        child: Text.rich(
+          TextSpan(
+            text: [
+              scheduleName(node.schedule!),
+              dueLabel(
+                node.dueOn!,
+                now,
+                dayStartMinutes: dayStartMinutes,
+                inSentence: true,
+              ),
+              if (wakeAt case final back?)
+                Strings.backAt(monthDay(back.toLocal())),
+            ].join(Strings.separator),
+            children: tag,
+          ),
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ),
@@ -448,12 +488,16 @@ Future<void> _openActions(
   TreeNode node,
   DateTime now,
 ) async {
+  // Read now rather than from a provider that may not have loaded yet.
+  final groups = await ref.read(nodeActionsProvider).loadGroups();
+  if (!context.mounted) return;
   final choice = await showNodeActions(
     context,
     tree,
     node,
     now: now,
     settings: ref.read(settingsProvider).value ?? const AppSettings(),
+    groups: groups,
   );
   if (choice == null || !context.mounted) return;
   final actions = ref.read(nodeActionsProvider);
@@ -478,6 +522,17 @@ Future<void> _openActions(
       await wakeNow(context, ref, node);
     case NodeChoice.changeTime:
       await changeTimeWithPicker(context, ref, tree, node);
+    case NodeChoice.contextGroup:
+      final pick = await chooseGroup(
+        context,
+        tree: tree,
+        groups: groups,
+        title: displayTitle(tree, node),
+        parentId: node.parentId,
+        current: node.groupId,
+      );
+      if (pick == null || !context.mounted) return;
+      await runAction(context, () => actions.setGroup(node.id, pick.setting));
     case NodeChoice.move:
       await context.push(Routes.moveNode(node.id));
     case NodeChoice.moveUp:

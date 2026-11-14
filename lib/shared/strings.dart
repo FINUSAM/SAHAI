@@ -367,7 +367,75 @@ abstract final class Strings {
       'Arrive on the minute instead of a few minutes late. Android asks '
       'for permission to set alarms.';
   static const laterSettings =
-      'Day start, preset times, groups, backup and more come in M7.';
+      'Day start, preset times, backup and more come in M7.';
+
+  // Context groups on the Summary (M5 frames 1 to 6).
+  static const noGroup = 'No group';
+  static const emptyGroup = 'empty';
+  static String movedTo(String group) => 'Moved to $group';
+  static String groupHeader(String group, int n) =>
+      n == 1 ? '$group, 1 card' : '$group, $n cards';
+  static String dropInGroup(String group) => 'Drop here to move to $group';
+  static const contextGroup = 'Context group';
+  static String setHere(String group) => '$group${separator}set here';
+  static String groupFrom(String group, String source) =>
+      '$group${separator}from $source';
+  static String positionIn(int place, int of, String group) =>
+      'Position $place of $of in $group';
+  static String positionOnSummary(int place, int of) =>
+      'Position $place of $of on the Summary';
+  static String moveCardUp(String title) => 'Move $title up on the Summary';
+  static String moveCardDown(String title) => 'Move $title down on the Summary';
+
+  // Group picker and forms (frames 7 and 8).
+  static String sameAs(String title) => 'Same as $title';
+  static String keepOutOf(String group) => 'Keep this item out of $group';
+  static const newGroup = 'New group';
+  static String cardsAppearHere(String group) =>
+      '$group${separator}its cards appear here';
+
+  // Settings and the groups list (frames 11 to 14).
+  static const summarySection = 'Summary';
+  static const contextGroups = 'Context groups';
+  static String groupCount(int n) => switch (n) {
+    0 => 'No groups yet',
+    1 => '1 group',
+    _ => '$n groups',
+  };
+  static const groupsHint =
+      'Shown on the Summary in this order. No group comes last.';
+  static const noGroupsYet =
+      'Groups sort your Summary by where you are or what you need, such as '
+      'At laptop or Errands.';
+  static String setOnItems(int n) => switch (n) {
+    0 => 'Not set on anything yet',
+    1 => 'Set on 1 item',
+    _ => 'Set on $n items',
+  };
+  static const editGroup = 'Edit group';
+  static const nameLabel = 'Name';
+  static const iconLabel = 'Icon (optional)';
+  static const noIcon = 'None';
+  static const deleteGroup = 'Delete group';
+  static String deleteGroupHint(int n) => switch (n) {
+    0 => "It isn't set on anything.",
+    1 => 'Its 1 item follows the group above it, or goes to No group.',
+    _ => 'Its $n items follow the group above them, or go to No group.',
+  };
+  static String moveGroupUp(String group) => 'Move $group up';
+  static String moveGroupDown(String group) => 'Move $group down';
+  static String iconName(String name) => switch (name) {
+    'laptop' => 'Laptop',
+    'bag' => 'Shopping bag',
+    'home' => 'Home',
+    'phone' => 'Phone',
+    'car' => 'Car',
+    'work' => 'Briefcase',
+    'person' => 'Person',
+    'document' => 'Document',
+    'place' => 'Place',
+    _ => name,
+  };
 
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';

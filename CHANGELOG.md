@@ -18,8 +18,17 @@ followed by v1.0.0 for the public release.
   saved Summary positions per project, stream and recurring item, so the next card takes the same
   place and a card that changes group goes to the end; moving cards within and between groups, with
   Undo; `reordered` and `group_changed` in the activity log, including Explorer reorders (E-015).
+- M5 screens (PR 2 of M5): the Summary in groups, with a header per group and No group last
+  (headers only once a group has cards); press and hold a card to drag it to another place or
+  group, with empty groups shown as places to drop it, auto-scroll near the edges, and "Moved to"
+  with Undo; Context group, Move up, Move down and the card's position in its sheet, so nothing
+  needs dragging; a group picker with "Same as", No group and New group; a Context group row in
+  every create and edit form; the group on Explorer rows where it's set, and in the item menu;
+  Settings › Context groups, to make, rename, give an icon, put in order and delete groups, with
+  Undo.
 
 ### Changed
+- Version 0.5.0+5 for the phone check.
 - PRD edits E-013 to E-015: "No group" can override an inherited group; what deleting a context
   group does; every order change is logged, in the Explorer too.
 

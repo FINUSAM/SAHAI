@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../actions/node_actions.dart';
 import '../data/database.dart';
 import '../data/settings.dart';
+import '../engine/groups.dart';
 import '../engine/settings.dart';
 import '../engine/tree.dart';
 import '../engine/visibility.dart';
@@ -71,3 +72,56 @@ final summaryProvider = Provider<AsyncValue<SummaryResult>>((ref) {
             computeSummary(tree, now: clock.now().toUtc(), settings: settings),
       );
 });
+
+/// The context groups, in their order (PRD 8.2).
+final groupsProvider = StreamProvider<List<ContextGroup>>(
+  (ref) => ref.watch(nodeActionsProvider).watchGroups(),
+);
+
+/// The tree, groups and saved slots the Summary Page is laid out from.
+final summaryLayoutProvider = StreamProvider<SummaryLayout>(
+  (ref) => ref.watch(nodeActionsProvider).watchSummaryLayout(),
+);
+
+/// The Summary in groups and saved order (PRD 8.2), recomputed like
+/// [summaryProvider].
+final arrangedSummaryProvider = Provider<AsyncValue<ArrangedSummary>>((ref) {
+  final clock = ref.watch(clockProvider);
+  ref.watch(recomputeTickProvider);
+  final settings = ref.watch(settingsProvider).value ?? const AppSettings();
+  return ref
+      .watch(summaryLayoutProvider)
+      .whenData(
+        (layout) => ArrangedSummary(
+          layout: layout,
+          sections: layout.arrange(clock.now().toUtc(), settings),
+        ),
+      );
+});
+
+/// The Summary's sections with the layout they came from.
+class ArrangedSummary {
+  const ArrangedSummary({required this.layout, required this.sections});
+
+  final SummaryLayout layout;
+  final List<SummarySection> sections;
+
+  Tree get tree => layout.tree;
+  List<ContextGroup> get groups => layout.groups;
+
+  /// Every card, top to bottom.
+  Iterable<SummaryCard> get cards => sections.expand((s) => s.cards);
+
+  /// Headers show only when a group other than the default list has cards
+  /// (frames 1 and 2).
+  bool get showsHeaders => sections.any((s) => s.group != null);
+
+  /// The section holding [nodeId]'s card and its index there.
+  (SummarySection, int)? find(String nodeId) {
+    for (final section in sections) {
+      final index = section.cards.indexWhere((c) => c.id == nodeId);
+      if (index >= 0) return (section, index);
+    }
+    return null;
+  }
+}
