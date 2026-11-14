@@ -144,6 +144,14 @@ How it works (M5 PR 1):
 - **Moving a card** within its group renumbers that group's slots, hidden owners' slots included, so they keep their order. The card goes just before the next visible card, or just after the previous one when it's last.
 - **Log.** A move within a group logs `reordered`. A move to another group logs `group_changed` and `reordered` (AT-094). Positions in the payload are places in the list the user saw, counted from 0, and groups are effective groups. Undo of a move logs the same events the other way round, each with `undoes_event_id`. Explorer reorders log `reordered` with the group unchanged; the Reorder screen logs only the items that moved, found as those outside the longest run that kept its order (E-015). A group setting on a node whose own card doesn't move logs `group_changed` only. Group create, edit, order and delete log nothing (E-014).
 
+The screens (M5 PR 2):
+
+- **One live read.** The Summary Page is laid out from `watchSummaryLayout`, which reads the tree, the groups and the slots together and emits again when any of them changes, so a move that only touches slots still redraws. Its query has its own SQL text, because drift shares live queries with the same text and plain `SELECT 1` would be `watchTree`'s, which doesn't read slots.
+- **Dragging.** Press and hold anywhere on a card lifts it (`LongPressDraggable`). Every card, every group header and, during a drag, a dashed box for each empty group are drop targets; the empty boxes go after the list, so nothing above them moves. Dropping in the same group calls `reorderCard`; dropping in another group calls `moveCardToGroup`, which puts the card at the end there, and shows "Moved to" with Undo. Near the top or bottom edge the list scrolls on its own.
+- **No-drag controls (AT-116).** The card sheet watches the layout, so Move up, Move down and "Position 1 of 3 in At laptop" stay current while it stays open. Its Context group line opens the group picker, which sets the group on the card's own item.
+- **Group picker.** "Same as" and a separate "No group" appear only when there's a group above to follow or to stay out of; otherwise one "No group" row clears the setting (E-013). New group opens the New group screen and picks the group made there.
+- **Icons.** Nine fixed names (`laptop`, `bag`, `home`, `phone`, `car`, `work`, `person`, `document`, `place`) map to Material icons the app already ships. An unknown name shows no icon.
+
 ---
 
 ## 5. Data

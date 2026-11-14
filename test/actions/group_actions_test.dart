@@ -7,6 +7,7 @@ import 'package:sahai/data/database.dart';
 import 'package:sahai/engine/groups.dart';
 import 'package:sahai/engine/node_type.dart';
 import 'package:sahai/engine/recurrence.dart';
+import 'package:sahai/engine/settings.dart';
 
 import '../helpers.dart';
 
@@ -683,5 +684,29 @@ void main() {
     await actions.deleteGroup(laptop);
     await actions.reorder(t2, 0);
     expect((await events(EventTypes.reordered)).single.groupId, isNull);
+  });
+
+  test('the Summary layout updates when only the order changes, while the '
+      'tree is being watched too', () async {
+    // drift shares live queries with the same SQL text, so this once
+    // missed slot changes by sharing watchTree's query.
+    final treeSub = actions.watchTree().listen((_) {});
+    final orders = <List<String>>[];
+    final layoutSub = actions.watchSummaryLayout().listen((layout) {
+      final sections = layout.arrange(
+        app.clock.clock.now(),
+        const AppSettings(),
+      );
+      orders.add([for (final c in sections.single.cards) c.node.title]);
+    });
+    await pumpEventQueue();
+    final first = orders.last;
+    await actions.moveCardDown(
+      (await actions.loadArrangedSummary()).single.cards.first.id,
+    );
+    await pumpEventQueue();
+    expect(orders.last, [first[1], first[0], ...first.skip(2)]);
+    await layoutSub.cancel();
+    await treeSub.cancel();
   });
 }

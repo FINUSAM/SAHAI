@@ -152,7 +152,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | AT-090 | New slots go to the end | 8.2 | Should | Founder | U |  |
 | AT-091 | Recurring items keep their position | 8.2 | Should | Founder | U |  |
 | AT-092 | Dragging never changes the tree | 8.2 | Must | Founder | U | Slots never touch sort_order |
-| AT-093 | Summary order persists | 8.2 | Must | Founder | I | Arrangement survives restart |
+| AT-093 | Summary order persists | 8.2 | Must | Founder | I | Arrangement survives restart; `groups_test.dart` restarts on a database file and runs in the phone suite |
 | AT-094 | Reorders and group changes are logged | 9 | Should | Developer | U |  |
 
 ## M6 Capture

@@ -49,6 +49,27 @@ extension GroupActions on NodeActions {
     _db.contextGroups,
   )..where((g) => g.isDeleted.equals(false))).watch().map(_sortedGroups);
 
+  /// The tree, the groups and the saved slots, emitted again after any of
+  /// them changes. They're read in one transaction, so the Summary Page
+  /// never lays out a new tree with old slots.
+  Stream<SummaryLayout> watchSummaryLayout() => _db
+      // Its own SQL text: drift shares live queries with the same text, so
+      // plain `SELECT 1` would be `watchTree`'s, which ignores slots.
+      .customSelect(
+        'SELECT 1 AS summary_layout',
+        readsFrom: {_db.nodes, _db.contextGroups, _db.summarySlots},
+      )
+      .watch()
+      .asyncMap(
+        (_) => _db.transaction(
+          () async => SummaryLayout(
+            tree: await loadTree(),
+            groups: await loadGroups(),
+            slots: await _liveSlots(),
+          ),
+        ),
+      );
+
   /// Creates a group at the end of the list (AT-084). [icon] is one of the
   /// app's icon names, or null. Not an activity log event in PRD 9.
   Future<String> createGroup(String name, {String? icon}) {

@@ -61,14 +61,14 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 
 **PR 2: screens** (`feat/m5-screens`, #43, after PR 1 merges)
 
-15. [ ] Group headers and No group on the Summary (frames 1 and 2)
-16. [ ] Drag within and between groups, with dashed drop zones for empty groups, auto-scroll, and the "Moved to" snackbar with Undo (frames 3 to 5)
-17. [ ] Card sheet: Context group, Move up, Move down and the position line; the sheet stays open between taps (frame 6, AT-116)
-18. [ ] Group picker (frame 7); Context group row in every create and edit form (frame 8); Explorer rows and item menu (frames 9 and 10)
-19. [ ] Settings: Summary section, Context groups list, New group, Edit group, Delete with Undo (frames 11 to 14)
-20. [ ] Accessibility: labels on every new action, 48 dp targets, large-text check
-21. [ ] Widget tests for the AT rows the matrix marks W; integration flow for AT-093 in `integration_test/`; list the device-only checks in the PR
-22. [ ] Version 0.5.0+5 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #43; open PR 2
+15. [x] Group headers and No group on the Summary (frames 1 and 2)
+16. [x] Drag within and between groups, with dashed drop zones for empty groups, auto-scroll, and the "Moved to" snackbar with Undo (frames 3 to 5)
+17. [x] Card sheet: Context group, Move up, Move down and the position line; the sheet stays open between taps (frame 6, AT-116)
+18. [x] Group picker (frame 7); Context group row in every create and edit form (frame 8); Explorer rows and item menu (frames 9 and 10)
+19. [x] Settings: Summary section, Context groups list, New group, Edit group, Delete with Undo (frames 11 to 14)
+20. [x] Accessibility: labels on every new action, 48 dp targets, large-text check
+21. [x] Widget tests for the AT rows the matrix marks W; integration flow for AT-093 in `integration_test/`; list the device-only checks in the PR
+22. [x] Version 0.5.0+5 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #43; open PR 2
 
 **Close-out and release**
 
@@ -83,6 +83,10 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 - 2026-11-08 (PR 1, step 11): `create` takes an optional group setting, so a new project with a group set starts at the end of that group (AT-090) instead of passing through the default list first. M4 did the same for schedules.
 - 2026-11-08 (PR 1): two refusal reasons were added, a missing group and a card that isn't on the Summary, with a message each, because the Explorer's message list must cover every reason. `watchTree` now also emits when groups change, so a deleted group updates every screen.
 - 2026-11-08 (PR 1): the M5 plan lines in `CHANGELOG.md` had landed under 0.4.0 when #83 merged after the release. They were moved to Unreleased.
+- 2026-11-15 (PR 2): the Summary needed one live read of the tree, groups and slots together, so a move that only changes slots redraws it. `watchSummaryLayout` was added for that. Its query needed its own SQL text: drift shares live queries with the same text, and the first version silently shared `watchTree`'s, which doesn't read slots. A unit test now guards this.
+- 2026-11-15 (PR 2, step 17): changing the group from the card sheet closes the sheet, so the "Moved to" snackbar with Undo can be seen. The sheet stays open for Move up and Move down, as frame 6 says.
+- 2026-11-15 (PR 2, step 18): changing a group from the Explorer menu or a form shows no snackbar, because the row or form shows the change straight away. The Summary is where a card visibly jumps, so only there does "Moved to" appear.
+- 2026-11-15 (PR 2, step 16): dropping a card on its own group's header puts it at the top of that group; dropping on another group's header, or on an empty group's dashed box, puts it at the end there.
 
 ## Notes for whoever picks this up
 
@@ -102,4 +106,9 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 - **AT-116 is tagged M7.** M5 adds the button alternatives and their labels; the TalkBack pass on the phone stays with #56.
 - **The frames were rendered with headless Chrome,** as in M4, and all 14 were checked as images. The final images are the reference if they differ from the live canvas, which hasn't been opened since it was published.
 - #80 (a new reminder replacing one in the shade) has no milestone and isn't part of M5.
-- **#84** (finishing a repeat-from-completion item early can give back the same due date) is in the M5 milestone but is its own bug-fix PR, not one of M5's three. It needs the owner's answer to its question first, and a failing test before the fix.
+- **#84** (finishing a repeat-from-completion item early can give back the same due date) is in the M5 milestone but is its own bug-fix PR, not one of M5's three. It needs the owner's answer to its question first, and a failing test before the fix. Done in #91 (E-016), merged 2026-11-08.
+- **PR 2 (2026-11-15):** the screens, version 0.5.0+5. `dart run tool/at_coverage.dart M5` reports 12 of 12. Checks that need the phone, for step 23:
+  - The drag itself: press and hold lifts the card with a buzz, the dashed boxes for empty groups appear at the bottom, and holding a card near the top or bottom edge scrolls the list. Widget tests drive the drag with a fake finger, so they can't judge how it feels.
+  - Group icons look right in the headers, the picker and the Explorer.
+  - Large system text on the phone, not only the test's 2×.
+  - TalkBack stays with M7 (AT-116), but the buttons it needs are here: Move up and Move down in the card sheet, and the group picker.
