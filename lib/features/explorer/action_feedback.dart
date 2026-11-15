@@ -137,4 +137,5 @@ String rejectMessage(RejectReason reason) => switch (reason) {
   RejectReason.staleUndo => Strings.staleUndo,
   RejectReason.noSuchGroup => Strings.noSuchGroup,
   RejectReason.notOnSummary => Strings.cardNotShowing,
+  RejectReason.emptyCapture => Strings.emptyCaptureError,
 };

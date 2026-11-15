@@ -440,6 +440,7 @@ abstract final class Strings {
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';
   static const emptyTitleError = 'Give it a title.';
+  static const emptyCaptureError = 'Type something to capture.';
   static const invalidParent = "That item can't go there.";
   static const noStatus = "Domains and streams can't be marked done.";
   static const lockedTask = 'Finish the task before it first.';
