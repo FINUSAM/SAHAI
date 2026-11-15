@@ -1,8 +1,8 @@
 # M5 Groups and order
 
-- **Status:** In progress (plan and wireframes; no app code yet)
-- **Approved by:** FINUSAM on 2026-11-07 (wireframes and their decisions). The checklist below still needs the owner's "Proceed" before PR 1 starts
-- **Branches / PRs:** plan and wireframes `docs/m5-plan` (#41, #83); PR 1 `feat/m5-engine` (#42, #44, #90); PR 2 `feat/m5-screens` (#43); close-out `docs/m5-close-out` (#46); release (#45)
+- **Status:** Done (v0.5.0, 2026-11-15)
+- **Approved by:** FINUSAM on 2026-11-07 (wireframes and their decisions); each PR's steps by the owner's "Proceed"
+- **Branches / PRs:** plan and wireframes `docs/m5-plan` (#41, #83); PR 1 `feat/m5-engine` (#42, #44, #90); PR 2 `feat/m5-screens` (#43, #92); close-out `docs/m5-close-out` (#46); release (#45)
 - **PRD sections:** 6, 8.2, 8.4, 8.6, 9, 10, 13, 16 (plus E-013, E-014, E-015)
 - **Acceptance tests:** AT-083 to AT-094 (12 rows: 9 Must, 3 Should), plus the button alternatives of AT-116 (tagged M7) and the E-013, E-014 and E-015 tests
 - **Wireframes:** [`docs/design/m5-groups/`](../design/m5-groups/) (approved 2026-11-07)
@@ -72,8 +72,8 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
 
 **Close-out and release**
 
-23. [ ] Owner: release build on the phone; arrange the real Summary and run the AT-083 to AT-094 Founder rows. The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner
-24. [ ] Close-out docs PR (#46), once the check passes: results on the test sheet, this plan, `CLAUDE.md` status
+23. [x] Owner: release build on the phone; arrange the real Summary and run the AT-083 to AT-094 Founder rows. The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner
+24. [x] Close-out docs PR (#46), once the check passes: results on the test sheet, this plan, `CLAUDE.md` status
 25. [ ] Owner: release PR `dev` → `main` (#45, merge commit), tag `v0.5.0`. Tick #45 and #46, and close #45 and the milestone by hand after tagging
 
 ## Changes to the plan
@@ -114,3 +114,4 @@ Measured in working sessions like the M4 ones (M4 took 3 PRs over about two days
   - TalkBack stays with M7 (AT-116), but the buttons it needs are here: Move up and Move down in the card sheet, and the group picker.
 - **On-phone suite (2026-11-15), 0.5.0+5 on the owner's phone:** 113 passed and 4 failed, all M5 tests among the passes. The 4 were repeat-form tests. The phone's keyboard opens with the new-item form, so the open "On day" menu showed only some days, and at 2× text the Repeat row wasn't built yet. Two of the 4 fail the same way at `v0.4.0` with a simulated keyboard; M5's Context group row added the 2× one. The app wasn't at fault. The fix is tests only: the repeat-form tests now simulate the keyboard and scroll to what they tap.
 - **Never run the on-phone suite from an older version than the one installed.** Android refuses the downgrade, and Flutter then uninstalls the app to install the test build, even with `--no-uninstall`, which deletes the data.
+- **Phone check (2026-11-15):** the owner ran the release build on the OnePlus and reported the M5 check done, so all 12 M5 rows of the acceptance sheet are Pass, dated 2026-11-15. AT-094 is a Developer row, covered by its automated test. A second on-phone suite run, on the #93 branch, was cut short after 51 passes when the test app left the screen; the fixed repeat-form tests pass on the computer with the keyboard simulated, but haven't run on the phone yet.

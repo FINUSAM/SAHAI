@@ -9,6 +9,8 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-15 (M5 Groups and order)
+
 ### Added
 - Approved M5 Groups and order wireframes in `docs/design/m5-groups/` (14 frames) and the choices
   made with them; the M5 plan in `docs/plans/0007-m5-groups.md`.
