@@ -17,14 +17,15 @@ void main() {
     }
   });
 
-  testSahai('the Set-Aside tab is real (M3); Capture shows what is coming', (
+  testSahai('the Set-Aside (M3) and Capture (M6) tabs are real', (
     tester,
   ) async {
     await pumpSahai(tester);
     await goToTab(tester, Strings.setAside);
     expect(find.text(Strings.nothingSetAside), findsOneWidget);
     await goToTab(tester, Strings.capture);
-    expect(find.text(Strings.comingIn('M6')), findsOneWidget);
+    expect(find.text(Strings.captureHint), findsOneWidget);
+    expect(find.text(Strings.nothingCaptured), findsOneWidget);
   });
 
   testSahai('the gear opens Settings, and back returns', (tester) async {

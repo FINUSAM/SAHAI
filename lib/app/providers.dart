@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../actions/capture_actions.dart';
 import '../actions/node_actions.dart';
 import '../data/database.dart';
 import '../data/settings.dart';
@@ -29,6 +30,18 @@ final databaseProvider = Provider<SahaiDatabase>((ref) {
 final nodeActionsProvider = Provider<NodeActions>(
   (ref) =>
       NodeActions(ref.watch(databaseProvider), clock: ref.watch(clockProvider)),
+);
+
+final captureActionsProvider = Provider<CaptureActions>(
+  (ref) => CaptureActions(
+    ref.watch(databaseProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
+
+/// The captures, newest first, with how many items each has made.
+final capturesProvider = StreamProvider<List<CaptureEntry>>(
+  (ref) => ref.watch(captureActionsProvider).watch(),
 );
 
 /// The live, non-deleted tree. Every action that writes makes it emit again.

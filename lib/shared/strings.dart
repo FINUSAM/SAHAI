@@ -8,15 +8,12 @@ import '../engine/time.dart';
 abstract final class Strings {
   static const appName = 'Sahai';
 
-  // Tabs and placeholders.
+  // Tabs.
   static const summary = 'Summary';
   static const setAside = 'Set-Aside';
   static const explorer = 'Explorer';
   static const capture = 'Capture';
   static const settings = 'Settings';
-  static String comingIn(String milestone) => 'Coming in $milestone';
-  static const captureLater =
-      'Quick notes to sort later will collect here, ready to turn into items.';
 
   // Explorer.
   static const loadError = "Your items couldn't be loaded.";
@@ -436,6 +433,46 @@ abstract final class Strings {
     'place' => 'Place',
     _ => name,
   };
+
+  // Capture (M6 frames 1 to 12).
+  static const captureHint = 'Capture a thought…';
+  static const nothingCaptured = 'Nothing captured yet';
+  static const nothingCapturedBody =
+      'Type a thought above, tap the home-screen widget, or share text from '
+      'another app. It can be one line or a whole list. It waits here until '
+      'you make items from it.';
+  static String itemsMade(int n) => '$n item${n == 1 ? '' : 's'} made';
+  static const create = 'Create';
+  static const createFromThis = 'Create an item from this capture';
+  static const captureActions = 'Actions for this capture';
+  static const createAnItem = 'Create an item';
+  static const createAnItemHint = 'Project, task, subtask or stream item';
+  static String capturedOn(String when) => 'Captured $when';
+  static const captureDeleted = 'Capture deleted';
+  static const editCapture = 'Edit capture';
+  static String editKeepsTime(String when) =>
+      'Captured $when. Editing keeps this time.';
+  static const createItem = 'Create item';
+  static const fromYourCapture = 'From your capture';
+  static const whatToMake = 'What to make';
+  static const goesIn = 'Goes in';
+  static const chooseTypeFirst = 'Choose what to make first';
+  static String pickA(NodeType type) => 'Pick a ${_typeNoun(type)}';
+  static String searchPlaces(NodeType type) => 'Search ${_plural(type)}';
+  static String goesInHint(NodeType type, NodeType parentType) =>
+      'A ${_typeNoun(type)} goes in a ${_typeNoun(parentType)}.';
+  static String noPlaces(NodeType type) =>
+      'No ${_plural(type)} yet. Add one in the Explorer first.';
+  static const noMatches = 'Nothing matches.';
+  static const removeCaptureTitle = 'Remove this capture?';
+  static String removeCaptureBody(String title, String place) =>
+      '$title is now in $place. Keep the capture if you want to make more '
+      'items from it.';
+  static const keep = 'Keep';
+  static const remove = 'Remove';
+  static String createdItem(String title) => 'Created $title';
+  static String createdAndRemoved(String title) =>
+      'Created $title${separator}capture removed';
 
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';
