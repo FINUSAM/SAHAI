@@ -1,8 +1,8 @@
 # 0007: The capture dialog is a small Flutter screen; the widget and share target are plain Android
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-16
-- **Decided by:** FINUSAM, 2026-11-16 (after trying both approaches on the phone: "both A and B is very good, so lets go with A")
+- **Decided by:** FINUSAM, 2026-11-16 (after trying both approaches on the phone: "both A and B is very good, so lets go with A"); the record, including its manifest changes, approved by the owner 2026-11-16
 - **Related:** M6; PRD 8.5, 10, 13; [E-009](../PRD_Edits.md#e-009-the-v1-home-screen-widget-opens-a-lightweight-text-capture-dialog), [E-017](../PRD_Edits.md#e-017-shared-text-opens-the-capture-dialog-filled-in); AT-099, AT-100; wireframes 13 to 17 in [`docs/design/m6-capture/`](../design/m6-capture/); [plan 0008](../plans/0008-m6-capture.md); #48, #50
 
 ## Context

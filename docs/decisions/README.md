@@ -24,4 +24,4 @@ A decision record captures a significant technical decision: what was decided, w
 | [0004](0004-time-and-clock.md) | Injected clock, UTC storage and one logical-day function | Accepted |
 | [0005](0005-notifications.md) | Plan notifications ahead with the engine, using flutter_local_notifications | Accepted |
 | [0006](0006-no-group-setting.md) | Store "No group" as a fixed value in `nodes.group_id` | Accepted |
-| [0007](0007-capture-widget-and-share.md) | The capture dialog is a small Flutter screen; the widget and share target are plain Android | Proposed |
+| [0007](0007-capture-widget-and-share.md) | The capture dialog is a small Flutter screen; the widget and share target are plain Android | Accepted |
