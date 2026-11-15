@@ -48,9 +48,10 @@ Measured in working sessions like the M5 ones (M5 took 3 PRs, plus 2 bug-fix PRs
 
 **Spike** (`spike/m6-widget-share`, #48, not merged)
 
-5. [ ] On the phone: a home-screen widget whose button opens a small dialog over the current app, where Save stores a capture without opening the full app (E-009). Try `home_widget` 0.10.0 and a plain Android widget with our own Kotlin
-6. [ ] Share target: compare `receive_sharing_intent` 1.9.0 with an intent filter on the same dialog and a few lines of Kotlin. Check text from Chrome and WhatsApp
+5. [x] On the phone: a home-screen widget whose button opens a small dialog over the current app, where Save stores a capture without opening the full app (E-009). Try `home_widget` 0.10.0 and a plain Android widget with our own Kotlin
+6. [x] Share target: compare `receive_sharing_intent` 1.9.0 with an intent filter on the same dialog and a few lines of Kotlin. Check text from Chrome and WhatsApp
 7. [ ] Decision record `docs/decisions/0007-capture-widget-and-share.md`, covering how the dialog reaches the database. Owner approval for any package (licence, upkeep, pinned version) and every manifest change
+   - 2026-11-16: both approaches worked on the phone; the owner chose A (a small Flutter screen). Our own Kotlin was tried first with the owner's agreement, and neither package turned out to be needed. Record written as Proposed, waiting for the owner's approval of the manifest changes
 
 **PR 1: captures, Capture tab, create form** (`feat/m6-captures`, #49)
 
