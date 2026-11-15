@@ -352,3 +352,23 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - The app used the chosen day of the month and took only the month from the finish date, so "repeat from completion" didn't count from completion. Finishing early could also give back the same due date, so the item never moved on (#84).
 
 **Affects:** new automated tests, `E-016 …`. AT-067 to AT-069 are unchanged.
+
+---
+
+## E-017: Shared text opens the capture dialog, filled in
+
+- **PRD section:** 8.5 (Capture, entry points outside the app)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-11-15 (with the M6 wireframes)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- When text is shared to Sahai from another app, the small capture dialog from E-009 opens over that app, with the shared text already in it. The user can trim or add to it, then tap Save, or Cancel to drop it.
+- Save adds it to Capture and closes the dialog, leaving the user where they were, with a short "Saved to Sahai Capture" message. The full app doesn't open.
+
+**Reason**
+
+- Shared text often carries more than the thought, such as a page title and a link. Saving it unseen would fill Capture with clutter, while one extra tap on Save lets the user keep only what matters. It's the same dialog as the widget's, so there's one way to capture from outside the app.
+
+**Affects:** AT-100 (the text lands in Capture after Save in the dialog).
