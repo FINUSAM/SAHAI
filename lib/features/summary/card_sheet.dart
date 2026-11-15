@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../actions/node_actions.dart';
+import '../../app/providers.dart';
 import '../../engine/recurrence.dart';
 import '../../engine/settings.dart';
 import '../../engine/time.dart';
@@ -7,14 +10,26 @@ import '../../engine/tree.dart';
 import '../../engine/visibility.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
+import '../explorer/action_feedback.dart';
 import '../explorer/explorer_rows.dart';
+import '../groups/group_picker.dart';
 
 /// What the user picked in a card's sheet (frame 7).
-enum CardChoice { markDone, setAside, skip, stopRepeating, openInTree }
+enum CardChoice {
+  markDone,
+  setAside,
+  skip,
+  stopRepeating,
+  contextGroup,
+  openInTree,
+}
 
 /// Tapping a card shows where it lives, as a chip per ancestor, and offers
 /// Mark done, Set aside (M3) and Open in tree (PRD 8.2, AT-029). A recurring
 /// card adds its due date and schedule, Skip and Stop repeating (M4 frame 5).
+/// M5 adds Context group, and Move up and Move down with the card's place,
+/// everything a drag does without dragging (M5 frame 6, AT-116). The sheet
+/// stays open between Move taps.
 ///
 /// [hiddenNote] says why an item opened from a reminder isn't on the Summary
 /// (M4 frame 11). The sheet then offers only what that frame shows.
@@ -39,7 +54,7 @@ Future<CardChoice?> showCardSheet(
   ),
 );
 
-class _CardSheet extends StatelessWidget {
+class _CardSheet extends ConsumerWidget {
   const _CardSheet({
     required this.tree,
     required this.card,
@@ -71,10 +86,14 @@ class _CardSheet extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final node = card.node;
     void pick(CardChoice choice) => Navigator.of(context).pop(choice);
+    // Live, so the position line follows each Move tap.
+    final arranged = hiddenNote == null
+        ? ref.watch(arrangedSummaryProvider).value
+        : null;
 
     return SingleChildScrollView(
       child: Column(
@@ -177,6 +196,7 @@ class _CardSheet extends StatelessWidget {
                 onTap: () => pick(CardChoice.stopRepeating),
               ),
           ],
+          if (arranged != null) ..._orderRows(context, ref, arranged, pick),
           ListTile(
             leading: const Icon(Icons.account_tree_outlined),
             title: const Text(Strings.openInTree),
@@ -187,5 +207,96 @@ class _CardSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Context group, Move up and Move down, and "Position 1 of 3 in At
+  /// laptop" (frame 6).
+  List<Widget> _orderRows(
+    BuildContext context,
+    WidgetRef ref,
+    ArrangedSummary arranged,
+    void Function(CardChoice choice) pick,
+  ) {
+    final theme = Theme.of(context);
+    final tree = arranged.tree;
+    final node = tree[card.node.id];
+    if (node == null) return const [];
+    final found = arranged.find(node.id);
+    final actions = ref.read(nodeActionsProvider);
+    final title = displayTitle(tree, node);
+    return [
+      ListTile(
+        leading: const Icon(Icons.view_agenda_outlined),
+        title: const Text(Strings.contextGroup),
+        subtitle: Text(groupLine(tree, arranged.groups, node)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+        onTap: () => pick(CardChoice.contextGroup),
+      ),
+      if (found case (final section, final index)) ...[
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  label: Strings.moveCardUp(title),
+                  excludeSemantics: true,
+                  button: true,
+                  enabled: index > 0,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.arrow_upward),
+                    label: const Text(Strings.moveUp),
+                    onPressed: index > 0
+                        ? () => runAction(
+                            context,
+                            () => actions.moveCardUp(node.id),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Semantics(
+                  label: Strings.moveCardDown(title),
+                  excludeSemantics: true,
+                  button: true,
+                  enabled: index < section.cards.length - 1,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.arrow_downward),
+                    label: const Text(Strings.moveDown),
+                    onPressed: index < section.cards.length - 1
+                        ? () => runAction(
+                            context,
+                            () => actions.moveCardDown(node.id),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              arranged.showsHeaders
+                  ? Strings.positionIn(
+                      index + 1,
+                      section.cards.length,
+                      section.group?.name ?? Strings.noGroup,
+                    )
+                  : Strings.positionOnSummary(index + 1, section.cards.length),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ],
+      const Divider(height: 1),
+    ];
   }
 }

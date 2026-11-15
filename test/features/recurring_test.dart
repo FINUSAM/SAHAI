@@ -61,10 +61,34 @@ void main() {
     await expandAll(tester);
     await openActions(tester, 'Finance & Bills');
     await choose(tester, Strings.addChild([NodeType.streamItem]));
+    // The new form puts the cursor in Title, so on a phone the keyboard
+    // opens and takes about a third of the screen. Without it here, these
+    // tests passed on the computer but missed their taps on the phone.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300 * 2.625);
+    await tester.pumpAndSettle();
+  }
+
+  /// Scrolls the form down to [finder] and taps it. Unlike [tapInView], this
+  /// also reaches a row the list hasn't built yet, which happens with the
+  /// keyboard open and large text.
+  Future<void> tapInForm(WidgetTester tester, Finder finder) async {
+    await tester.scrollUntilVisible(
+      finder,
+      100,
+      scrollable: find
+          .ancestor(
+            of: find.byType(TextField).first,
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(finder);
+    await tester.pumpAndSettle();
   }
 
   Future<void> turnRepeatOn(WidgetTester tester) async {
-    await tapInView(tester, find.text(Strings.repeat));
+    await tapInForm(tester, find.text(Strings.repeat));
   }
 
   Future<void> pickFrom<T>(
@@ -72,14 +96,22 @@ void main() {
     String label,
     String choice,
   ) async {
-    await tapInView(
+    await tapInForm(
       tester,
       find.ancestor(
         of: find.text(label),
         matching: find.byType(DropdownButtonFormField<T>),
       ),
     );
-    await tester.tap(find.text(choice).last);
+    // The open menu starts at the current choice and builds only what
+    // fits, so scroll it from the top until the choice shows, as a person
+    // would.
+    final menu = find.byType(Scrollable).last;
+    tester.state<ScrollableState>(menu).position.jumpTo(0);
+    await tester.pumpAndSettle();
+    final item = find.text(choice).last;
+    await tester.scrollUntilVisible(item, 48, scrollable: menu);
+    await tester.tap(item);
     await tester.pumpAndSettle();
   }
 
@@ -193,6 +225,40 @@ void main() {
       expect(find.text(Strings.everyError), findsOneWidget);
       final save = find.widgetWithText(FilledButton, Strings.save);
       expect(tester.widget<FilledButton>(save).onPressed, isNull);
+    });
+
+    testSahai('E-016 repeating from completion hides the day and month, and '
+        'starts today', (tester) async {
+      final app = newApp();
+      final bill = await addBill(app);
+      await pumpExplorer(tester, app: app);
+      await openNewItemForm(tester);
+      await turnRepeatOn(tester);
+      await pickFrom<int>(tester, Strings.onDay, '5');
+      expect(find.text('Sat, Dec 5'), findsOneWidget);
+      await tapInView(tester, find.text(Strings.completionDate));
+      expect(find.text(Strings.onDay), findsNothing);
+      expect(find.text(Strings.fromCompletionHint), findsOneWidget);
+      expect(find.text('Mon, Nov 9'), findsOneWidget);
+      await pickFrom<Frequency>(
+        tester,
+        Strings.periodName(Frequency.monthly, interval: 1),
+        Strings.periodName(Frequency.yearly, interval: 1),
+      );
+      expect(find.text(Strings.inMonth), findsNothing);
+      expect(find.text(Strings.onDay), findsNothing);
+      await tapInView(tester, find.text(Strings.dueDate));
+      expect(find.text(Strings.inMonth), findsOneWidget);
+      expect(find.text(Strings.onDay), findsOneWidget);
+      await tapInView(tester, find.text(Strings.completionDate));
+      await fillForm(tester, 'Service the bike');
+
+      final bike = (await app.actions.loadTree())
+          .childrenOf(bill.finance)
+          .firstWhere((n) => n.title == 'Service the bike');
+      expect(bike.schedule!.frequency, Frequency.yearly);
+      expect(bike.schedule!.repeatFrom, RepeatFrom.completionDate);
+      expect(bike.dueOn, DateTime(2026, 11, 9));
     });
 
     testSahai('a date the user picked stays when the schedule changes', (

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../engine/groups.dart';
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
 import '../../engine/settings.dart';
 import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
+import '../groups/group_picker.dart';
 import 'explorer_rows.dart';
 import 'node_icons.dart';
 
@@ -18,6 +20,7 @@ enum NodeChoice {
   setAside,
   wakeNow,
   changeTime,
+  contextGroup,
   move,
   moveUp,
   moveDown,
@@ -29,20 +32,27 @@ enum NodeChoice {
 /// on domains, streams or locked tasks (AT-003, E-007), and Add only for
 /// types that can hold children (AT-002). A set-aside node offers Wake now
 /// and Change set-aside time; any other TODO node or container offers Set
-/// aside… (M3 frame 12, AT-041).
+/// aside… (M3 frame 12, AT-041). Every node has a Context group line saying
+/// where its group comes from (M5 frame 10).
 Future<NodeChoice?> showNodeActions(
   BuildContext context,
   Tree tree,
   TreeNode node, {
   required DateTime now,
   required AppSettings settings,
+  List<ContextGroup> groups = const [],
 }) => showModalBottomSheet<NodeChoice>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
   showDragHandle: true,
-  builder: (context) =>
-      _NodeActionsSheet(tree: tree, node: node, now: now, settings: settings),
+  builder: (context) => _NodeActionsSheet(
+    tree: tree,
+    node: node,
+    now: now,
+    settings: settings,
+    groups: groups,
+  ),
 );
 
 class _NodeActionsSheet extends StatelessWidget {
@@ -51,12 +61,14 @@ class _NodeActionsSheet extends StatelessWidget {
     required this.node,
     required this.now,
     required this.settings,
+    required this.groups,
   });
 
   final Tree tree;
   final TreeNode node;
   final DateTime now;
   final AppSettings settings;
+  final List<ContextGroup> groups;
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +154,12 @@ class _NodeActionsSheet extends StatelessWidget {
               Strings.setAsideMenu,
               () => pick(NodeChoice.setAside),
             ),
+          _item(
+            Icons.view_agenda_outlined,
+            Strings.contextGroup,
+            () => pick(NodeChoice.contextGroup),
+            subtitle: groupLine(tree, groups, node),
+          ),
           if (parentType != null)
             _item(
               Icons.drive_file_move_outlined,

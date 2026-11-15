@@ -267,3 +267,88 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - On Android 12 and higher, Android delivers an inexact alarm within an hour of its time, and possibly later under Doze or battery saver. The app can't promise a few minutes.
 
 **Affects:** none. No acceptance test relies on the old wording.
+
+---
+
+## E-013: "No group" can override an inherited group
+
+- **PRD section:** 8.2
+- **Type:** Addition
+- **Decided by:** FINUSAM, 2026-11-07 (approved with the M5 wireframes)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- A node can have one of three group settings: follow its parent (the default), a named group, or "No group".
+- "No group" stops inheritance. The card goes in the default list, even if an ancestor has a group. Nodes below it follow it, unless they have their own setting.
+- Dragging a card to the default list sets "No group" on that item only, as dragging to a group does. If no ancestor has a group, it clears the setting instead.
+- The group picker offers "Same as <parent>" and "No group" only when an ancestor has a group. Otherwise it has a single "No group" row that clears the setting.
+
+**Reason**
+
+- PRD 8.2 lets an item choose a different group from its parent, but not choose none. A card dragged out of an inherited group would jump straight back.
+
+**Affects:** new automated tests, `E-013 …`. AT-085 to AT-087 are unchanged.
+
+---
+
+## E-014: Deleting a context group
+
+- **PRD section:** 8.2, 8.6
+- **Type:** Addition
+- **Decided by:** FINUSAM, 2026-11-07 (approved with the M5 wireframes)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- Deleting a group has no "Are you sure?" step. It offers Undo for 5 seconds, as Delete does elsewhere.
+- Items keep their setting underneath, and a deleted group counts as unset. Each one follows the next group up the tree, or goes to the default list.
+- Cards that change group this way go to the end of their new group.
+- Undo restores the group and its items' settings exactly.
+- Deleting a group writes no events to the activity log, because a group isn't a node.
+
+**Reason**
+
+- PRD 8.2 and 8.6 let the user manage groups, but don't say what happens to their items when one is deleted.
+
+**Affects:** new automated tests, `E-014 …`.
+
+---
+
+## E-015: Every order change is logged
+
+- **PRD section:** 9
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-11-07 (approved with the M5 wireframes; settles #44)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- `reordered` covers the Explorer as well as the Summary. Reorders and Move up or Move down in the Explorer each log it, with the old and new position and the group unchanged.
+
+**Reason**
+
+- PRD 9 lists `reordered` without saying where it applies, and M1's Explorer reorder doesn't log it. Logging every order change gives the Phase 2 planner the full picture.
+
+**Affects:** new automated tests, `E-015 …`. AT-094 is unchanged.
+
+---
+
+## E-016: Repeating from completion counts from the finish day
+
+- **PRD section:** 7 (Recurring items)
+- **Type:** Clarification
+- **Decided by:** FINUSAM, 2026-11-08 (answer to #84)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- For monthly and yearly items that repeat from the completion date, the next due date counts from the day the item is finished. Monthly, finished on Nov 5, gives Dec 5. Yearly, finished on Nov 5, 2026, gives Nov 5, 2027. A day the month doesn't have falls on its last day, so monthly finished on Jan 31 gives Feb 28.
+- The schedule form doesn't ask for a day of the month, or a month, for these schedules, because they don't apply.
+- For every schedule, the next due date is always later than the one just finished. If the count lands on or before it, as when an item is finished early, it moves on one more step.
+
+**Reason**
+
+- The app used the chosen day of the month and took only the month from the finish date, so "repeat from completion" didn't count from completion. Finishing early could also give back the same due date, so the item never moved on (#84).
+
+**Affects:** new automated tests, `E-016 …`. AT-067 to AT-069 are unchanged.

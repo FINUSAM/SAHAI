@@ -55,10 +55,10 @@ class SummaryCard {
   final List<TreeNode> path;
 
   /// The project, stream or recurring item that owns this card's slot
-  /// (PRD 8.2, used by M5). One card per owner at a time.
+  /// (PRD 8.2). One card per owner at a time.
   final String ownerId;
 
-  /// The effective context group (PRD 8.2); unused until M5.
+  /// The effective context group (PRD 8.2); null for the default list.
   final String? groupId;
 
   /// For sign-off cards: how many children were done.
@@ -91,7 +91,7 @@ class SummaryResult {
 /// Computes the Summary from the tree and the time, never from stored
 /// state (PRD 6, tech plan 4.2). Cards come out in tree order: domains in
 /// order, then each domain's projects and streams in order (M2 wireframe
-/// choice; M5 adds saved positions and groups).
+/// choice). `arrangeSummary` puts them in groups and saved positions (M5).
 SummaryResult computeSummary(
   Tree tree, {
   required DateTime now,

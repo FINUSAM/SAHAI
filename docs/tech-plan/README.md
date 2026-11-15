@@ -115,7 +115,7 @@ The cost is O(n log n), because sibling lists are sorted. The engine also return
 ### 4.4 Recurring items (PRD 7)
 
 - **Schedule.** Stored as JSON in `recurrence`: frequency (daily, weekly, monthly or yearly), interval, weekdays or day-of-month, and repeat-from (due date or completion date).
-- **Next due date.** A pure function. A missing month day falls on the last day (AT-073). Repeating from the due date is based on the *missed* due date, not the payment day (AT-067, AT-068). Repeating from completion is based on the completion's logical date (AT-069).
+- **Next due date.** A pure function. A missing month day falls on the last day (AT-073). Repeating from the due date is based on the *missed* due date, not the payment day (AT-067, AT-068). Repeating from completion is based on the completion's logical date (AT-069): monthly and yearly count from that day, so the chosen day and month don't apply ([E-016](../PRD_Edits.md#e-016-repeating-from-completion-counts-from-the-finish-day)). Whatever the schedule, the next due date is always after the one just finished, stepping on again if needed (#84).
 - **Show time.** `due_on − lead_days` at the day-start hour, computed in the current time zone each time rather than stored. A user's own set-aside of an occurrence is stored in `snooze_until` as normal, and the item is awake only when both have passed (AT-072).
 - **On the Set-Aside page** ([E-005](../PRD_Edits.md#e-005-recurring-items-waiting-for-their-show-date-are-listed-on-the-set-aside-page)). Waiting recurring items are listed at their effective wake time: the later of the show time and any `snooze_until`. **Wake now** and **Change time** on one store the chosen time in `snooze_until` and set `snooze_overrides_show = true`, so that time replaces the computed show time for this occurrence only. Completing or skipping the occurrence clears both, so the due date and schedule are never touched.
 - **Completion.** Write a `completed` event that includes the due date (AT-082), advance `due_on`, keep status TODO (AT-077), and clear `snooze_until`. All of this happens in one transaction, with an undo token that restores the old `due_on` (AT-070, E-001).
@@ -135,6 +135,22 @@ After each recompute, the engine compares the new card set with the previous one
 ### 4.6 Summary order and groups (PRD 8.2, M5)
 
 `summary_slots` stores one position per owner: each project, each stream (its non-recurring card), and each recurring item. The next card for the same owner takes the same slot (AT-088). A card that moves to another group goes to the end (AT-089), and new slots go to the end (AT-090). Dragging changes only slots and group settings, never the tree (AT-092).
+
+How it works (M5 PR 1):
+
+- **Group settings.** `nodes.group_id` is null (follow the parent), `none` for "No group", or a group id ([decision 0006](../decisions/0006-no-group-setting.md), E-013). `Tree.effectiveGroupOf` walks up from the node: it stops at `none`, skips a deleted group (E-014), and returns the first live group it finds. The tree is loaded with the live group ids, and `watchTree` emits again when groups change.
+- **Slots follow the Summary.** Every write that recomputes the Summary also checks each card's slot, in the same transaction as the `surfaced` events. A slot already in the card's group keeps its position. A missing slot, or one in another group, moves to the end of the card's group. Slots of owners with no card now are kept, so a recurring item or a set-aside project comes back to its place (AT-091). Positions only need to be in order, so gaps are normal.
+- **Layout.** `arrangeSummary` is pure: groups in their order, the default list last, empty groups left out, and cards by slot position. A card without a slot in its group yet goes last in tree order, which is where the next write puts it.
+- **Moving a card** within its group renumbers that group's slots, hidden owners' slots included, so they keep their order. The card goes just before the next visible card, or just after the previous one when it's last.
+- **Log.** A move within a group logs `reordered`. A move to another group logs `group_changed` and `reordered` (AT-094). Positions in the payload are places in the list the user saw, counted from 0, and groups are effective groups. Undo of a move logs the same events the other way round, each with `undoes_event_id`. Explorer reorders log `reordered` with the group unchanged; the Reorder screen logs only the items that moved, found as those outside the longest run that kept its order (E-015). A group setting on a node whose own card doesn't move logs `group_changed` only. Group create, edit, order and delete log nothing (E-014).
+
+The screens (M5 PR 2):
+
+- **One live read.** The Summary Page is laid out from `watchSummaryLayout`, which reads the tree, the groups and the slots together and emits again when any of them changes, so a move that only touches slots still redraws. Its query has its own SQL text, because drift shares live queries with the same text and plain `SELECT 1` would be `watchTree`'s, which doesn't read slots.
+- **Dragging.** Press and hold anywhere on a card lifts it (`LongPressDraggable`). Every card, every group header and, during a drag, a dashed box for each empty group are drop targets; the empty boxes go after the list, so nothing above them moves. Dropping in the same group calls `reorderCard`; dropping in another group calls `moveCardToGroup`, which puts the card at the end there, and shows "Moved to" with Undo. Near the top or bottom edge the list scrolls on its own.
+- **No-drag controls (AT-116).** The card sheet watches the layout, so Move up, Move down and "Position 1 of 3 in At laptop" stay current while it stays open. Its Context group line opens the group picker, which sets the group on the card's own item.
+- **Group picker.** "Same as" and a separate "No group" appear only when there's a group above to follow or to stay out of; otherwise one "No group" row clears the setting (E-013). New group opens the New group screen and picks the group made there.
+- **Icons.** Nine fixed names (`laptop`, `bag`, `home`, `phone`, `car`, `work`, `person`, `document`, `place`) map to Material icons the app already ships. An unknown name shows no icon.
 
 ---
 

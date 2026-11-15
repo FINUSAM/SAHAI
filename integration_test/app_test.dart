@@ -1,8 +1,9 @@
 // Runs the app's widget tests on a real phone, including the restart flows
 // for AT-001 (create every node type), AT-004 (reorder tasks) and AT-005
 // (reorder subtasks and stream items), the M2 Summary flows, the M3 set-aside
-// and reminder flows, and the M4 recurring flows (with the phone's
-// notifications faked).
+// and reminder flows, the M4 recurring flows (with the phone's notifications
+// faked), and the M5 group flows, including the restart for AT-093 (Summary
+// order persists).
 //
 // Each test uses its own throwaway database (in memory, or a file in the
 // app's temporary folder), never the app's real `sahai.sqlite`.
@@ -16,6 +17,8 @@
 // Without --no-uninstall the run uninstalls the app when it finishes, which
 // deletes its data on the phone. The test build still replaces the installed
 // app, so reinstall the release build afterwards with `adb install -r`.
+// Never run it from an older version than the one installed: Android refuses
+// the downgrade, and Flutter then uninstalls the app, flag or not.
 // Check this again in M8: once the app has its own signing key, a test build
 // won't install over the release build, and that could trigger an uninstall.
 import 'package:integration_test/integration_test.dart';
@@ -23,6 +26,7 @@ import 'package:integration_test/integration_test.dart';
 import '../test/app/home_shell_test.dart' as home_shell;
 import '../test/features/explorer/explorer_m2_test.dart' as explorer_m2;
 import '../test/features/explorer/explorer_screen_test.dart' as explorer;
+import '../test/features/groups_test.dart' as groups;
 import '../test/features/recurring_test.dart' as recurring;
 import '../test/features/reminders_test.dart' as reminders;
 import '../test/features/set_aside/set_aside_screens_test.dart' as set_aside;
@@ -37,4 +41,5 @@ void main() {
   set_aside.main();
   reminders.main();
   recurring.main();
+  groups.main();
 }

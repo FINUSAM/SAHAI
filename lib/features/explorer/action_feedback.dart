@@ -79,8 +79,17 @@ void _showUndo(
   BuildContext context,
   String text,
   Future<void> Function() undo,
+) => showUndo(ScaffoldMessenger.of(context), text, undo);
+
+/// Shows [text] with Undo for 5 seconds. Takes the messenger rather than a
+/// context, so it still works after the screen that started it has closed,
+/// as when a group is deleted from its Edit screen (frame 14).
+void showUndo(
+  ScaffoldMessengerState messenger,
+  String text,
+  Future<void> Function() undo,
 ) {
-  ScaffoldMessenger.of(context)
+  messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
@@ -90,7 +99,17 @@ void _showUndo(
         persist: false,
         action: SnackBarAction(
           label: Strings.undo,
-          onPressed: () => runAction(context, undo),
+          onPressed: () async {
+            try {
+              await undo();
+            } on ActionRejected catch (e) {
+              messenger
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(rejectMessage(e.reason))),
+                );
+            }
+          },
         ),
       ),
     );
@@ -116,4 +135,6 @@ String rejectMessage(RejectReason reason) => switch (reason) {
   RejectReason.cantRepeat => Strings.cantRepeat,
   RejectReason.notRecurring => Strings.notRecurring,
   RejectReason.staleUndo => Strings.staleUndo,
+  RejectReason.noSuchGroup => Strings.noSuchGroup,
+  RejectReason.notOnSummary => Strings.cardNotShowing,
 };

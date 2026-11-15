@@ -9,6 +9,40 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-15 (M5 Groups and order)
+
+### Added
+- Approved M5 Groups and order wireframes in `docs/design/m5-groups/` (14 frames) and the choices
+  made with them; the M5 plan in `docs/plans/0007-m5-groups.md`.
+- M5 groups and order engine (PR 1 of M5, no screens yet): context groups that can be created,
+  renamed, given an icon, put in order and deleted with Undo; a group set on any node, inherited
+  down the tree, with "No group" to override it (E-013); a deleted group counts as unset (E-014);
+  saved Summary positions per project, stream and recurring item, so the next card takes the same
+  place and a card that changes group goes to the end; moving cards within and between groups, with
+  Undo; `reordered` and `group_changed` in the activity log, including Explorer reorders (E-015).
+- M5 screens (PR 2 of M5): the Summary in groups, with a header per group and No group last
+  (headers only once a group has cards); press and hold a card to drag it to another place or
+  group, with empty groups shown as places to drop it, auto-scroll near the edges, and "Moved to"
+  with Undo; Context group, Move up, Move down and the card's position in its sheet, so nothing
+  needs dragging; a group picker with "Same as", No group and New group; a Context group row in
+  every create and edit form; the group on Explorer rows where it's set, and in the item menu;
+  Settings › Context groups, to make, rename, give an icon, put in order and delete groups, with
+  Undo.
+
+### Changed
+- Version 0.5.0+5 for the phone check.
+- PRD edits E-013 to E-015: "No group" can override an inherited group; what deleting a context
+  group does; every order change is logged, in the Explorer too.
+
+### Fixed
+- An item repeating from completion could come back with the same due date when finished early, so
+  it never moved on (#84). The next due date is now always after the one finished. Monthly and
+  yearly items repeating from completion count from the day they're finished, so finishing on Nov 5
+  gives Dec 5, and the form no longer asks for their day or month (E-016).
+- Four repeat-form tests failed on the phone but passed on the computer. The phone's keyboard opens
+  with the new-item form, and the tests then couldn't reach a menu choice or row without scrolling.
+  The tests now simulate the keyboard and scroll as a person would. The app itself didn't change.
+
 ## [0.4.0] - 2026-11-07 (M4 Recurring items)
 
 ### Added
