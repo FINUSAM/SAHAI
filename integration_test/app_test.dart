@@ -17,6 +17,8 @@
 // Without --no-uninstall the run uninstalls the app when it finishes, which
 // deletes its data on the phone. The test build still replaces the installed
 // app, so reinstall the release build afterwards with `adb install -r`.
+// Never run it from an older version than the one installed: Android refuses
+// the downgrade, and Flutter then uninstalls the app, flag or not.
 // Check this again in M8: once the app has its own signing key, a test build
 // won't install over the release build, and that could trigger an uninstall.
 import 'package:integration_test/integration_test.dart';
