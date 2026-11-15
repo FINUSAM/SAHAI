@@ -37,6 +37,9 @@ followed by v1.0.0 for the public release.
   it never moved on (#84). The next due date is now always after the one finished. Monthly and
   yearly items repeating from completion count from the day they're finished, so finishing on Nov 5
   gives Dec 5, and the form no longer asks for their day or month (E-016).
+- Four repeat-form tests failed on the phone but passed on the computer. The phone's keyboard opens
+  with the new-item form, and the tests then couldn't reach a menu choice or row without scrolling.
+  The tests now simulate the keyboard and scroll as a person would. The app itself didn't change.
 
 ## [0.4.0] - 2026-11-07 (M4 Recurring items)
 

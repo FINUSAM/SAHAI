@@ -184,10 +184,17 @@ Future<void> choose(WidgetTester tester, String label) async {
 
 /// Fills in the create/edit form and saves it.
 Future<void> fillForm(WidgetTester tester, String title) async {
-  await tester.enterText(
-    find.widgetWithText(TextField, Strings.titleLabel),
-    title,
-  );
+  final field = find.widgetWithText(TextField, Strings.titleLabel);
+  if (field.evaluate().isEmpty) {
+    // Scrolled far down a long form, as with the keyboard open: scroll back
+    // up to Title, as a person would.
+    await tester.scrollUntilVisible(
+      field,
+      -100,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+  await tester.enterText(field, title);
   await tester.pump();
   await tester.tap(find.text(Strings.save));
   await tester.pumpAndSettle();
