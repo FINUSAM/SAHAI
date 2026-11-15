@@ -152,6 +152,24 @@ The screens (M5 PR 2):
 - **Group picker.** "Same as" and a separate "No group" appear only when there's a group above to follow or to stay out of; otherwise one "No group" row clears the setting (E-013). New group opens the New group screen and picks the group made there.
 - **Icons.** Nine fixed names (`laptop`, `bag`, `home`, `phone`, `car`, `work`, `person`, `document`, `place`) map to Material icons the app already ships. An unknown name shows no icon.
 
+### 4.7 Capture (PRD 8.5, M6)
+
+Captures use the `captures` table that has been in the schema since version 1, so M6 adds no migration; the database stays at version 2.
+
+How it works (M6 PR 1):
+
+- **Actions.** `CaptureActions` adds, edits, deletes and restores captures, each in one transaction. Text is trimmed, but its inner line breaks are kept, so a capture can be a whole list. Editing keeps `created_at`, which is the captured time, so the list keeps its order. Delete is a soft delete, and Undo clears the flag; Remove after making an item is the same action.
+- **Events.** Adding writes `captured`: its node is the capture, with node type `capture`, and its payload is `{"source": "app" | "widget" | "share"}`, never the text. Editing and deleting a capture write nothing, as PRD 9 lists no events for them.
+- **Making an item.** `NodeActions.create` takes an optional capture id. The item, its `created` event and a `converted` event are written in one transaction. `converted` is about the new item, like `created`, with `{"capture_id": …}` in its payload. A deleted capture is refused. Remove or Keep comes after, as its own step.
+- **The list.** `CaptureActions.watch` lists the live captures newest first, with ties in the order they were saved, and counts each one's `converted` events with `json_extract` for "N items made". It reads `captures` and `events`, so it updates after a capture changes or an item is made.
+- **Screens.** The Capture tab has a box that grows to about 6 lines, and the list with a Create button and a menu on each capture. The Create form puts the type first. Its "Goes in" picker lists only nodes of that type's parent type, in tree order, with their paths and a search box, and changing the type clears a place that no longer fits. The form shares the Context group line with the node form (`groupSummary`).
+
+The widget and share target (M6 PR 2), per [decision 0007](../decisions/0007-capture-widget-and-share.md):
+
+- A see-through Flutter activity runs a second Dart entry point with only the capture dialog.
+- A plain Android widget and a `text/plain` share filter open that activity.
+- The database is opened with `shareAcrossIsolates: true`, so the dialog and the app share one connection.
+
 ---
 
 ## 5. Data
@@ -344,12 +362,10 @@ Current versions were checked on pub.dev on 2026-10-30. Each package is added on
 | `flutter_local_notifications` | 22.3.3 | BSD-3 | dexterx.dev | 2026-10-25 | Scheduled, grouped notifications | M3 |
 | `timezone` | 0.11.2 | BSD-2 | labs.dart.dev | 2026-10-12 | Time-zone-aware schedules | M3 |
 | `desugar_jdk_libs` (Android build) | 2.1.4 | GPL-2.0 with Classpath Exception | Google (com.android.tools) | 2024 | Java 8+ APIs the notifications plugin needs on older Android | M3 |
-| `home_widget` | 0.10.0 | BSD-3 | antonborri.es | 2026-09-17 | Home-screen widget (to confirm in an M6 spike) | M6 |
-| `receive_sharing_intent` | 1.9.0 | Apache-2.0 | kasem.dev | 2026-06-24 | Share target (or about 40 lines of our own Kotlin, decided in M6) | M6 |
 
 All of these are actively maintained (released within the last 6 months, except `flutter_lints`, the official and stable Flutter lint set) and score 110–160 out of 160 pub points. `sqlite3`, `path_provider` and `path` come in automatically through drift; the lock file pins them.
 
-**Considered and not chosen:** `flutter_timezone` (planned for M3, dropped 2026-11-05 because reminders are scheduled in UTC), `sqflite` (hand-written SQL, no generated migration tests), `sqlite3_flutter_libs` (end-of-life), `flutter_bloc` (more boilerplate for a two-person team), `very_good_analysis` (stricter than needed; can be revisited), `url_launcher` (a few lines of Kotlin are enough for one email draft).
+**Considered and not chosen:** `flutter_timezone` (planned for M3, dropped 2026-11-05 because reminders are scheduled in UTC), `sqflite` (hand-written SQL, no generated migration tests), `sqlite3_flutter_libs` (end-of-life), `flutter_bloc` (more boilerplate for a two-person team), `very_good_analysis` (stricter than needed; can be revisited), `url_launcher` (a few lines of Kotlin are enough for one email draft), `home_widget` and `receive_sharing_intent` (the M6 spike showed a plain Android widget and an intent filter are enough; [decision 0007](../decisions/0007-capture-widget-and-share.md), 2026-11-16).
 
 ---
 
@@ -364,7 +380,7 @@ Before each milestone: wireframes approved (PRD 16), the developer's estimate, a
 | **M3** Set aside | Set-aside picker (presets, scope), Explorer set-aside, Set-Aside page, notifications | Logical day, presets, `nextChangeAt` timer, notification planner | Notification behaviour with the app closed differs by phone maker: test on 2+ devices | 28 (22) |
 | **M4** Recurring | Schedules, due labels, skip, stop repeating, recurring reminders | Recurrence functions, show-time calculation | Time-zone and month-end edge cases; a full simulated month with the fake clock | 22 (17) |
 | **M5** Groups and order | Groups, inheritance, drag between groups, saved positions | Slots (4.6) | Drag-and-drop accessibility needs button alternatives (AT-116) | 12 (9) |
-| **M6** Capture | Scratchpad, convert form, widget, share target | Captures, `captured`/`converted` events | The widget is a button that opens a lightweight text dialog, since Android widgets can't hold a text field ([E-009](../PRD_Edits.md#e-009-the-v1-home-screen-widget-opens-a-lightweight-text-capture-dialog)): spike, then a decision record | 10 (9) |
+| **M6** Capture | Scratchpad, convert form, widget, share target | Captures, `captured`/`converted` events | The widget is a button that opens a lightweight text dialog, since Android widgets can't hold a text field ([E-009](../PRD_Edits.md#e-009-the-v1-home-screen-widget-opens-a-lightweight-text-capture-dialog)): spike, then a decision record. Done: [decision 0007](../decisions/0007-capture-widget-and-share.md), no packages | 10 (9) |
 | **M7** Polish and safety | Onboarding, full Settings, backup rules, 20 MB warning, log retention, accessibility, speed check | Retention compaction | Backup restore on a real device; TalkBack pass | 16 (7) |
 | **M8** Release prep | Icon, store listing, privacy policy, Data safety form, testing track upload | — | Play Console account type and the 12-tester rule (PRD 2) | 4 (3) |
 
