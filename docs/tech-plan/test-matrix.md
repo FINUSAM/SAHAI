@@ -161,7 +161,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 |---|---|---|---|---|---|---|
 | AT-095 | Quick capture works offline | 8.5 | Must | Founder | U, W, D | Airplane mode on device |
 | AT-096 | Newest captures come first | 8.5 | Must | Founder | U, W |  |
-| AT-097 | Edit a capture | 8.5 | Must | Founder | U, I | Edit survives restart |
+| AT-097 | Edit a capture | 8.5 | Must | Founder | U, I | Edit survives restart; `capture_test.dart` restarts on a database file and runs in the phone suite |
 | AT-098 | Delete a capture with Undo | 8.5 | Must | Founder | W |  |
 | AT-099 | Capture from the home-screen widget | 8.5 | Must | Founder | D | Home-screen widget |
 | AT-100 | Capture from the share sheet | 8.5 | Must | Founder | D | Share sheet from Chrome / WhatsApp |

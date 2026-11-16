@@ -11,7 +11,6 @@ import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../groups/group_picker.dart';
 import 'action_feedback.dart';
-import 'explorer_rows.dart';
 import 'explorer_state.dart';
 import 'schedule_fields.dart';
 
@@ -264,21 +263,12 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
 
   /// "At laptop · its cards appear here", "Same as Website relaunch · At
   /// laptop" or "No group" (frame 8).
-  String _groupSummary(Tree tree, String? parentId) {
-    final groups = ref.watch(groupsProvider).value ?? const <ContextGroup>[];
-    final setting = _group;
-    if (setting != null && setting != noGroup) {
-      return Strings.cardsAppearHere(groupName(groups, setting));
-    }
-    final source = parentId == null ? null : tree.groupSourceOf(parentId);
-    if (setting == null && source != null) {
-      return [
-        Strings.sameAs(displayTitle(tree, source)),
-        groupName(groups, source.groupId),
-      ].join(Strings.separator);
-    }
-    return Strings.noGroup;
-  }
+  String _groupSummary(Tree tree, String? parentId) => groupSummary(
+    tree,
+    ref.watch(groupsProvider).value ?? const <ContextGroup>[],
+    setting: _group,
+    parentId: parentId,
+  );
 
   Future<void> _pickGroup(Tree tree, String? parentId) async {
     final pick = await chooseGroup(

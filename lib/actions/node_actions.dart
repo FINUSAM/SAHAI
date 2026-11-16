@@ -17,6 +17,7 @@ import '../engine/tree.dart';
 import '../engine/visibility.dart';
 import '../shared/ids.dart';
 import '../shared/time.dart';
+import 'capture_actions.dart';
 
 part 'summary_order_actions.dart';
 
@@ -63,6 +64,14 @@ abstract final class EventTypes {
   /// A node's group setting changed (PRD 9). The payload holds the old and
   /// new setting and the old and new effective group.
   static const groupChanged = 'group_changed';
+
+  /// A thought saved to Capture (PRD 9). Its node is the capture, and the
+  /// payload holds where it came from, never the text (M6 decision 5).
+  static const captured = 'captured';
+
+  /// An item made from a capture (PRD 9, 10). Its node is the new item, and
+  /// the payload holds the capture's id (AT-104).
+  static const converted = 'converted';
 }
 
 // Payload keys for what Undo restores on a recurring item. `due_on` on a
@@ -109,6 +118,9 @@ enum RejectReason {
 
   /// A Summary action on a node that isn't a card on the Summary.
   notOnSummary,
+
+  /// A capture with no text.
+  emptyCapture,
 }
 
 class ActionRejected implements Exception {
@@ -149,6 +161,10 @@ class NodeActions {
   /// is the Settings default if null, as in [setRecurrence]. [group] is the
   /// node's group setting, as in [setGroup], so a new card starts in its
   /// group (AT-090).
+  ///
+  /// With [fromCapture], the item is made from that capture, and its
+  /// `converted` event is written in the same transaction (PRD 8.5, 13).
+  /// The capture itself is left alone: Remove or Keep comes after.
   Future<String> create({
     required NodeType type,
     String? parentId,
@@ -158,6 +174,7 @@ class NodeActions {
     DateTime? dueOn,
     int? leadDays,
     String? group,
+    String? fromCapture,
   }) {
     assert((schedule == null) == (dueOn == null), 'A schedule needs a date.');
     final cleanTitle = title.trim();
@@ -175,6 +192,9 @@ class NodeActions {
       }
       if (schedule != null && type != NodeType.streamItem) {
         throw const ActionRejected(RejectReason.cantRepeat);
+      }
+      if (fromCapture != null && !await _isLiveCapture(fromCapture)) {
+        throw const ActionRejected(RejectReason.notFound);
       }
       final inherited = parentId == null
           ? null
@@ -205,17 +225,31 @@ class NodeActions {
               updatedAt: now,
             ),
           );
+      final domainId = type == NodeType.domain
+          ? id
+          : tree.domainOf(parentId!)?.id;
+      final groupId = switch (setting) {
+        null => inherited,
+        noGroup => null,
+        _ => setting,
+      };
       await _log(
         EventTypes.created,
         nodeId: id,
         nodeType: type,
-        domainId: type == NodeType.domain ? id : tree.domainOf(parentId!)?.id,
-        groupId: switch (setting) {
-          null => inherited,
-          noGroup => null,
-          _ => setting,
-        },
+        domainId: domainId,
+        groupId: groupId,
       );
+      if (fromCapture != null) {
+        await _log(
+          EventTypes.converted,
+          nodeId: id,
+          nodeType: type,
+          domainId: domainId,
+          groupId: groupId,
+          payload: {CaptureActions.captureIdKey: fromCapture},
+        );
+      }
       if (parentId != null && type.hasStatus) {
         await _reopenDoneChain(tree, parentId, cause: 'created', childId: id);
       }
@@ -1012,6 +1046,13 @@ class NodeActions {
         : tree.childrenOf(node.parentId!);
     final index = siblings.indexWhere((s) => s.id == id);
     await reorder(id, index + by);
+  }
+
+  Future<bool> _isLiveCapture(String id) async {
+    final row = await (_db.select(
+      _db.captures,
+    )..where((c) => c.id.equals(id))).getSingleOrNull();
+    return row != null && !row.isDeleted;
   }
 
   Future<TreeNode> _requireNode(String id) async {

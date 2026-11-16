@@ -1,6 +1,6 @@
 # M6 Capture
 
-- **Status:** In progress (plan and wireframes; no app code yet)
+- **Status:** In progress (spike done, decision 0007 accepted; PR 1 open)
 - **Approved by:** FINUSAM on 2026-11-15 (wireframes and their decisions). Each PR's steps still need the owner's "Proceed"
 - **Branches / PRs:** plan and wireframes `docs/m6-plan` (#47); spike `spike/m6-widget-share` (#48, not merged); PR 1 `feat/m6-captures` (#49); PR 2 `feat/m6-widget-share` (#50); close-out `docs/m6-close-out` (#52); release (#51)
 - **PRD sections:** 8.5, 9, 10, 13, 16 (plus E-009, E-010, E-017)
@@ -48,20 +48,22 @@ Measured in working sessions like the M5 ones (M5 took 3 PRs, plus 2 bug-fix PRs
 
 **Spike** (`spike/m6-widget-share`, #48, not merged)
 
-5. [ ] On the phone: a home-screen widget whose button opens a small dialog over the current app, where Save stores a capture without opening the full app (E-009). Try `home_widget` 0.10.0 and a plain Android widget with our own Kotlin
-6. [ ] Share target: compare `receive_sharing_intent` 1.9.0 with an intent filter on the same dialog and a few lines of Kotlin. Check text from Chrome and WhatsApp
-7. [ ] Decision record `docs/decisions/0007-capture-widget-and-share.md`, covering how the dialog reaches the database. Owner approval for any package (licence, upkeep, pinned version) and every manifest change
+5. [x] On the phone: a home-screen widget whose button opens a small dialog over the current app, where Save stores a capture without opening the full app (E-009). Try `home_widget` 0.10.0 and a plain Android widget with our own Kotlin
+6. [x] Share target: compare `receive_sharing_intent` 1.9.0 with an intent filter on the same dialog and a few lines of Kotlin. Check text from Chrome and WhatsApp
+7. [x] Decision record `docs/decisions/0007-capture-widget-and-share.md`, covering how the dialog reaches the database. Owner approval for any package (licence, upkeep, pinned version) and every manifest change
+   - 2026-11-16: both approaches worked on the phone; the owner chose A (a small Flutter screen). Our own Kotlin was tried first with the owner's agreement, and neither package turned out to be needed. The owner approved the record and its manifest changes the same day (Accepted)
 
 **PR 1: captures, Capture tab, create form** (`feat/m6-captures`, #49)
 
-8. [ ] Confirm the existing tables are enough and the database stays at version 2
-9. [ ] Capture actions, each in one transaction: add (with `captured` and its source), edit (keeps the captured time), delete and Undo (soft delete). Never log capture text
-10. [ ] Create from a capture: create the node, `created` and `converted` (linking capture and node) in one transaction (PRD 13); Remove with Undo; "N items made"
-11. [ ] Capture tab (frames 1 to 7): the growing box, newest first, 3-line preview, Create button, menu, Edit, Delete with Undo
-12. [ ] Create form (frames 8 to 12): type, then "Goes in" with search, then title, notes, Context group and Repeat for a stream item; Remove or Keep
-13. [ ] Accessibility: labels on every new action, 48 dp targets, large-text check
-14. [ ] Unit and widget tests named by AT ID with the fake clock (AT-095 to AT-098, AT-101 to AT-104); an integration flow for AT-097's restart
-15. [ ] Update tech plan, matrix, `README.md`, `CHANGELOG.md` and this plan; tick #49; open PR 1
+8. [x] Confirm the existing tables are enough and the database stays at version 2
+9. [x] Capture actions, each in one transaction: add (with `captured` and its source), edit (keeps the captured time), delete and Undo (soft delete). Never log capture text
+10. [x] Create from a capture: create the node, `created` and `converted` (linking capture and node) in one transaction (PRD 13); Remove with Undo; "N items made"
+11. [x] Capture tab (frames 1 to 7): the growing box, newest first, 3-line preview, Create button, menu, Edit, Delete with Undo
+12. [x] Create form (frames 8 to 12): type, then "Goes in" with search, then title, notes, Context group and Repeat for a stream item; Remove or Keep
+13. [x] Accessibility: labels on every new action, 48 dp targets, large-text check
+14. [x] Unit and widget tests named by AT ID with the fake clock (AT-095 to AT-098, AT-101 to AT-104); an integration flow for AT-097's restart
+15. [x] Update tech plan, matrix, `README.md`, `CHANGELOG.md` and this plan; tick #49; open PR 1
+   - 2026-11-16: no schema change was needed (step 8). The owner approved changing the home shell test that looked for the "Coming in M6" placeholder, and deleting the placeholder screen. TalkBack check: the whole capture row first merged into one item, hiding its buttons; only the text now opens the menu. The screens haven't been seen on the phone yet; that's step 20
 
 **PR 2: widget and share target** (`feat/m6-widget-share`, #50, after PR 1 and decision 0007)
 

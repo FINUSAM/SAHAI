@@ -54,6 +54,28 @@ String? liveSetting(Tree tree, String? setting, {String? parentId}) {
 /// is [parentId] and whose setting is [current]. New group opens the New
 /// group screen, and the group made there is the pick. Null when nothing
 /// was picked.
+/// A form's Context group line for a new or edited node under [parentId]
+/// with group [setting]: "At laptop · its cards appear here", "Same as
+/// Website relaunch · At laptop" or "No group" (M5 frame 8).
+String groupSummary(
+  Tree tree,
+  List<ContextGroup> groups, {
+  required String? setting,
+  required String? parentId,
+}) {
+  if (setting != null && setting != noGroup) {
+    return Strings.cardsAppearHere(groupName(groups, setting));
+  }
+  final source = parentId == null ? null : tree.groupSourceOf(parentId);
+  if (setting == null && source != null) {
+    return [
+      Strings.sameAs(displayTitle(tree, source)),
+      groupName(groups, source.groupId),
+    ].join(Strings.separator);
+  }
+  return Strings.noGroup;
+}
+
 Future<GroupPick?> chooseGroup(
   BuildContext context, {
   required Tree tree,

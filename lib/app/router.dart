@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../engine/node_type.dart';
+import '../features/capture/capture_screen.dart';
+import '../features/capture/create_from_capture_screen.dart';
+import '../features/capture/edit_capture_screen.dart';
 import '../features/explorer/explorer_screen.dart';
 import '../features/explorer/move_screen.dart';
 import '../features/explorer/node_form_screen.dart';
 import '../features/explorer/reorder_screen.dart';
 import '../features/groups/group_form_screen.dart';
 import '../features/groups/groups_screen.dart';
-import '../features/placeholders/coming_later_screen.dart';
 import '../features/set_aside/set_aside_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/summary/summary_screen.dart';
-import '../shared/strings.dart';
 import 'home_shell.dart';
 
 /// Paths, so screens never spell them out by hand.
@@ -36,6 +37,10 @@ abstract final class Routes {
   ).toString();
 
   static String editNode(String id) => '/nodes/$id/edit';
+
+  static String editCapture(String id) => '/capture/$id/edit';
+
+  static String createFromCapture(String id) => '/capture/$id/create';
 
   /// The Explorer opened at [id], expanded and highlighted (frame 8).
   static String explorerNode(String id) =>
@@ -81,14 +86,7 @@ GoRouter buildRouter() {
               ),
             ],
           ),
-          _tab(
-            Routes.capture,
-            const ComingLaterScreen(
-              title: Strings.capture,
-              milestone: 'M6',
-              body: Strings.captureLater,
-            ),
-          ),
+          _tab(Routes.capture, const CaptureScreen()),
         ],
       ),
       // Full-screen routes, drawn over the bottom tabs.
@@ -133,6 +131,18 @@ GoRouter buildRouter() {
         parentNavigatorKey: rootKey,
         builder: (context, state) =>
             NodeFormScreen.edit(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/capture/:id/edit',
+        parentNavigatorKey: rootKey,
+        builder: (context, state) =>
+            EditCaptureScreen(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/capture/:id/create',
+        parentNavigatorKey: rootKey,
+        builder: (context, state) =>
+            CreateFromCaptureScreen(captureId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/nodes/:id/move',
