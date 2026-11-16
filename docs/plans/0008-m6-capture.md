@@ -1,6 +1,6 @@
 # M6 Capture
 
-- **Status:** In progress (spike done, decision 0007 accepted; PR 1 open)
+- **Status:** In progress (PR 1 merged; PR 2 open)
 - **Approved by:** FINUSAM on 2026-11-15 (wireframes and their decisions). Each PR's steps still need the owner's "Proceed"
 - **Branches / PRs:** plan and wireframes `docs/m6-plan` (#47); spike `spike/m6-widget-share` (#48, not merged); PR 1 `feat/m6-captures` (#49); PR 2 `feat/m6-widget-share` (#50); close-out `docs/m6-close-out` (#52); release (#51)
 - **PRD sections:** 8.5, 9, 10, 13, 16 (plus E-009, E-010, E-017)
@@ -67,10 +67,11 @@ Measured in working sessions like the M5 ones (M5 took 3 PRs, plus 2 bug-fix PRs
 
 **PR 2: widget and share target** (`feat/m6-widget-share`, #50, after PR 1 and decision 0007)
 
-16. [ ] The widget and its dialog, as decided (frames 13, 14 and 17)
-17. [ ] The share target, opening the same dialog filled in (frames 15 to 17, E-017)
-18. [ ] Tests for what runs in Flutter (the dialog screen and its save); device-only checks listed in the PR (AT-095 in airplane mode, AT-099, AT-100)
-19. [ ] Version 0.6.0+6 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #50; open PR 2
+16. [x] The widget and its dialog, as decided (frames 13, 14 and 17)
+17. [x] The share target, opening the same dialog filled in (frames 15 to 17, E-017)
+18. [x] Tests for what runs in Flutter (the dialog screen and its save); device-only checks listed in the PR (AT-095 in airplane mode, AT-099, AT-100)
+19. [x] Version 0.6.0+6 build for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #50; open PR 2
+   - 2026-11-16: built as decision 0007 says. The owner approved two choices with the checklist: tapping outside the dialog doesn't close it, and the widget is the spike's teal bar. The widget's text is in `res/values/strings.xml`, and its text colour is in `colors.xml`. A test shows a save from a second drift client reaching the app's open list straight away. The phone wasn't connected, so the 0.6.0 build hasn't been installed or tried yet; that, the keyboard and dark mode are step 20
 
 **Close-out and release**
 

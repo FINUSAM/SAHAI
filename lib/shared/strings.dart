@@ -474,6 +474,11 @@ abstract final class Strings {
   static String createdAndRemoved(String title) =>
       'Created $title${separator}capture removed';
 
+  // The capture dialog outside the app (M6 frames 14, 16 and 17).
+  static const savedToCapture = 'Saved to Sahai Capture';
+  static const captureSaveFailed =
+      "Couldn't save. Your text is still here, so try again.";
+
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';
   static const emptyTitleError = 'Give it a title.';

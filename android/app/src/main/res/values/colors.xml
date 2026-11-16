@@ -2,4 +2,6 @@
 <resources>
     <!-- Brand teal; the same value as Brand.teal in lib/shared/brand.dart. -->
     <color name="ic_launcher_background">#0F6469</color>
+    <!-- Text on the teal capture widget (M6 frame 13). -->
+    <color name="capture_widget_text">#F5F2ED</color>
 </resources>
