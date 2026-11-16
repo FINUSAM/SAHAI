@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The home-screen widget (M6 frame 13). Android draws it, so its text
+         lives here rather than in lib/shared/strings.dart. -->
+    <string name="capture_widget_label">Capture a thought</string>
+    <string name="capture_widget_description">Capture a thought in Sahai</string>
+</resources>

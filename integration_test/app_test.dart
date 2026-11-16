@@ -4,7 +4,9 @@
 // and reminder flows, the M4 recurring flows (with the phone's notifications
 // faked), the M5 group flows, including the restart for AT-093 (Summary
 // order persists), and the M6 capture flows, including the restart for
-// AT-097 (an edited capture persists).
+// AT-097 (an edited capture persists) and the capture dialog that the
+// widget and the share sheet open (AT-099, AT-100; opening it from outside
+// the app is checked by hand).
 //
 // Each test uses its own throwaway database (in memory, or a file in the
 // app's temporary folder), never the app's real `sahai.sqlite`.
@@ -25,6 +27,7 @@
 import 'package:integration_test/integration_test.dart';
 
 import '../test/app/home_shell_test.dart' as home_shell;
+import '../test/features/capture_dialog_test.dart' as capture_dialog;
 import '../test/features/capture_test.dart' as capture;
 import '../test/features/explorer/explorer_m2_test.dart' as explorer_m2;
 import '../test/features/explorer/explorer_screen_test.dart' as explorer;
@@ -45,4 +48,5 @@ void main() {
   recurring.main();
   groups.main();
   capture.main();
+  capture_dialog.main();
 }

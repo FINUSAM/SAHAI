@@ -47,6 +47,40 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
+        <!-- Capture from outside the app (M6, decision 0007, approved
+             2026-11-16): a small dialog over whatever is on screen, opened
+             by the widget below or by text shared from another app. Exported
+             so other apps can share to it; it takes only plain text, and
+             saving is always the user's tap. -->
+        <activity
+            android:name=".CaptureActivity"
+            android:label="Sahai"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/CaptureTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize|stateVisible">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
+        <!-- The "Capture a thought" home-screen widget. Not exported: only
+             Android's widget host talks to it. -->
+        <receiver
+            android:name=".CaptureWidget"
+            android:label="@string/capture_widget_label"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/capture_widget_info"/>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

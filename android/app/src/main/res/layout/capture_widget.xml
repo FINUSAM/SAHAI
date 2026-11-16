@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The "Capture a thought" bar (M6 frame 13). The whole bar is one tap
+     target that opens the capture dialog, and TalkBack reads it as one
+     button. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/capture_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minHeight="48dp"
+    android:background="@drawable/capture_widget_background"
+    android:contentDescription="@string/capture_widget_description"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:text="S"
+        android:textColor="@color/capture_widget_text"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="1"
+        android:paddingStart="14dp"
+        android:paddingEnd="8dp"
+        android:text="@string/capture_widget_label"
+        android:textColor="@color/capture_widget_text"
+        android:textSize="16sp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:text="+"
+        android:textColor="@color/capture_widget_text"
+        android:textSize="24sp" />
+</LinearLayout>
