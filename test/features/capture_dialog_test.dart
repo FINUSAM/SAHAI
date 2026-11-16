@@ -223,14 +223,21 @@ void main() {
     addTearDown(app.close);
     final host = FakeCaptureHost();
     await pumpDialog(tester, app: app, host: host);
+    final box = tester.widget<EditableText>(find.byType(EditableText));
+    // On a computer Flutter's test keyboard reports whether it is up. On a
+    // phone the real keyboard is used and can't be read, so there the test
+    // checks what brings it up: the box having focus.
+    final keyboardReadable = tester.testTextInput.isRegistered;
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump();
-    expect(tester.testTextInput.isVisible, isFalse);
+    expect(box.focusNode.hasFocus, isFalse);
+    if (keyboardReadable) expect(tester.testTextInput.isVisible, isFalse);
 
     host.focus();
     await tester.pump();
 
-    expect(tester.testTextInput.isVisible, isTrue);
+    expect(box.focusNode.hasFocus, isTrue);
+    if (keyboardReadable) expect(tester.testTextInput.isVisible, isTrue);
   });
 
   group('accessibility', () {
