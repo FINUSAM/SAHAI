@@ -166,9 +166,9 @@ How it works (M6 PR 1):
 
 The widget and share target (M6 PR 2), per [decision 0007](../decisions/0007-capture-widget-and-share.md):
 
-- A see-through Flutter activity runs a second Dart entry point with only the capture dialog.
-- A plain Android widget and a `text/plain` share filter open that activity.
-- The database is opened with `shareAcrossIsolates: true`, so the dialog and the app share one connection.
+- **The dialog.** `CaptureActivity` is a see-through `FlutterActivity` that runs `captureMain` (in `lib/main.dart`) instead of `main`. That starts only the theme and `CaptureDialog`, not the router, the reminders or the rest of the app. The activity hands the dialog the shared text and the source (`widget` or `share`) over the `sahai/capture_dialog` method channel. It tells the dialog when its window first has focus, so the dialog can ask for the keyboard again, and shows the "Saved to Sahai Capture" toast as it closes. Tapping outside the dialog does nothing, so a half-typed thought isn't lost; Cancel and Back close it. A failed save keeps the text and says so.
+- **Entry points.** `CaptureWidget` is a plain `AppWidgetProvider`: a fixed teal "Capture a thought" bar whose tap opens the activity, with no updates. The activity's `SEND` `text/plain` intent filter puts Sahai in the share sheet. No packages and no permissions.
+- **The database.** Both the app and the dialog open it through `openAppDatabase` (`lib/data/app_database.dart`), with `shareAcrossIsolates: true`, so they are two clients of one drift isolate and the file is never written through two connections. The dialog opens it only to save, and closes it straight after. `test/data/shared_database_test.dart` shows a save from a second client reaching the first client's live list straight away, so the Capture tab updates while it's open. Two separate Flutter engines finding the same isolate can only be checked on the phone; the spike saw it work.
 
 ---
 

@@ -24,6 +24,14 @@ followed by v1.0.0 for the public release.
   capture, with Undo, or Keep it to make more, shown as "N items made". `captured` and `converted`
   events in the activity log; the `captured` event records where a capture came from, never its
   text.
+- M6 home-screen widget and share target (PR 2 of M6): a "Capture a thought" widget, and Sahai in
+  the share sheet for text. Both open a small capture dialog over whatever is on screen, the shared
+  text already in it, without opening the full app; Save adds it to Capture and shows "Saved to
+  Sahai Capture". No new packages or permissions.
+
+### Changed
+- The app and the capture dialog share one database connection (decision 0007). Nothing changes
+  on disk.
 
 ### Removed
 - The "Coming in M6" placeholder on the Capture tab.
