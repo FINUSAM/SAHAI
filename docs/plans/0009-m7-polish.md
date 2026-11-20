@@ -108,7 +108,7 @@ Approved by the owner's "Proceed" on 2026-11-20, with three choices: (A) the bra
 22. [x] AT-118: set-aside times are stored and compared as moments, tested across offsets (a real zone switch is the owner's phone check); AT-119: a failure forced in the middle of a completion leaves neither the change nor its event
 23. [x] AT-114: the profile-mode speed test from choice B, added but not run
 23a. [x] Tests named by AT ID with the fake clock: AT-128 to AT-133, AT-116 to AT-119, the engine fix; new screen tests added to `integration_test/app_test.dart`, not run
-24. [ ] Version 0.7.0+7; `flutter analyze`, `dart format`, `flutter test` clean and the debug APK builds; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #56 and #87 (not the phone tasks); once #107 merges, merge `dev` in and open PR 3 listing the device checks (AT-114 to AT-118, AT-129, AT-130)
+24. [x] Version 0.7.0+7; `flutter analyze`, `dart format`, `flutter test` clean and the debug APK builds; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #56 and #87 (not the phone tasks); once #107 merges, merge `dev` in and open PR 3 listing the device checks (AT-114 to AT-118, AT-129, AT-130). Opened as #108
 
 **Close-out and release**
 
