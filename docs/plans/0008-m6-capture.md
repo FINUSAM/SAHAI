@@ -1,8 +1,8 @@
 # M6 Capture
 
-- **Status:** In progress (PR 1 merged; PR 2 open)
-- **Approved by:** FINUSAM on 2026-11-15 (wireframes and their decisions). Each PR's steps still need the owner's "Proceed"
-- **Branches / PRs:** plan and wireframes `docs/m6-plan` (#47); spike `spike/m6-widget-share` (#48, not merged); PR 1 `feat/m6-captures` (#49); PR 2 `feat/m6-widget-share` (#50); close-out `docs/m6-close-out` (#52); release (#51)
+- **Status:** Done (v0.6.0, 2026-11-20)
+- **Approved by:** FINUSAM on 2026-11-15 (wireframes and their decisions); each PR's steps by the owner's "Proceed"
+- **Branches / PRs:** plan and wireframes `docs/m6-plan` (#47); spike `spike/m6-widget-share` (#48, not merged); PR 1 `feat/m6-captures` (#49, #97); PR 2 `feat/m6-widget-share` (#50, #98); keyboard test fix `fix/capture-dialog-keyboard-test` (#99); close-out `docs/m6-close-out` (#52); release (#51)
 - **PRD sections:** 8.5, 9, 10, 13, 16 (plus E-009, E-010, E-017)
 - **Acceptance tests:** AT-095 to AT-104 (10 rows: 9 Must, 1 Should)
 - **Wireframes:** [`docs/design/m6-capture/`](../design/m6-capture/) (approved 2026-11-15)
@@ -75,8 +75,9 @@ Measured in working sessions like the M5 ones (M5 took 3 PRs, plus 2 bug-fix PRs
 
 **Close-out and release**
 
-20. [ ] Owner: release build on the phone; the AT-095 to AT-103 Founder rows, including the widget and sharing from Chrome and WhatsApp. The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner, and never from an older version than the one installed
-21. [ ] Close-out docs PR (#52), once the check passes: results on the test sheet, this plan, `CLAUDE.md` status
+20. [x] Owner: release build on the phone; the AT-095 to AT-103 Founder rows, including the widget and sharing from Chrome and WhatsApp. The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner, and never from an older version than the one installed
+   - **Phone check (2026-11-17):** the owner ran the 0.6.0 release build on the OnePlus and reported AT-095 to AT-103 passed, including the widget, sharing from Chrome and WhatsApp, the keyboard and dark mode, so all 10 M6 rows of the acceptance sheet are Pass, dated 2026-11-17. AT-104 is a Developer row, covered by its automated tests. The on-phone suite passed 142 of 143: the capture dialog's keyboard test read Flutter's test keyboard, which doesn't exist on a phone. The owner approved changing that test (#99); after it the suite passed 143 of 143. The release build was reinstalled with `adb install -r` both times, with data kept
+21. [x] Close-out docs PR (#52), once the check passes: results on the test sheet, this plan, `CLAUDE.md` status
 22. [ ] Owner: release PR `dev` → `main` (#51, merge commit), tag `v0.6.0`. Tick #51 and #52, and close #51 and the milestone by hand after tagging
 
 ## Changes to the plan

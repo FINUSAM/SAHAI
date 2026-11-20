@@ -8,7 +8,7 @@ Read at the start of every Claude Code session in this repo. These rules apply t
 
 - Android application ID: `com.finusam.sahai`
 - Owner: FINUSAM (founder and product owner). Only the owner approves changes to the PRD, these rules, dependencies and permissions.
-- Status: M5 Groups and order shipped as `v0.5.0` (2026-11-15). M6 Capture is next. Architecture and packages are decided in the technical plan (`docs/tech-plan/`), not ad hoc.
+- Status: M6 Capture shipped as `v0.6.0` (2026-11-20). M7 Polish and safety is next. Architecture and packages are decided in the technical plan (`docs/tech-plan/`), not ad hoc.
 
 ### Never break these
 

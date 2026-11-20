@@ -9,6 +9,8 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-20 (M6 Capture)
+
 ### Added
 - Approved M6 Capture wireframes in `docs/design/m6-capture/` (17 frames) and the choices made with
   them; PRD edit E-017 (shared text opens the capture dialog, filled in); the M6 plan in
