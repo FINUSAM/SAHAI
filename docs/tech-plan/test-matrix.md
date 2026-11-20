@@ -161,10 +161,10 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 |---|---|---|---|---|---|---|
 | AT-095 | Quick capture works offline | 8.5 | Must | Founder | U, W, D | Airplane mode on device |
 | AT-096 | Newest captures come first | 8.5 | Must | Founder | U, W |  |
-| AT-097 | Edit a capture | 8.5 | Must | Founder | U, I | Edit survives restart |
+| AT-097 | Edit a capture | 8.5 | Must | Founder | U, I | Edit survives restart; `capture_test.dart` restarts on a database file and runs in the phone suite |
 | AT-098 | Delete a capture with Undo | 8.5 | Must | Founder | W |  |
-| AT-099 | Capture from the home-screen widget | 8.5 | Must | Founder | D | Home-screen widget |
-| AT-100 | Capture from the share sheet | 8.5 | Must | Founder | D | Share sheet from Chrome / WhatsApp |
+| AT-099 | Capture from the home-screen widget | 8.5 | Must | Founder | W, D | Home-screen widget; `capture_dialog_test.dart` covers the dialog and its save, the phone covers the widget opening it |
+| AT-100 | Capture from the share sheet | 8.5 | Must | Founder | W, D | Share sheet from Chrome / WhatsApp; `capture_dialog_test.dart` covers the shared text filled in and saved as a share |
 | AT-101 | Create a stream item from a capture | 8.5 | Must | Founder | U, W |  |
 | AT-102 | Create a project, task or subtask | 8.5 | Must | Founder | W |  |
 | AT-103 | Keep a capture to create more | 8.5 | Must | Founder | W |  |

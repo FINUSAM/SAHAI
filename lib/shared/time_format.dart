@@ -73,6 +73,10 @@ String clockTime(DateTime at) => _time.format(at.toLocal());
 /// "Tue, Nov 3".
 String shortDate(DateTime at) => _date.format(at.toLocal());
 
+/// "Sun, Nov 15 · 6:00 PM": when a thought was captured (M6 frame 2).
+String capturedTime(DateTime at) =>
+    '${shortDate(at)}${Strings.separator}${clockTime(at)}';
+
 /// "Nov 5".
 String monthDay(DateTime date) => _monthDay.format(date);
 

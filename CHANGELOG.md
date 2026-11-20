@@ -9,6 +9,39 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-20 (M6 Capture)
+
+### Added
+- Approved M6 Capture wireframes in `docs/design/m6-capture/` (17 frames) and the choices made with
+  them; PRD edit E-017 (shared text opens the capture dialog, filled in); the M6 plan in
+  `docs/plans/0008-m6-capture.md`.
+- Decision 0007: the capture dialog outside the app is a small Flutter screen, opened by a plain
+  Android widget and a text share target, with no packages and no new permissions (from the
+  widget and share spike, checked on the phone).
+- M6 Capture tab (PR 1 of M6): a box at the top that grows as you type, where Enter starts a new
+  line and Save saves; captures newest first, each with its date and time and its first 3 lines;
+  a menu with the whole text, Create an item, Edit (keeps the captured time) and Delete with Undo.
+  Create an item from a capture: pick what to make, where it goes (only places it can go, with
+  their path and a search box), then the title, notes, Context group and Repeat; then Remove the
+  capture, with Undo, or Keep it to make more, shown as "N items made". `captured` and `converted`
+  events in the activity log; the `captured` event records where a capture came from, never its
+  text.
+- M6 home-screen widget and share target (PR 2 of M6): a "Capture a thought" widget, and Sahai in
+  the share sheet for text. Both open a small capture dialog over whatever is on screen, the shared
+  text already in it, without opening the full app; Save adds it to Capture and shows "Saved to
+  Sahai Capture". No new packages or permissions.
+
+### Changed
+- The app and the capture dialog share one database connection (decision 0007). Nothing changes
+  on disk.
+
+### Fixed
+- The capture dialog's keyboard test now also runs on a phone: there it checks the box gets focus,
+  since the real keyboard can't be read. On a computer it still checks the keyboard as well.
+
+### Removed
+- The "Coming in M6" placeholder on the Capture tab.
+
 ## [0.5.0] - 2026-11-15 (M5 Groups and order)
 
 ### Added

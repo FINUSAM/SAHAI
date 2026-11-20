@@ -1,8 +1,9 @@
 import 'package:clock/clock.dart';
-import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../actions/capture_actions.dart';
 import '../actions/node_actions.dart';
+import '../data/app_database.dart';
 import '../data/database.dart';
 import '../data/settings.dart';
 import '../engine/groups.dart';
@@ -14,14 +15,9 @@ import '../notifications/reminders.dart';
 /// The one source of "now". Tests override it with a fake (decision 0004).
 final clockProvider = Provider<Clock>((ref) => const Clock());
 
-/// `sahai.sqlite` in the app's private storage. drift_flutter runs the
-/// queries on a background isolate, so the UI thread never waits on the
-/// database (PRD 13).
+/// `sahai.sqlite`, shared with the capture dialog (see [openAppDatabase]).
 final databaseProvider = Provider<SahaiDatabase>((ref) {
-  final db = SahaiDatabase(
-    driftDatabase(name: 'sahai'),
-    clock: ref.watch(clockProvider),
-  );
+  final db = openAppDatabase(clock: ref.watch(clockProvider));
   ref.onDispose(db.close);
   return db;
 });
@@ -29,6 +25,18 @@ final databaseProvider = Provider<SahaiDatabase>((ref) {
 final nodeActionsProvider = Provider<NodeActions>(
   (ref) =>
       NodeActions(ref.watch(databaseProvider), clock: ref.watch(clockProvider)),
+);
+
+final captureActionsProvider = Provider<CaptureActions>(
+  (ref) => CaptureActions(
+    ref.watch(databaseProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
+
+/// The captures, newest first, with how many items each has made.
+final capturesProvider = StreamProvider<List<CaptureEntry>>(
+  (ref) => ref.watch(captureActionsProvider).watch(),
 );
 
 /// The live, non-deleted tree. Every action that writes makes it emit again.

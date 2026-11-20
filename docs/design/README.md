@@ -14,6 +14,7 @@ Wireframes for each milestone's screens. PRD 16 makes approved wireframes a gate
 | M3 Set aside | Set-aside picker, Set-Aside page, Explorer set aside, notifications, reminder settings (14 frames) | **Approved** by FINUSAM, 2026-11-04 | [`m3-set-aside/`](m3-set-aside/) | [Sahai wireframes: M3 Set aside](https://claude.ai/artifact/Pyxg2E37pU7pYzF3KhPB12) (private to the owner until shared) |
 | M4 Recurring items | Due labels, schedule form, Skip and Stop repeating, waiting bills, recurring reminders (11 frames) | **Approved** by FINUSAM, 2026-11-06 | [`m4-recurring/`](m4-recurring/) | [Sahai wireframes: M4 Recurring items](https://claude.ai/artifact/JqARsT6vEsGqa2uMZZEunt) (private to the owner until shared) |
 | M5 Groups and order | Grouped Summary, drag and button moves, group picker, Explorer groups, Context groups settings (14 frames) | **Approved** by FINUSAM, 2026-11-07 | [`m5-groups/`](m5-groups/) | [Sahai wireframes: M5 Groups and order](https://claude.ai/artifact/SA1DfAVLoFVkS1njswWto5) (private to the owner until shared) |
+| M6 Capture | Capture tab, edit and delete, create from a capture, Remove or Keep, home-screen widget, share target (17 frames) | **Approved** by FINUSAM, 2026-11-15 | [`m6-capture/`](m6-capture/) | [Sahai wireframes: M6 Capture](https://claude.ai/artifact/Syp64TDuh6QAMzxx4bgr69) (private to the owner until shared) |
 
 ## Brand
 
@@ -213,3 +214,46 @@ The PRD doesn't specify these. The owner approved them along with the wireframes
 - **Deleting a group:** no "Are you sure?" step, like Delete elsewhere. The Delete row says what happens to the items.
 - **Recurring cards:** their sheets keep Skip this occurrence and Stop repeating from M4, alongside the new rows.
 - **Collapsing groups:** not in M5. A collapsed group could hide an overdue bill, and neither the PRD nor the acceptance tests ask for it.
+
+## M6 Capture
+
+Same style and sample tree as M1 to M5, with the groups from M5. Unless a frame says otherwise it is Sunday, Nov 15, 2026, early evening. Frames 13 to 17 happen outside the app: on the home screen, and in Chrome. Their home screen, keyboard and share sheet are rough sketches of Android's, not designs.
+
+| # | Frame | Shows | Acceptance tests |
+|---|---|---|---|
+| 1 | [Capture, empty](m6-capture/01-capture-empty.png) | The capture box at the top, and what Capture is for | — |
+| 2 | [Captures, newest first](m6-capture/02-capture-list.png) | Each capture with its date and time, a Create button and a menu; a long capture shows its first 3 lines | AT-095, AT-096 |
+| 3 | [Typing a longer capture](m6-capture/03-typing-long.png) | The box grows as you type; Enter starts a new line and only Save saves | AT-095 |
+| 4 | [A new capture goes on top](m6-capture/04-new-capture.png) | Saved straight into the list, newest first | AT-095, AT-096 |
+| 5 | [Capture menu](m6-capture/05-capture-menu.png) | The whole text, then Create an item, Edit and Delete | AT-097, AT-098 |
+| 6 | [Edit a capture](m6-capture/06-edit-capture.png) | Text only; editing keeps the captured time | AT-097 |
+| 7 | [Deleted, with Undo](m6-capture/07-delete-undo.png) | "Capture deleted" snackbar with Undo | AT-098 |
+| 8 | [Create from a capture](m6-capture/08-create-form.png) | The capture above the form, not copied in; what to make, where it goes, title, notes, Context group (and Repeat for a stream item) | AT-101, AT-102 |
+| 9 | [Where it goes](m6-capture/09-place-picker.png) | Only the places the chosen type can go, with their path and a search box | AT-101, AT-102 |
+| 10 | [Remove this capture?](m6-capture/10-remove-dialog.png) | After Save: Keep or Remove | AT-101 to AT-103 |
+| 11 | [Kept, to make the next one](m6-capture/11-kept.png) | The capture stays, with "3 items made" | AT-103 |
+| 12 | [Last item made, capture removed](m6-capture/12-removed.png) | The capture leaves the list; Undo brings it back | AT-103 |
+| 13 | [Home-screen widget](m6-capture/13-widget.png) | A "Capture a thought" bar | AT-099 |
+| 14 | [Widget dialog](m6-capture/14-widget-dialog.png) | A small dialog over the home screen: text box, Cancel, Save (E-009) | AT-099 |
+| 15 | [Sharing text from Chrome](m6-capture/15-share-sheet.png) | Sahai Capture in Android's share sheet | AT-100 |
+| 16 | [Shared text, ready to save](m6-capture/16-shared-dialog.png) | The same dialog with the shared text filled in (E-017) | AT-100 |
+| 17 | [Saved, back where you were](m6-capture/17-saved-toast.png) | "Saved to Sahai Capture", without opening the app | AT-099, AT-100 |
+
+AT-104 (capture events in the log) has no frame: the log has no screen.
+
+### Choices approved with these wireframes
+
+The PRD doesn't specify these. The owner approved them along with the wireframes on 2026-11-15. One changes what the PRD says, so it is also a PRD edit: shared text opening the dialog is [E-017](../PRD_Edits.md#e-017-shared-text-opens-the-capture-dialog-filled-in).
+
+- **Capturing in the app:** a box at the top of the Capture tab, so a thought never needs another screen. It grows to about 6 lines, then scrolls. Enter starts a new line, and only Save saves, so a capture can be a whole list. Save is off while the box is empty.
+- **Long captures:** a capture has no length limit. The list shows the first 3 lines and "…"; the menu, Edit and the Create form show the whole text.
+- **Making items from a capture:** one at a time, by hand. A capture with several things in it is worked through with Keep after each item and Remove after the last. Splitting a capture into items automatically is Phase 2 (E-010).
+- **Create button:** on every capture in the list, so making an item starts with one tap. The menu also has Create an item, plus Edit and Delete.
+- **Create form:** the capture text sits above the form, greyed and not copied in, and the title starts empty (PRD 8.5). The type comes first, because it decides where the item can go and which fields follow (Repeat for a stream item). After the type comes the place, then the usual title, notes and Context group. Save is off until the type, place and title are filled in.
+- **Where it goes:** a list of only the places the chosen type can go, each with its path, plus a search box: domains for a project, projects for a task, tasks for a subtask, streams for a stream item.
+- **Remove or Keep:** asked after every Save. Remove has Undo for 5 seconds, which brings back the capture but not the new item.
+- **"N items made":** a kept capture shows how many items have been made from it, counted from its `converted` events.
+- **Edit and Delete:** editing keeps the captured time, and the list stays in captured order. Delete has no "Are you sure?" step, with Undo for 5 seconds, as elsewhere.
+- **Widget:** one "Capture a thought" bar. Tapping it opens the small dialog over whatever is on screen, and Save closes it without opening the app (E-009).
+- **Share target:** shared text opens the same dialog, filled in, so it can be trimmed before Save (E-017). Both dialogs end with a short "Saved to Sahai Capture" message.
+- **Where a capture came from:** the `captured` event records the app, the widget or a share. It never records the text (tech plan, logging).
