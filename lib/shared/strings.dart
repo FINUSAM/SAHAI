@@ -504,6 +504,43 @@ abstract final class Strings {
   static const reminderTimeHint =
       'When recurring items remind you on the day they show';
   static const helpSection = 'Help';
+  static const replayOnboarding = 'Replay onboarding';
+  static const replayOnboardingHint = 'Walk through the first steps again';
+  static const aboutSahai = 'About Sahai';
+  static String aboutHint(String? version) => version == null
+      ? "Privacy, and what's coming"
+      : "Version $version, privacy, and what's coming";
+  static const sendFeedback = 'Send feedback';
+  static const sendFeedbackHint =
+      'Opens your email app. Sahai sends nothing itself.';
+  static String feedbackSubject(String? version) =>
+      version == null ? 'Sahai feedback' : 'Sahai feedback ($version)';
+  static const noEmailApp =
+      'No email app found. Install or set up one to send feedback.';
+
+  // About (M7 frame 15).
+  static String versionLine(String version) => 'Version $version';
+  static const yourData = 'Your data';
+  static const yourDataBody =
+      'Everything stays on this phone. Sahai has no internet access, no '
+      'account, no ads and no tracking. The only copy that leaves the phone '
+      "is Android's own backup to your Google account.";
+  static const whatsComing = "What's coming";
+  static const nextHeading = 'Next';
+  static const comingNext = [
+    'AI that suggests and never decides: turn a brain dump into tasks, and '
+        'get a suggested order for your day. You bring your own AI key, and '
+        'see what would be sent before anything is.',
+    'Voice capture from the widget',
+    'Export and import your data',
+    'An iPhone app',
+  ];
+  static const laterHeading = 'Later';
+  static const comingLater = [
+    'Sync between your own devices, encrypted, through your Google Drive',
+  ];
+  static const moreHeading = 'More';
+  static const licences = 'Open-source licences';
 
   // Set-aside presets (M7 frames 11 and 12).
   static const presetsIntro =
@@ -523,6 +560,98 @@ abstract final class Strings {
       'already set aside keep their time.';
   static const resetToDefaults = 'Reset to defaults';
   static String changePresetTime(String preset) => 'Time for $preset';
+
+  static const notInPractice = 'Explorer opens after the practice.';
+
+  // Onboarding (PRD 8.1, M7 frames 1 to 9 and 16).
+  static const skip = 'Skip';
+  static const next = 'Next';
+  static const backButton = 'Back';
+  static const getStarted = 'Get started';
+  static const welcomeTitle = 'Welcome to Sahai';
+  static const welcomeBody1 =
+      'Sahai shows you one next step at a time, so a long list never buries '
+      'what to do now.';
+  static const welcomeBody2 =
+      "Let's set up your first project from real work you have on right "
+      "now. It takes about two minutes, and there's no sample data to clear "
+      'away afterwards.';
+  static const welcomeNote =
+      "Skip any step. Anything you've added by then is kept. You can replay "
+      'this from Settings.';
+  static String stepOf(int step) => 'Step $step of 4';
+  static const areasTitle = 'Name your areas';
+  static const areasBody =
+      'Areas are the big parts of your life or work. Everything you add lives '
+      'in one. Start with one or two.';
+  static const firstArea = 'First area';
+  static const firstAreaHint = 'For example your company, your job, or Studies';
+  static const secondArea = 'Second area (optional)';
+  static const secondAreaHint = 'For example Personal, Home, or Family';
+  static const areasNote =
+      'You can add more areas, rename them or delete them later in Explorer.';
+  static const projectTitle = 'Add something real';
+  static const projectBody =
+      "Pick one project you're working on now, and the first task it needs.";
+  static const whichArea = 'In which area?';
+  static const projectLabel = 'Project';
+  static const projectHint =
+      'Something with an end, like Website relaunch or Move house';
+  static const firstTaskLabel = 'Its first task';
+  static const firstTaskHint = 'The first thing the project needs done';
+  static const subtasksTitle = 'Break it into two steps';
+  static String subtasksBody(String task) =>
+      'What are the first two things to do for $task?';
+  static String subtaskLabel(int n) => 'Subtask $n';
+  static const subtaskHint = 'Small enough to finish in one sitting';
+  static const subtasksNote =
+      "Order matters. Sahai shows subtask 1 first, and subtask 2 only when "
+      "it's done. You can add more steps later.";
+  static const whatYoureMaking = "What you're making";
+  static const revealTitle = 'This is your Summary';
+  static const revealBody = 'It shows only what you can do next.';
+  static const whyOnlyOne = 'Why only one?';
+  static String whyOnlyOneBody(String first, String second) =>
+      ' $second waits its turn, because you said it comes second. When '
+      '$first is done, it takes its place. So the Summary never turns into a '
+      'long list.';
+  static const tryIt = 'Try it';
+  static const practiceBanner = 'Step 4 of 4 · Practice: nothing here is saved';
+  static String practiceTick(String first) =>
+      'Tick off $first: tap its circle, as if it were done.';
+  static String practiceUndo(String first, String second) =>
+      'You ticked off $first, and $second took its place. Now tap Undo to '
+      'bring it back.';
+  static const bringItBack = 'Bring it back';
+  static String practiceSetAside(String first) =>
+      'Now set $first aside: tap its clock and pick a time.';
+  static String practiceOpenSetAside(String first, String second) =>
+      'You set $first aside, and $second took its place. Now open Set-Aside.';
+  static String practiceWake(String first) =>
+      'Everything set aside waits here until its time. Tap Wake now, and '
+      '$first goes straight back to the Summary.';
+  static String coachStep(int n) => '$n of 3.';
+  static const finishTitle = "That's the whole idea";
+  static const finishBody =
+      "Do what the Summary shows. Set aside what can't happen yet. The next "
+      'step appears on its own.';
+  static const oneMoreThing = 'One more thing.';
+  static String signOffNote(String task) =>
+      ' When both subtasks are done, $task comes back once more for you to '
+      'sign off. Nothing is marked finished until you say so.';
+  static String practiceUndone(String first) =>
+      'The practice was undone. Your project is exactly as you made it, with '
+      '$first on the Summary.';
+  static const addTheRest =
+      'Add the rest of your work in Explorer, or jot things down in Capture '
+      'and sort them later.';
+  static const goToSummary = 'Go to my Summary';
+  static const replayTitle = 'Replay onboarding?';
+  static const replayBody =
+      "You'll go through the first steps again. Anything you add there is "
+      'saved as new, next to what you already have, and the practice step '
+      'changes nothing. Skip at any step to come back.';
+  static const replay = 'Replay';
 
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';

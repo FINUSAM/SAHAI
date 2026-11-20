@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show QueryExecutor;
 import 'package:drift/native.dart';
 import 'package:sahai/actions/node_actions.dart';
+import 'package:sahai/app/app_platform.dart';
 import 'package:sahai/data/database.dart';
 import 'package:sahai/notifications/reminders.dart';
 
@@ -21,6 +22,28 @@ class TestClock {
 String Function() sequentialIds() {
   var next = 0;
   return () => 'id-${++next}';
+}
+
+/// Stands in for Android's side of About and Send feedback.
+class FakeAppPlatform implements AppPlatform {
+  String? installedVersion = '0.7.0';
+
+  /// Whether the phone has an email app.
+  bool hasEmailApp = true;
+  final feedbackDrafts = <({String address, String subject})>[];
+
+  @override
+  Future<String?> version() async => installedVersion;
+
+  @override
+  Future<bool> sendFeedback({
+    required String address,
+    required String subject,
+  }) async {
+    if (!hasEmailApp) return false;
+    feedbackDrafts.add((address: address, subject: subject));
+    return true;
+  }
 }
 
 /// Stands in for the phone's notifications and records what the app asks.
@@ -89,6 +112,7 @@ class TestApp {
 
   final TestClock clock;
   final reminders = FakeReminders();
+  final platform = FakeAppPlatform();
   late final SahaiDatabase db;
   late final NodeActions actions;
 

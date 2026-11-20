@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/app_platform.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../data/settings.dart';
@@ -10,6 +11,7 @@ import '../../engine/time.dart';
 import '../../shared/strings.dart';
 import '../../shared/time.dart';
 import '../../shared/time_format.dart';
+import '../explorer/action_feedback.dart';
 import 'setting_widgets.dart';
 
 /// Settings (PRD 8.6, M7 frame 10): one scrolling screen in sections. Each
@@ -21,6 +23,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final groupCount = ref.watch(groupsProvider).value?.length ?? 0;
+    final version = ref.watch(appVersionProvider).value;
     Future<void> save({
       bool? notifications,
       bool? exact,
@@ -125,11 +128,71 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(Routes.groups),
           ),
+          const SettingsSection(Strings.helpSection),
+          ListTile(
+            title: const Text(Strings.replayOnboarding),
+            subtitle: const Text(Strings.replayOnboardingHint),
+            onTap: () async {
+              if (await confirmReplay(context) && context.mounted) {
+                await context.push(Routes.onboarding);
+              }
+            },
+          ),
+          ListTile(
+            title: const Text(Strings.aboutSahai),
+            subtitle: Text(Strings.aboutHint(version)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(Routes.about),
+          ),
+          ListTile(
+            title: const Text(Strings.sendFeedback),
+            subtitle: const Text(Strings.sendFeedbackHint),
+            onTap: () => sendFeedback(context, ref, version),
+          ),
           const SizedBox(height: 16),
         ],
       ),
     );
   }
+}
+
+/// "Replay onboarding?" (M7 frame 16): what is made is added next to the
+/// existing data, and nothing existing changes (AT-108).
+Future<bool> confirmReplay(BuildContext context) async =>
+    await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(Strings.replayTitle),
+        content: const Text(Strings.replayBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(Strings.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(Strings.replay),
+          ),
+        ],
+      ),
+    ) ??
+    false;
+
+/// Opens the email app with the feedback address and the subject "Sahai
+/// feedback (version)", and an empty body, so nothing about the user's
+/// tasks goes in (AT-120, M7 frame 17).
+Future<void> sendFeedback(
+  BuildContext context,
+  WidgetRef ref,
+  String? version,
+) async {
+  final opened = await ref
+      .read(appPlatformProvider)
+      .sendFeedback(
+        address: feedbackAddress,
+        subject: Strings.feedbackSubject(version),
+      );
+  if (!opened && context.mounted) showMessage(context, Strings.noEmailApp);
 }
 
 /// "Day starts at" (M7 frame 13): whole hours from midnight to 6 AM. Null

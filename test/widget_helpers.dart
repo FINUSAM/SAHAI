@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sahai/app/app.dart';
 import 'package:sahai/app/providers.dart';
+import 'package:sahai/data/settings.dart';
 import 'package:sahai/engine/node_type.dart';
 import 'package:sahai/shared/strings.dart';
 
@@ -36,8 +37,14 @@ Future<TestApp> pumpSahai(
   TestApp? app,
   double textScale = 1,
   String? tab,
+  bool onboarded = true,
 }) async {
   final testApp = app ?? TestApp();
+  // Most tests start on the Summary, even with no data; onboarding's own
+  // tests pass [onboarded] false to see the first run (PRD 8.1).
+  if (onboarded) {
+    await saveSettings(testApp.db, nowMillis: 0, onboardingDone: true);
+  }
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
   // A typical phone: 411 x 914 logical pixels.
@@ -51,6 +58,7 @@ Future<TestApp> pumpSahai(
         databaseProvider.overrideWithValue(testApp.db),
         nodeActionsProvider.overrideWithValue(testApp.actions),
         remindersProvider.overrideWithValue(testApp.reminders),
+        appPlatformProvider.overrideWithValue(testApp.platform),
       ],
       child: const SahaiApp(),
     ),

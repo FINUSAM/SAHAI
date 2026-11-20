@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/home_shell.dart';
+import '../../app/practice_scope.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
+import '../explorer/action_feedback.dart';
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
 import '../../engine/settings.dart';
@@ -57,15 +59,17 @@ class _SetAsideScreenState extends ConsumerState<SetAsideScreen> {
         title: const Text(Strings.setAside),
         actions: const [SettingsButton()],
       ),
-      body: switch (tree) {
-        AsyncData(:final value) => _Body(
-          tree: value,
-          entries: setAsideEntries(value, now: now, settings: settings),
-          now: now,
-        ),
-        AsyncError() => const Center(child: Text(Strings.loadError)),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+      body: WithPracticeCoach(
+        child: switch (tree) {
+          AsyncData(:final value) => _Body(
+            tree: value,
+            entries: setAsideEntries(value, now: now, settings: settings),
+            now: now,
+          ),
+          AsyncError() => const Center(child: Text(Strings.loadError)),
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+      ),
     );
   }
 }
@@ -264,6 +268,10 @@ class SetAsideCard extends ConsumerWidget {
       case SetAsideChoiceAction.changeTime:
         await changeTimeWithPicker(context, ref, tree, entry.node);
       case SetAsideChoiceAction.openInTree:
+        if (PracticeScope.isOn(context)) {
+          showMessage(context, Strings.notInPractice);
+          return;
+        }
         context.go(Routes.explorerNode(entry.node.id));
     }
   }

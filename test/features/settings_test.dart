@@ -201,4 +201,58 @@ void main() {
     expect(after.every((at) => at.hour == 8), isTrue);
     expect(app.reminders.scheduled.map((m) => m.at).toSet(), isNot(before));
   });
+
+  Future<void> openHelpRow(WidgetTester tester, String title) async {
+    await tester.scrollUntilVisible(
+      find.text(title),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text(title));
+    await tester.pumpAndSettle();
+  }
+
+  testSahai('About shows the version, where the data lives, what is coming '
+      'and the licences', (tester) async {
+    await pumpAt(tester);
+    await openSettings(tester);
+    await tester.scrollUntilVisible(
+      find.text(Strings.aboutHint('0.7.0')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await openHelpRow(tester, Strings.aboutSahai);
+    expect(find.text('Version 0.7.0'), findsOneWidget);
+    expect(find.text(Strings.yourDataBody), findsOneWidget);
+    expect(find.text(Strings.comingNext.last), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text(Strings.licences),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text(Strings.licences));
+    await tester.pumpAndSettle();
+    expect(find.byType(LicensePage), findsOneWidget);
+  });
+
+  testSahai('AT-120 Send feedback opens an email draft with only the address '
+      'and subject', (tester) async {
+    final (app, _) = await pumpAt(tester);
+    await openSettings(tester);
+    await openHelpRow(tester, Strings.sendFeedback);
+    expect(app.platform.feedbackDrafts, hasLength(1));
+    final draft = app.platform.feedbackDrafts.single;
+    expect(draft.address, contains('@'));
+    expect(draft.subject, 'Sahai feedback (0.7.0)');
+    // Nothing else is sent to the email app: there is no body to fill in.
+    expect(find.text(Strings.noEmailApp), findsNothing);
+  });
+
+  testSahai('Send feedback says so when there is no email app', (tester) async {
+    final (app, _) = await pumpAt(tester);
+    app.platform.hasEmailApp = false;
+    await openSettings(tester);
+    await openHelpRow(tester, Strings.sendFeedback);
+    expect(find.text(Strings.noEmailApp), findsOneWidget);
+  });
 }
