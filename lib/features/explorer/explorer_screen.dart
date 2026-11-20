@@ -490,6 +490,9 @@ Future<void> _openActions(
 ) async {
   // Read now rather than from a provider that may not have loaded yet.
   final groups = await ref.read(nodeActionsProvider).loadGroups();
+  final reopenable = node.isRecurring
+      ? (await ref.read(nodeActionsProvider).reopenableOccurrences())[node.id]
+      : null;
   if (!context.mounted) return;
   final choice = await showNodeActions(
     context,
@@ -498,6 +501,7 @@ Future<void> _openActions(
     now: now,
     settings: ref.read(settingsProvider).value ?? const AppSettings(),
     groups: groups,
+    reopenable: reopenable,
   );
   if (choice == null || !context.mounted) return;
   final actions = ref.read(nodeActionsProvider);
@@ -515,6 +519,8 @@ Future<void> _openActions(
       );
     case NodeChoice.reopen:
       await runAction(context, () => actions.reopen(node.id));
+    case NodeChoice.reopenOccurrence:
+      await reopenOccurrence(context, actions, node.id);
     case NodeChoice.setAside:
       // The node is chosen directly, so no scope dropdown (frame 12).
       await setAsideWithPicker(context, ref, tree, node, withScope: false);

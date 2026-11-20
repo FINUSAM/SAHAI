@@ -38,6 +38,7 @@ import '../test/features/groups_test.dart' as groups;
 import '../test/features/m7_accessibility_test.dart' as m7_accessibility;
 import '../test/features/onboarding_test.dart' as onboarding;
 import '../test/features/recurring_test.dart' as recurring;
+import '../test/features/reopen_occurrence_test.dart' as reopen_occurrence;
 import '../test/features/reminders_test.dart' as reminders;
 import '../test/features/set_aside/set_aside_screens_test.dart' as set_aside;
 import '../test/features/settings_test.dart' as settings;
@@ -59,4 +60,5 @@ void main() {
   onboarding.main();
   due_year.main();
   m7_accessibility.main();
+  reopen_occurrence.main();
 }

@@ -9,6 +9,7 @@ import '../../app/practice_scope.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../explorer/action_feedback.dart';
+import '../../data/occurrences.dart';
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
 import '../../engine/settings.dart';
@@ -260,9 +261,22 @@ class SetAsideCard extends ConsumerWidget {
   }
 
   Future<void> _openSheet(BuildContext context, WidgetRef ref) async {
-    final choice = await showSetAsideSheet(context, tree, entry, now);
+    final actions = ref.read(nodeActionsProvider);
+    final reopenable = entry.node.isRecurring
+        ? (await actions.reopenableOccurrences())[entry.node.id]
+        : null;
+    if (!context.mounted) return;
+    final choice = await showSetAsideSheet(
+      context,
+      tree,
+      entry,
+      now,
+      reopenable: reopenable,
+    );
     if (choice == null || !context.mounted) return;
     switch (choice) {
+      case SetAsideChoiceAction.reopenOccurrence:
+        await reopenOccurrence(context, actions, entry.node.id);
       case SetAsideChoiceAction.wakeNow:
         await wakeNow(context, ref, entry.node);
       case SetAsideChoiceAction.changeTime:
@@ -314,16 +328,19 @@ class WakeLine extends StatelessWidget {
 }
 
 /// What the user picked in a Set-Aside card's sheet.
-enum SetAsideChoiceAction { wakeNow, changeTime, openInTree }
+enum SetAsideChoiceAction { wakeNow, changeTime, reopenOccurrence, openInTree }
 
 /// Frame 9: when it comes back, where it lives, what it hides until then,
-/// and Wake now, Change time and Open in tree.
+/// and Wake now, Change time and Open in tree. A repeating item waiting
+/// for its next show date also offers Reopen last completion or skip, as a
+/// shortcut to the Explorer's (E-018).
 Future<SetAsideChoiceAction?> showSetAsideSheet(
   BuildContext context,
   Tree tree,
   SetAsideEntry entry,
-  DateTime now,
-) => showModalBottomSheet<SetAsideChoiceAction>(
+  DateTime now, {
+  ReopenableOccurrence? reopenable,
+}) => showModalBottomSheet<SetAsideChoiceAction>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
@@ -333,13 +350,18 @@ Future<SetAsideChoiceAction?> showSetAsideSheet(
     final node = entry.node;
     final chain = [...tree.ancestorsOf(node.id).reversed, node];
     void pick(SetAsideChoiceAction choice) => Navigator.of(context).pop(choice);
-    Widget item(IconData icon, String label, SetAsideChoiceAction choice) =>
-        ListTile(
-          leading: Icon(icon),
-          title: Text(label),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-          onTap: () => pick(choice),
-        );
+    Widget item(
+      IconData icon,
+      String label,
+      SetAsideChoiceAction choice, {
+      String? subtitle,
+    }) => ListTile(
+      leading: Icon(icon),
+      title: Text(label),
+      subtitle: subtitle == null ? null : Text(subtitle),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      onTap: () => pick(choice),
+    );
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -413,6 +435,13 @@ Future<SetAsideChoiceAction?> showSetAsideSheet(
             Strings.changeTime,
             SetAsideChoiceAction.changeTime,
           ),
+          if (reopenable case final occurrence?)
+            item(
+              Icons.undo,
+              reopenTitle(occurrence),
+              SetAsideChoiceAction.reopenOccurrence,
+              subtitle: reopenLine(occurrence, now),
+            ),
           item(
             Icons.account_tree_outlined,
             Strings.openInTree,
