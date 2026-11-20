@@ -33,6 +33,10 @@ followed by v1.0.0 for the public release.
 - The app and the capture dialog share one database connection (decision 0007). Nothing changes
   on disk.
 
+### Fixed
+- The capture dialog's keyboard test now also runs on a phone: there it checks the box gets focus,
+  since the real keyboard can't be read. On a computer it still checks the keyboard as well.
+
 ### Removed
 - The "Coming in M6" placeholder on the Capture tab.
 
