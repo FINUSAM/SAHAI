@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../shared/strings.dart';
+import 'practice_scope.dart';
 import 'router.dart';
 
 /// The four bottom tabs (frame 1). Each tab keeps its own place.
@@ -46,9 +47,12 @@ class SettingsButton extends StatelessWidget {
   const SettingsButton({super.key});
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    icon: const Icon(Icons.settings_outlined),
-    tooltip: Strings.settings,
-    onPressed: () => context.push(Routes.settings),
-  );
+  Widget build(BuildContext context) => PracticeScope.isOn(context)
+      // Settings would leave the practice copy.
+      ? const SizedBox.shrink()
+      : IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          tooltip: Strings.settings,
+          onPressed: () => context.push(Routes.settings),
+        );
 }

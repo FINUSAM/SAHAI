@@ -42,6 +42,7 @@ Future<SetAsideChoice?> showSetAsidePicker(
   required TreeNode node,
   required Clock clock,
   int dayStartMinutes = defaultDayStartMinutes,
+  PresetTimes presetTimes = const PresetTimes(),
   bool withScope = true,
   bool changeTime = false,
 }) => showModalBottomSheet<SetAsideChoice>(
@@ -54,6 +55,7 @@ Future<SetAsideChoice?> showSetAsidePicker(
     node: node,
     clock: clock,
     dayStartMinutes: dayStartMinutes,
+    presetTimes: presetTimes,
     withScope: withScope && !changeTime,
     changeTime: changeTime,
   ),
@@ -65,6 +67,7 @@ class _PickerSheet extends StatefulWidget {
     required this.node,
     required this.clock,
     required this.dayStartMinutes,
+    required this.presetTimes,
     required this.withScope,
     required this.changeTime,
   });
@@ -73,6 +76,7 @@ class _PickerSheet extends StatefulWidget {
   final TreeNode node;
   final Clock clock;
   final int dayStartMinutes;
+  final PresetTimes presetTimes;
   final bool withScope;
   final bool changeTime;
 
@@ -111,7 +115,11 @@ class _PickerSheetState extends State<_PickerSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final now = widget.clock.now();
-    final presets = presetsAt(now, dayStartMinutes: widget.dayStartMinutes);
+    final presets = presetsAt(
+      now,
+      dayStartMinutes: widget.dayStartMinutes,
+      times: widget.presetTimes,
+    );
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -148,7 +156,7 @@ class _PickerSheetState extends State<_PickerSheet> {
             ),
           for (final p in presets)
             ListTile(
-              leading: Icon(_presetIcon(p.preset)),
+              leading: Icon(presetIcon(p.preset)),
               // The time sits at the right, or wraps under the name when
               // large text leaves no room beside it.
               title: Wrap(
@@ -189,7 +197,8 @@ class _PickerSheetState extends State<_PickerSheet> {
   }
 }
 
-IconData _presetIcon(Preset preset) => switch (preset) {
+/// The icon each preset has in the picker and in Settings.
+IconData presetIcon(Preset preset) => switch (preset) {
   Preset.tonight => Icons.bedtime_outlined,
   Preset.tomorrowMorning => Icons.wb_twilight,
   Preset.threeDaysLater => Icons.calendar_month_outlined,

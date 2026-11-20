@@ -140,6 +140,9 @@ class NodeActions {
 
   final SahaiDatabase _db;
   final Clock _clock;
+
+  /// Now, from the injected clock, for messages written after an action.
+  DateTime get now => _clock.now();
   final IdGenerator _newId;
 
   /// The non-deleted tree, with the groups that still exist (E-014).

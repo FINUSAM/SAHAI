@@ -11,6 +11,7 @@ import '../engine/settings.dart';
 import '../engine/tree.dart';
 import '../engine/visibility.dart';
 import '../notifications/reminders.dart';
+import 'app_platform.dart';
 
 /// The one source of "now". Tests override it with a fake (decision 0004).
 final clockProvider = Provider<Clock>((ref) => const Clock());
@@ -47,6 +48,16 @@ final treeProvider = StreamProvider<Tree>(
 /// The phone's notifications. Tests swap in a fake.
 final remindersProvider = Provider<Reminders>(
   (ref) => PluginReminders(clock: ref.watch(clockProvider)),
+);
+
+/// Android's side of About and Send feedback. Tests swap in a fake.
+final appPlatformProvider = Provider<AppPlatform>(
+  (ref) => const ChannelAppPlatform(),
+);
+
+/// The installed version, such as "0.7.0"; null if Android can't say.
+final appVersionProvider = FutureProvider<String?>(
+  (ref) => ref.watch(appPlatformProvider).version(),
 );
 
 /// The user's settings, with the PRD defaults until they change them.

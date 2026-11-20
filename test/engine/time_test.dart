@@ -143,4 +143,53 @@ void main() {
     expect(names, hasLength(Preset.values.length));
     expect(names, isNot(contains(Preset.customLogName)));
   });
+
+  group('editable preset times (M7)', () {
+    test('AT-109 Tonight changed to 9 PM is offered at 9 PM', () {
+      final now = DateTime(2026, 11, 3, 15);
+      final times = const PresetTimes().withTime(Preset.tonight, 21 * 60);
+      final offered = {
+        for (final p in presetsAt(now, times: times)) p.preset: p.wakeAt,
+      };
+      expect(offered[Preset.tonight], DateTime(2026, 11, 3, 21));
+      // Only the time changes; the others keep theirs.
+      expect(offered[Preset.tomorrowMorning], DateTime(2026, 11, 4, 8));
+      expect(offered[Preset.nextWeek], DateTime(2026, 11, 9, 8));
+    });
+
+    test('AT-110 with the day starting at 3 AM, Tomorrow morning at 3:30 AM '
+        'is 8 AM the next calendar day', () {
+      final now = DateTime(2026, 11, 4, 3, 30);
+      expect(
+        presets(now, dayStart: 180)[Preset.tomorrowMorning],
+        DateTime(2026, 11, 5, 8),
+      );
+      // With the default 4 AM start it would still be Tuesday night.
+      expect(presets(now)[Preset.tomorrowMorning], DateTime(2026, 11, 4, 8));
+    });
+
+    test('Tonight before the day start is after midnight that night', () {
+      final now = DateTime(2026, 11, 3, 15);
+      final times = const PresetTimes().withTime(Preset.tonight, 30);
+      final offered = {
+        for (final p in presetsAt(now, times: times)) p.preset: p.wakeAt,
+      };
+      // 12:30 AM "tonight" is after midnight, on Wednesday's date.
+      expect(offered[Preset.tonight], DateTime(2026, 11, 4, 0, 30));
+    });
+
+    test('times round-trip through JSON, and bad values fall back', () {
+      final times = const PresetTimes()
+          .withTime(Preset.tonight, 21 * 60)
+          .withTime(Preset.nextWeek, 9 * 60 + 30);
+      expect(PresetTimes.fromJson(times.toJson()), times);
+      expect(times.isDefault, isFalse);
+      expect(const PresetTimes().isDefault, isTrue);
+      expect(
+        PresetTimes.fromJson({'tonight': 99999, 'next_week': 'soon'}),
+        const PresetTimes(),
+      );
+      expect(PresetTimes.fromJson(null), const PresetTimes());
+    });
+  });
 }

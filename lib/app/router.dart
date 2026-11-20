@@ -9,9 +9,12 @@ import '../features/explorer/explorer_screen.dart';
 import '../features/explorer/move_screen.dart';
 import '../features/explorer/node_form_screen.dart';
 import '../features/explorer/reorder_screen.dart';
+import '../features/onboarding/onboarding_screen.dart';
 import '../features/groups/group_form_screen.dart';
 import '../features/groups/groups_screen.dart';
 import '../features/set_aside/set_aside_screen.dart';
+import '../features/settings/about_screen.dart';
+import '../features/settings/presets_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/summary/summary_screen.dart';
 import 'home_shell.dart';
@@ -23,6 +26,9 @@ abstract final class Routes {
   static const explorer = '/explorer';
   static const capture = '/capture';
   static const settings = '/settings';
+  static const onboarding = '/onboarding';
+  static const presets = '/settings/presets';
+  static const about = '/settings/about';
   static const groups = '/settings/groups';
   static const newGroup = '/settings/groups/new';
   static String editGroup(String id) => '/settings/groups/$id';
@@ -55,12 +61,13 @@ abstract final class Routes {
   ).toString();
 }
 
-GoRouter buildRouter() {
+/// [onboarding] opens the app on onboarding instead (first run, PRD 8.1).
+GoRouter buildRouter({bool onboarding = false}) {
   final rootKey = GlobalKey<NavigatorState>();
   return GoRouter(
     navigatorKey: rootKey,
     // The Summary is the start screen (M2 wireframe choice).
-    initialLocation: Routes.summary,
+    initialLocation: onboarding ? Routes.onboarding : Routes.summary,
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),
@@ -91,9 +98,24 @@ GoRouter buildRouter() {
       ),
       // Full-screen routes, drawn over the bottom tabs.
       GoRoute(
+        path: Routes.onboarding,
+        parentNavigatorKey: rootKey,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
         path: Routes.settings,
         parentNavigatorKey: rootKey,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: Routes.about,
+        parentNavigatorKey: rootKey,
+        builder: (context, state) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: Routes.presets,
+        parentNavigatorKey: rootKey,
+        builder: (context, state) => const PresetsScreen(),
       ),
       GoRoute(
         path: Routes.groups,

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../actions/node_actions.dart';
 import '../../app/home_shell.dart';
+import '../../app/practice_scope.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../engine/groups.dart';
@@ -142,17 +143,19 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
         title: const Text(Strings.summary),
         actions: const [SettingsButton()],
       ),
-      body: switch (arranged) {
-        AsyncData(:final value) when value.cards.isEmpty =>
-          const _EmptySummary(),
-        AsyncData(:final value) => _CardList(
-          arranged: value,
-          highlighted: _highlighted,
-          focusKey: _focusKey,
-        ),
-        AsyncError() => const Center(child: Text(Strings.loadError)),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+      body: WithPracticeCoach(
+        child: switch (arranged) {
+          AsyncData(:final value) when value.cards.isEmpty =>
+            const _EmptySummary(),
+          AsyncData(:final value) => _CardList(
+            arranged: value,
+            highlighted: _highlighted,
+            focusKey: _focusKey,
+          ),
+          AsyncError() => const Center(child: Text(Strings.loadError)),
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+      ),
     );
   }
 }
@@ -680,6 +683,10 @@ Future<void> applyCardChoice(
     case CardChoice.contextGroup:
       await changeCardGroup(context, ref, card.node.id);
     case CardChoice.openInTree:
+      if (PracticeScope.isOn(context)) {
+        showMessage(context, Strings.notInPractice);
+        return;
+      }
       context.go(Routes.explorerNode(card.node.id));
   }
 }
