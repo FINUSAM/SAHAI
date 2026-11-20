@@ -16,7 +16,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 
 ## Totals
 
-127 tests. Tests that include each level: U 100 · W 57 · I 6 · CI 1 · D 28. Tests that need **only** a real device: 8.
+133 tests. Tests that include each level: U 105 · W 60 · I 6 · CI 1 · D 30. Tests that need **only** a real device: 8.
 
 ## Extra tests from PRD edits
 
@@ -193,6 +193,12 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | AT-125 | Reopen the last completion | 7, 9 | Must | Founder | U, W | Fake clock; checks the reopened event (E-018) |
 | AT-126 | Reopen the last skip | 7, 9 | Should | Founder | U, W | Fake clock; checks the reopened event (E-018) |
 | AT-127 | Only the latest can be reopened | 7 | Should | Founder | U, W | Fake clock; only the latest completion or skip is offered (E-018) |
+| AT-128 | Set and clear a due date | 4, 7 | Must | Founder | U, W | Fake clock; past days cannot be picked (E-019) |
+| AT-129 | A due reminder gets through a set-aside area | 7 | Must | Founder | U, D | Due reminder ignores set-aside ancestors and waiting steps (E-019) |
+| AT-130 | An early reminder, then one on the day | 7 | Should | Founder | U, D | Fake clock; follow-up on the day only if not done (E-019) |
+| AT-131 | Due labels, and completing removes them | 7 | Should | Founder | U, W | Fake clock; label goes on done and returns on Undo (E-019) |
+| AT-132 | A due date from a capture | 7, 8 | Should | Founder | W |  |
+| AT-133 | Due date changes are logged | 9 | Should | Founder | U | Checks due_changed holds no text (E-019) |
 
 ## M8 Release prep
 

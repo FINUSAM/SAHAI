@@ -15,7 +15,7 @@ Wireframes for each milestone's screens. PRD 16 makes approved wireframes a gate
 | M4 Recurring items | Due labels, schedule form, Skip and Stop repeating, waiting bills, recurring reminders (11 frames) | **Approved** by FINUSAM, 2026-11-06 | [`m4-recurring/`](m4-recurring/) | [Sahai wireframes: M4 Recurring items](https://claude.ai/artifact/JqARsT6vEsGqa2uMZZEunt) (private to the owner until shared) |
 | M5 Groups and order | Grouped Summary, drag and button moves, group picker, Explorer groups, Context groups settings (14 frames) | **Approved** by FINUSAM, 2026-11-07 | [`m5-groups/`](m5-groups/) | [Sahai wireframes: M5 Groups and order](https://claude.ai/artifact/SA1DfAVLoFVkS1njswWto5) (private to the owner until shared) |
 | M6 Capture | Capture tab, edit and delete, create from a capture, Remove or Keep, home-screen widget, share target (17 frames) | **Approved** by FINUSAM, 2026-11-15 | [`m6-capture/`](m6-capture/) | [Sahai wireframes: M6 Capture](https://claude.ai/artifact/Syp64TDuh6QAMzxx4bgr69) (private to the owner until shared) |
-| M7 Polish and safety | Onboarding with the practice step, full Settings, presets, Day starts at, backup warning, About, Replay, Send feedback, largest font (18 frames) | **Approved** by FINUSAM, 2026-11-20 | [`m7-polish/`](m7-polish/) | [Sahai wireframes: M7 Polish and safety](https://claude.ai/artifact/Ro6sSXNPPUcXdScF6F9GJe) (private to the owner until shared) |
+| M7 Polish and safety | Onboarding with the practice step, full Settings, presets, Day starts at, backup warning, About, Replay, Send feedback, largest font, due dates on one-off items (27 frames) | **Approved** by FINUSAM, 2026-11-20 | [`m7-polish/`](m7-polish/) | [Sahai wireframes: M7 Polish and safety](https://claude.ai/artifact/Ro6sSXNPPUcXdScF6F9GJe) (private to the owner until shared) |
 
 ## Brand
 
@@ -305,3 +305,36 @@ The PRD doesn't specify these. The owner approved them along with the wireframes
 - **About:** the version, where the data lives, what's coming in Phase 2 and Phase 3 in plain words, and the open-source licences. The privacy policy link comes in M8 (AT-122).
 - **Send feedback:** opens the phone's email app with the feedback address and the subject "Sahai feedback (0.7.0)". The body is left empty, so nothing about the user's tasks goes in. Sahai sends nothing itself, and the email app sends nothing until the user taps Send.
 - **Largest font:** rows wrap rather than cutting text off, and at the largest sizes a row's value moves below its label.
+
+### Due dates on one-off items (#87, E-019)
+
+Frames 19 to 27, approved by the owner on 2026-11-20 as a separate step of M7 (plan 0009, steps 4a to 4d). Unless a frame says otherwise it is Monday, Nov 9, 2026, and the Reminder time is the default 9:00 AM.
+
+| # | Frame | Shows | Acceptance tests |
+|---|---|---|---|
+| 19 | [New task, no due date](m7-polish/19-due-empty.png) | The optional Due date row on the form: "None. Optional, for a real deadline", with Add | AT-128 |
+| 20 | [Pick a due date](m7-polish/20-due-picker.png) | The date picker; days before today are greyed and can't be picked | AT-128 |
+| 21 | [Due date set](m7-polish/21-due-set.png) | Fri, Nov 20 with ✕ to clear it; Remind me "3 days before · Tue, Nov 17, 9:00 AM"; a tip about the follow-up on the day | AT-128, AT-130 |
+| 22 | [Remind me choices](m7-polish/22-remind-choices.png) | The five choices with their dates; a choice already in the past is greyed | AT-130 |
+| 23 | [Summary with due labels](m7-polish/23-due-summary.png) | Overdue, Due today and Due Nov 20 with a calendar mark; a bill keeps its repeat mark; an item without a due date has no label | AT-131 |
+| 24 | [Explorer with due labels](m7-polish/24-due-explorer.png) | A project, task, subtask and stream item each with a due label; a locked subtask keeps its label | AT-128, AT-131 |
+| 25 | [Reminders](m7-polish/25-due-reminders.png) | The early reminder on Nov 17, the one on the day on Nov 20, and several grouped into one | AT-129, AT-130 |
+| 26 | [Reminder tap: item is hidden](m7-polish/26-due-hidden-sheet.png) | Why the item isn't on the Summary, with Mark done, Change due date and Open in tree | AT-129 |
+| 27 | [Create from a capture, with a due date](m7-polish/27-due-capture.png) | The capture's Create form with Due date and Remind me | AT-132 |
+
+AT-133 (the `due_changed` event) has no frame: it is about the log, not a screen.
+
+#### Choices approved with these wireframes
+
+Approved by the owner on 2026-11-20, along with the answers to the #87 questions. They change PRD behaviour, so they are recorded in `PRD_Edits.md` as E-019.
+
+- **Which items:** anything that can be ticked off: projects, tasks, subtasks and one-off stream items. Domains and streams never get a due date.
+- **Where it's set:** an optional Due date row on the create and edit forms and on the capture's Create form. ✕ clears it. Days before today are greyed in the picker.
+- **Look:** the same label as bills: "Due Nov 20", "Due today", "3 days overdue", with the year when it isn't this year (#85). One-off due dates get a calendar mark; bills keep the repeat mark. Overdue is a label, not a status.
+- **Remind me:** each item picks one: On the day (the default), 1 day before, 3 days before, 1 week before, or No reminder. A choice already in the past is greyed. Reminders arrive at the Reminder time setting.
+- **Follow-up on the day:** an early reminder is followed by one on the due day if the item still isn't done. Nothing arrives once it's done.
+- **Breaking through:** the reminder arrives even when the item is hidden by a set-aside area or by waiting its turn behind an earlier step, as a bill's does (AT-079). It is the only thing that breaks through: the item doesn't come onto the Summary because of its due date.
+- **Reminder tap:** opens the item. If it's hidden, a sheet says why, with Mark done, Change due date and Open in tree. A locked item's sheet has no Mark done (E-007).
+- **Completing:** removes the label and stops the reminders. Undo or Reopen brings both back.
+- **Repeating stream items:** an item with Repeat on uses its schedule's Next due, not a separate due date. Stop repeating still clears the due date, so AT-080 is unchanged.
+- **Logging:** setting, changing or clearing a due date, or changing Remind me, logs `due_changed` with the old and new dates and the reminder choice, never the item's text.

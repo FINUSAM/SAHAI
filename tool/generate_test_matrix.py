@@ -64,6 +64,9 @@ L = {  # id: (levels, note)
 121:("D","Play testing track"),122:("D","Play Console and About screen"),123:("D","Data safety form review"),124:("D","Launcher and store listing"),
 125:("U, W","Fake clock; checks the reopened event (E-018)"),126:("U, W","Fake clock; checks the reopened event (E-018)"),
 127:("U, W","Fake clock; only the latest completion or skip is offered (E-018)"),
+128:("U, W","Fake clock; past days cannot be picked (E-019)"),129:("U, D","Due reminder ignores set-aside ancestors and waiting steps (E-019)"),
+130:("U, D","Fake clock; follow-up on the day only if not done (E-019)"),131:("U, W","Fake clock; label goes on done and returns on Undo (E-019)"),
+132:("W",""),133:("U","Checks due_changed holds no text (E-019)"),
 }
 ws = openpyxl.load_workbook(src, data_only=True)['Tests']
 rows = [r for r in ws.iter_rows(min_row=2, values_only=True) if r[0]]
