@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 import '../data/database.dart';
 import '../data/occurrences.dart';
 import '../data/settings.dart';
+import '../engine/due.dart';
 import '../engine/groups.dart';
 import '../engine/node_type.dart';
 import '../engine/order.dart';
@@ -57,6 +58,11 @@ abstract final class EventTypes {
   /// Undo after stopping repeating; points at the `repeat_stopped` event
   /// (E-011).
   static const repeatRestored = 'repeat_restored';
+
+  /// A one-off item's due date was set, changed or cleared, or its Remind
+  /// me changed. The payload holds the old and new dates and the reminder
+  /// choice, never the item's text (E-019, AT-133).
+  static const dueChanged = 'due_changed';
 
   /// An order change, on the Summary or in the Explorer (E-015). The payload
   /// holds the old and new position and group (PRD 9).
@@ -126,6 +132,13 @@ enum RejectReason {
   /// Reopen last completion or skip with nothing that can be reopened
   /// (E-018).
   nothingToReopen,
+
+  /// A one-off due date on a domain, a stream or a repeating item, which
+  /// uses its schedule's Next due instead (E-019).
+  cantHaveDueDate,
+
+  /// A new due date before today (E-019).
+  pastDueDate,
 }
 
 class ActionRejected implements Exception {
@@ -180,11 +193,12 @@ class NodeActions {
     String notes = '',
     Schedule? schedule,
     DateTime? dueOn,
+    DueReminder dueReminder = DueReminder.onTheDay,
     int? leadDays,
     String? group,
     String? fromCapture,
   }) {
-    assert((schedule == null) == (dueOn == null), 'A schedule needs a date.');
+    assert(schedule == null || dueOn != null, 'A schedule needs a date.');
     final cleanTitle = title.trim();
     if (cleanTitle.isEmpty) {
       throw const ActionRejected(RejectReason.emptyTitle);
@@ -200,6 +214,16 @@ class NodeActions {
       }
       if (schedule != null && type != NodeType.streamItem) {
         throw const ActionRejected(RejectReason.cantRepeat);
+      }
+      // A one-off due date: anything that can be ticked off (E-019).
+      final oneOffDue = schedule == null ? dueOn : null;
+      if (oneOffDue != null) {
+        if (!type.hasStatus) {
+          throw const ActionRejected(RejectReason.cantHaveDueDate);
+        }
+        if (oneOffDue.isBefore(await _today())) {
+          throw const ActionRejected(RejectReason.pastDueDate);
+        }
       }
       if (fromCapture != null && !await _isLiveCapture(fromCapture)) {
         throw const ActionRejected(RejectReason.notFound);
@@ -229,6 +253,7 @@ class NodeActions {
                     : leadDays ?? (await _settings()).defaultLeadDays,
               ),
               groupId: Value(setting),
+              dueReminder: Value(oneOffDue == null ? null : dueReminder.dbName),
               createdAt: now,
               updatedAt: now,
             ),
@@ -248,6 +273,18 @@ class NodeActions {
         domainId: domainId,
         groupId: groupId,
       );
+      if (oneOffDue != null) {
+        // Setting a due date is logged even when it comes with the item
+        // (E-019, owner's choice C for M7 PR 3).
+        await _log(
+          EventTypes.dueChanged,
+          nodeId: id,
+          nodeType: type,
+          domainId: domainId,
+          groupId: groupId,
+          payload: _dueChange(null, null, oneOffDue, dueReminder),
+        );
+      }
       if (fromCapture != null) {
         await _log(
           EventTypes.converted,
@@ -265,6 +302,74 @@ class NodeActions {
       return id;
     });
   }
+
+  /// Sets, changes or clears a one-off item's due date and when its
+  /// reminder arrives (E-019, AT-128). Projects, tasks, subtasks and stream
+  /// items without a repeat; a repeating item uses its schedule's Next due.
+  /// A new date can't be before today, but an overdue date can be kept
+  /// while Remind me changes. Logs `due_changed` with the old and new
+  /// values (AT-133); does nothing if nothing changed.
+  Future<void> setDueDate(
+    String id,
+    DateTime? dueOn, {
+    DueReminder reminder = DueReminder.onTheDay,
+  }) => _write(() async {
+    final tree = await loadTree();
+    final node = tree[id];
+    if (node == null) throw const ActionRejected(RejectReason.notFound);
+    if (!node.type.hasStatus || node.isRecurring) {
+      throw const ActionRejected(RejectReason.cantHaveDueDate);
+    }
+    final newDue = dueOn == null
+        ? null
+        : DateTime(dueOn.year, dueOn.month, dueOn.day);
+    final newReminder = newDue == null ? DueReminder.onTheDay : reminder;
+    final oldReminder = node.dueOn == null
+        ? DueReminder.onTheDay
+        : node.dueReminder;
+    if (newDue == node.dueOn && newReminder == oldReminder) return;
+    if (newDue != null &&
+        newDue != node.dueOn &&
+        newDue.isBefore(await _today())) {
+      throw const ActionRejected(RejectReason.pastDueDate);
+    }
+    await (_db.update(_db.nodes)..where((n) => n.id.equals(id))).write(
+      NodesCompanion(
+        dueOn: Value(newDue == null ? null : formatDueOn(newDue)),
+        dueReminder: Value(newDue == null ? null : newReminder.dbName),
+        updatedAt: Value(utcMillis(_clock)),
+      ),
+    );
+    await _log(
+      EventTypes.dueChanged,
+      nodeId: id,
+      nodeType: node.type,
+      domainId: tree.domainOf(id)?.id,
+      groupId: tree.effectiveGroupOf(id),
+      payload: _dueChange(node.dueOn, oldReminder, newDue, newReminder),
+    );
+    await _syncSummary();
+  });
+
+  /// The `due_changed` payload: dates as `YYYY-MM-DD` or null, and the
+  /// reminder choices by name (E-019). Never the item's text.
+  Map<String, Object?> _dueChange(
+    DateTime? oldDue,
+    DueReminder? oldReminder,
+    DateTime? newDue,
+    DueReminder newReminder,
+  ) => {
+    'old_due_on': oldDue == null ? null : formatDueOn(oldDue),
+    'due_on': newDue == null ? null : formatDueOn(newDue),
+    'old_reminder': oldDue == null ? null : oldReminder?.logName,
+    'reminder': newDue == null ? null : newReminder.logName,
+  };
+
+  /// Today's logical date, by Day starts at (PRD 7).
+  Future<DateTime> _today() async => logicalDate(
+    _clock.now(),
+    dayStartMinutes: (await _settings()).dayStartMinutes,
+  );
 
   /// Changes a node's title and notes. Not an activity log event in PRD 9.
   Future<void> edit(String id, {String? title, String? notes}) {
@@ -1382,5 +1487,6 @@ class NodeActions {
     dueOn: row.dueOn == null ? null : parseDueOn(row.dueOn!),
     leadDays: row.leadDays,
     snoozeOverridesShow: row.snoozeOverridesShow,
+    dueReminder: DueReminder.fromDbName(row.dueReminder),
   );
 }

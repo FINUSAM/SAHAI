@@ -1,3 +1,4 @@
+import '../engine/due.dart';
 import '../engine/node_type.dart';
 import '../engine/recurrence.dart';
 import '../engine/scope.dart';
@@ -196,6 +197,32 @@ abstract final class Strings {
   static const customDateTime = 'Custom date and time…';
   static const remindMe = 'Remind me';
   static const remindMeHint = "Notify me when it's back";
+
+  // Due dates on one-off items (E-019, M7 frames 19 to 22).
+  static const dueDateNone = 'None. Optional, for a real deadline';
+  static const addDueDate = 'Add';
+  static const addDueDateLabel = 'Add a due date';
+  static const clearDueDate = 'Clear due date';
+  static String dueReminderName(DueReminder reminder) => switch (reminder) {
+    DueReminder.onTheDay => 'On the day',
+    DueReminder.dayBefore => '1 day before',
+    DueReminder.threeDaysBefore => '3 days before',
+    DueReminder.weekBefore => '1 week before',
+    DueReminder.none => 'No reminder',
+  };
+  static String remindAt(String choice, String when) => '$choice · $when';
+  static String dueTipEarly(String dueDay) =>
+      "If it isn't done by then, Sahai reminds you again on $dueDay. "
+      'Reminders get through even when this is set aside or waiting its '
+      'turn.';
+  static const dueTipOnTheDay =
+      'Reminders get through even when this is set aside or waiting its '
+      'turn.';
+  static String dueOnDay(String day) => 'Due $day';
+  static String remindSheetFooter(String time) =>
+      'At $time, your Reminder time in Settings. An early reminder is '
+      "followed by one on the day if it still isn't done. Choices already "
+      'past are greyed.';
   static const remindOff = 'Remind me is off';
   static String setAsideUntil(String when) => 'Set aside until $when';
   static const todayWord = 'Today';
@@ -317,6 +344,9 @@ abstract final class Strings {
   static String noLongerRepeats(String title) => '$title no longer repeats';
   static String notOnSummary(String title, String date) =>
       "$title is set aside until $date, so this isn't on the Summary.";
+  static const waitsForEarlier =
+      "This waits for an earlier step, so it isn't on the Summary.";
+  static const changeDueDate = 'Change due date';
 
   // Custom time (frame 6).
   static String enterTime(String date) => '$date · Enter time';
@@ -692,6 +722,9 @@ abstract final class Strings {
   static const notRecurring = 'That item does not repeat.';
   static const staleUndo = 'That item has already moved on.';
   static const nothingToReopen = 'There is nothing to reopen.';
+  static const cantHaveDueDate =
+      'Only items you can tick off can have a due date.';
+  static const pastDueDate = 'Pick today or a later day.';
   static const noSuchGroup = 'That group no longer exists.';
   static const cardNotShowing = 'That item is not on the Summary right now.';
 }

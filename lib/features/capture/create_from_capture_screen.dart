@@ -11,6 +11,7 @@ import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
 import '../explorer/action_feedback.dart';
+import '../explorer/due_date_fields.dart';
 import '../explorer/explorer_rows.dart';
 import '../explorer/explorer_state.dart';
 import '../explorer/schedule_fields.dart';
@@ -49,6 +50,7 @@ class _CreateFromCaptureScreenState
   String? _placeId;
   var _repeat = false;
   ScheduleDraft? _draft;
+  var _due = const DueDraft();
   var _saving = false;
 
   /// The group setting: null to follow the place, [noGroup], or a group id.
@@ -199,6 +201,19 @@ class _CreateFromCaptureScreenState
           ),
           const SizedBox(height: 16),
           const Divider(height: 1),
+          // A due date for anything that can be ticked off, unless it
+          // repeats (E-019, M7 frame 27, AT-132).
+          if (type != null && type.hasStatus && !_repeat) ...[
+            DueDateFields(
+              draft: _due,
+              today: _today,
+              now: ref.read(clockProvider).now(),
+              reminderMinutes: _settings.reminderMinutes,
+              dayStartMinutes: _settings.dayStartMinutes,
+              onChanged: (d) => setState(() => _due = d),
+            ),
+            const Divider(height: 1),
+          ],
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(Strings.contextGroup),
@@ -267,7 +282,8 @@ class _CreateFromCaptureScreenState
         title: title,
         notes: _notes.text,
         schedule: draft?.schedule,
-        dueOn: draft?.dueOn,
+        dueOn: draft?.dueOn ?? _due.dueOn,
+        dueReminder: _due.reminder,
         leadDays: draft?.leadDays,
         group: _group,
         fromCapture: entry.id,

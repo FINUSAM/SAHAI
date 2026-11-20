@@ -35,11 +35,16 @@ class SummaryCard {
     this.unlocks,
   });
 
-  /// A recurring item as a card whether or not it's on the Summary, for the
-  /// reminders and the sheet that reach it anyway (AT-079).
-  factory SummaryCard.ofRecurring(Tree tree, TreeNode node) => SummaryCard(
+  /// An item with a due date as a card whether or not it's on the Summary,
+  /// for the reminders and the sheet that reach it anyway (AT-079, E-019).
+  factory SummaryCard.ofItem(Tree tree, TreeNode node) => SummaryCard(
     node: node,
-    kind: CardKind.streamItem,
+    kind: switch (node.type) {
+      NodeType.subtask => CardKind.subtask,
+      NodeType.task => CardKind.task,
+      NodeType.project => CardKind.project,
+      _ => CardKind.streamItem,
+    },
     reason: CardReason.next,
     path: tree.ancestorsOf(node.id).reversed.toList(),
     ownerId: node.id,

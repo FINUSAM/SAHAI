@@ -183,12 +183,12 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | AT-111 | Auto Backup restores data | 3 | Must | Developer | D | adb bmgr backup, reinstall, restore |
 | AT-112 | Database size warning | 3, 8.6 | Should | Developer | U, W | Fake database size |
 | AT-113 | Log retention | 9 | Should | Developer | U | Compaction into event_daily_summaries (E-004) |
-| AT-114 | Fast with 10,000 items | 13 | Must | Developer | U, D | Engine benchmark on dev machine from M2; profile build on mid-range phone |
+| AT-114 | Fast with 10,000 items | 13 | Must | Developer | U, D | test/perf/at114_speed.dart reports times on a computer; profile build on a mid-range phone via flutter drive |
 | AT-115 | Everything works offline | 13 | Must | Founder | D | Every feature in airplane mode |
-| AT-116 | TalkBack support | 13 | Must | Founder | W, D | Semantics labels and button alternatives; TalkBack pass on device |
-| AT-117 | Large system font | 13 | Should | Founder | W, D | Largest text scale on every screen |
-| AT-118 | Set-aside times survive a time-zone change | 13 | Should | Founder | U, D |  |
-| AT-119 | No half-finished changes | 13 | Should | Developer | U | Transaction rollback test |
+| AT-116 | TalkBack support | 13 | Must | Founder | W, D | Labelled buttons, 48 dp targets and button alternatives on every screen; TalkBack pass on device |
+| AT-117 | Large system font | 13 | Should | Founder | W, D | Every screen at 200% text in widget tests; on device too |
+| AT-118 | Set-aside times survive a time-zone change | 13 | Should | Founder | U, D | Stored and compared as UTC moments; a real zone switch on device |
+| AT-119 | No half-finished changes | 13 | Should | Developer | U | A SQLite trigger refuses the log write; nothing is saved |
 | AT-120 | Send feedback | 8.6 | Should | Founder | W, D | Fake platform channel; real email app on device |
 | AT-125 | Reopen the last completion | 7, 9 | Must | Founder | U, W | Fake clock; checks the reopened event (E-018) |
 | AT-126 | Reopen the last skip | 7, 9 | Should | Founder | U, W | Fake clock; checks the reopened event (E-018) |

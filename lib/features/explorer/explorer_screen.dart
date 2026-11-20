@@ -10,8 +10,10 @@ import '../../actions/node_actions.dart';
 import '../../app/router.dart';
 import '../../engine/groups.dart';
 import '../../engine/node_type.dart';
+import '../../engine/recurrence.dart';
 import '../../engine/set_aside_list.dart';
 import '../../engine/settings.dart';
+import '../../engine/time.dart';
 import '../../engine/tree.dart';
 import '../../shared/group_icons.dart';
 import '../../shared/strings.dart';
@@ -350,6 +352,15 @@ class _NodeTile extends ConsumerWidget {
                             Strings.hiddenWhile(displayTitle(tree, hiddenBy)),
                             style: subtitle,
                           )
+                        else if (node.hasOneOffDue && !node.isDone)
+                          _DueRowLine(
+                            text: line.subtitle,
+                            tag: tag,
+                            dueOn: node.dueOn!,
+                            locked: line.mark == RowMark.locked,
+                            now: now,
+                            dayStartMinutes: settings.dayStartMinutes,
+                          )
                         else
                           Text.rich(
                             TextSpan(text: line.subtitle, children: tag),
@@ -441,6 +452,65 @@ class _RepeatLine extends StatelessWidget {
       ),
     ],
   );
+}
+
+/// "Task · due Nov 20" with the calendar mark, or the lock on a locked row,
+/// and bold once it's overdue (M7 frame 24). A DONE item shows no due date.
+class _DueRowLine extends StatelessWidget {
+  const _DueRowLine({
+    required this.text,
+    required this.tag,
+    required this.dueOn,
+    required this.locked,
+    required this.now,
+    required this.dayStartMinutes,
+  });
+
+  final String text;
+  final List<InlineSpan> tag;
+  final DateTime dueOn;
+  final bool locked;
+  final DateTime now;
+  final int dayStartMinutes;
+
+  @override
+  Widget build(BuildContext context) {
+    final overdue =
+        daysUntilDue(
+          dueOn,
+          logicalDate(now, dayStartMinutes: dayStartMinutes),
+        ) <
+        0;
+    final style = Theme.of(context).textTheme.bodySmall
+        ?.copyWith(fontWeight: overdue ? FontWeight.bold : null);
+    return Row(
+      children: [
+        // The lock already has a label on the row's mark.
+        Icon(
+          locked ? Icons.lock_outline : Icons.calendar_today_outlined,
+          size: 16,
+        ),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text.rich(
+            TextSpan(
+              text: [
+                text,
+                dueLabel(
+                  dueOn,
+                  now,
+                  dayStartMinutes: dayStartMinutes,
+                  inSentence: true,
+                ),
+              ].join(Strings.separator),
+              children: tag,
+            ),
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _AddTile extends ConsumerWidget {

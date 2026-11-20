@@ -94,19 +94,20 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
     });
   }
 
-  /// A recurring item's reminder can arrive while the item isn't on the
-  /// Summary, so its sheet opens directly, saying why (AT-079, frame 11).
-  /// Anything else waits until it's on the Summary.
+  /// A due-date reminder can arrive while its item isn't on the Summary, so
+  /// the item's sheet opens directly, saying why (AT-079, M4 frame 11, M7
+  /// frame 26, AT-129). Anything else waits until it's on the Summary.
   void _openHiddenItem(String id) {
     final tree = ref.read(treeProvider).value;
     final node = tree?[id];
-    if (tree == null || node == null || !node.isRecurring) return;
+    if (tree == null || node == null) return;
+    if (!node.isRecurring && !(node.hasOneOffDue && node.isTodo)) return;
     _pendingFocus = null;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final now = ref.read(clockProvider).now();
       final settings = ref.read(settingsProvider).value ?? const AppSettings();
-      final card = SummaryCard.ofRecurring(tree, node);
+      final card = SummaryCard.ofItem(tree, node);
       final choice = await showCardSheet(
         context,
         tree,
@@ -122,13 +123,18 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   }
 
   /// "Personal is set aside until Tue, Nov 10, so this isn't on the Summary."
+  /// A one-off item that isn't set aside is waiting behind an earlier step.
   String _hiddenNote(
     Tree tree,
     TreeNode node,
     DateTime now,
     AppSettings settings,
   ) {
-    final holder = setAsideAncestor(tree, node.id, now) ?? node;
+    final aside =
+        setAsideAncestor(tree, node.id, now) ??
+        (wakeTimeOf(node, now, settings: settings) != null ? node : null);
+    if (aside == null && !node.isRecurring) return Strings.waitsForEarlier;
+    final holder = aside ?? node;
     final until = wakeTimeOf(holder, now, settings: settings) ?? now;
     return Strings.notOnSummary(displayTitle(tree, holder), shortDate(until));
   }
@@ -682,6 +688,8 @@ Future<void> applyCardChoice(
       await stopRepeatingWithUndo(context, actions, card.node.id, title);
     case CardChoice.contextGroup:
       await changeCardGroup(context, ref, card.node.id);
+    case CardChoice.changeDueDate:
+      await context.push(Routes.editNode(card.node.id));
     case CardChoice.openInTree:
       if (PracticeScope.isOn(context)) {
         showMessage(context, Strings.notInPractice);

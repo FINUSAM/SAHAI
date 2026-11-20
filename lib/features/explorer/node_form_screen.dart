@@ -11,12 +11,15 @@ import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../groups/group_picker.dart';
 import 'action_feedback.dart';
+import 'due_date_fields.dart';
 import 'explorer_state.dart';
 import 'schedule_fields.dart';
 
 /// Creates a node, or edits one: the same screen does both (frame 5,
 /// AT-001, AT-010). A TODO stream item can repeat (M4 frames 2 to 4). Every
-/// type has a Context group row (M5 frame 8, AT-090).
+/// type has a Context group row (M5 frame 8, AT-090). Anything that can be
+/// ticked off, unless it repeats, has an optional Due date (E-019, M7
+/// frames 19 to 22).
 class NodeFormScreen extends ConsumerStatefulWidget {
   const NodeFormScreen.create({
     super.key,
@@ -46,6 +49,8 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
   var _saving = false;
   var _repeat = false;
   ScheduleDraft? _draft;
+  var _due = const DueDraft();
+  var _dueAtStart = const DueDraft();
 
   /// The group setting chosen here: null to follow the parent, [noGroup],
   /// or a group id (E-013).
@@ -87,6 +92,12 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
       _title.text = node.title;
       _notes.text = node.notes;
       _group = liveSetting(tree!, node.groupId, parentId: node.parentId);
+      if (node.hasOneOffDue) {
+        _due = _dueAtStart = DueDraft(
+          dueOn: node.dueOn,
+          reminder: node.dueReminder,
+        );
+      }
       if (node.isRecurring) {
         _repeat = true;
         _draft = ScheduleDraft.of(
@@ -103,6 +114,12 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
     final canRepeat =
         type == NodeType.streamItem && (node == null || node.isTodo);
     final draft = _repeat ? _draft : null;
+    // A repeating item's due date is its schedule's Next due.
+    final canHaveDue =
+        type != null &&
+        type.hasStatus &&
+        !_repeat &&
+        !(node?.isRecurring ?? false);
 
     if (type == null) {
       return Scaffold(
@@ -176,6 +193,17 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
           ),
           const SizedBox(height: 16),
           const Divider(height: 1),
+          if (canHaveDue) ...[
+            DueDateFields(
+              draft: _due,
+              today: _today,
+              now: ref.read(clockProvider).now(),
+              reminderMinutes: _settings.reminderMinutes,
+              dayStartMinutes: _settings.dayStartMinutes,
+              onChanged: (d) => setState(() => _due = d),
+            ),
+            const Divider(height: 1),
+          ],
           if (tree != null)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -216,6 +244,11 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
       final done = await runAction(context, () async {
         await actions.edit(id, title: _title.text, notes: _notes.text);
         if (_groupChanged) await actions.setGroup(id, _group);
+        if (draft == null &&
+            !(node?.isRecurring ?? false) &&
+            _due != _dueAtStart) {
+          await actions.setDueDate(id, _due.dueOn, reminder: _due.reminder);
+        }
         if (draft != null && _scheduleChanged(node, draft)) {
           await actions.setRecurrence(
             id,
@@ -241,7 +274,8 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
           title: _title.text,
           notes: _notes.text,
           schedule: draft?.schedule,
-          dueOn: draft?.dueOn,
+          dueOn: draft?.dueOn ?? _due.dueOn,
+          dueReminder: _due.reminder,
           leadDays: draft?.leadDays,
           group: _group,
         ),

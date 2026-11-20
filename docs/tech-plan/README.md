@@ -124,6 +124,13 @@ The cost is O(n log n), because sibling lists are sorted. The engine also return
 - **One wake rule.** `TreeNode.wakeAt` returns when a node comes back, so the Summary, `nextChangeAt`, the Set-Aside list and Wake now agree. Because a show time isn't stored, the catch-up before each write compares the Summary whenever any item has a due date. A bill reaching its show date gets `surfaced` dated at that time (E-002), and no `woke`.
 - **Due labels.** "Due Nov 5", "Due today", "N days overdue", measured in logical days (AT-062, AT-063). While one shows, `nextChangeAt` includes the next day start.
 
+### 4.4a One-off due dates ([E-019](../PRD_Edits.md#e-019-one-off-items-can-have-a-due-date-with-a-reminder), M7)
+
+- **Where.** Projects, tasks, subtasks and one-off stream items can have `due_on` without a schedule, plus `due_reminder` (null for On the day, `1_day`, `3_days`, `1_week` or `none`). `TreeNode.hasOneOffDue` tells them apart from repeating items. Domains, streams and repeating items are refused (`cantHaveDueDate`), and a changed date before today is refused (`pastDueDate`); an overdue date can be kept while Remind me changes.
+- **No effect on the Summary.** Only repeating items wait for a show date: `wakeAt` ignores a one-off due date, so it never hides an item, brings one onto the Summary or changes the order.
+- **Log.** `setDueDate` and `create` log `due_changed` with `old_due_on`, `due_on`, `old_reminder` and `reminder` (by name), never the text, in the same transaction. Completing keeps the due date, so Undo and Reopen bring the label and reminders back.
+- **Labels.** The same words as a bill's, with a calendar mark instead of the repeat mark, bold once overdue, and none on a DONE item. In the Explorer: "Task · due Nov 20", with the lock on a locked row.
+
 ### 4.5 Surfaced events (PRD 9, PRD_Edits E-001 and E-002)
 
 After each recompute, the engine compares the new card set with the previous one. Each newly visible item gets a `surfaced` event.
@@ -263,8 +270,9 @@ The approach is to **plan notifications ahead of time with the engine, and resch
   - With no lead days the two reminders fall on one day, so only the due-day one is sent.
   - A group whose dates differ reads "2 items are due", and each line gives its own date.
   - Tapping a reminder for a bill that isn't on the Summary opens its sheet, with a note saying why.
+- **One-off due dates (E-019, M7)** get a reminder on the day of their Remind me choice and one on the due day while not done, at the same reminder moment as a bill's (`dueReminderAt`, shared with the form). Both get through set-aside ancestors and earlier steps; the item stays off the Summary. The early one reads "is due Fri, Nov 20". Tapping one for a hidden item opens its sheet saying why (set aside, or waiting for an earlier step), with Mark done (not when locked, E-007), Change due date (the edit form) and Open in tree.
 - **Rescheduling.** Everything is cancelled and rescheduled after each action, on app start, on resume and after a time-zone change. The phone's own alarm list survives restarts through the plugin's boot receiver (AT-057).
-- **Late reminders (#77).** Rescheduling would cancel a reminder whose time has passed but that Android hasn't delivered. So the app first reads the plugin's pending list, which holds only undelivered reminders, and each reminder carries its time because that list gives none. A recurring reminder that's late, still applies and is for an item not on the Summary shows at once, with an id from 1000 up so a scheduled reminder can't replace it. Anything else late is dropped: with the app open, a card on the Summary needs no reminder.
+- **Late reminders (#77).** Rescheduling would cancel a reminder whose time has passed but that Android hasn't delivered. So the app first reads the plugin's pending list, which holds only undelivered reminders, and each reminder carries its time because that list gives none. A due-date reminder (a bill's or a one-off item's) that's late, still applies and is for an item not on the Summary shows at once, with an id from 1000 up so a scheduled reminder can't replace it. Anything else late is dropped: with the app open, a card on the Summary needs no reminder.
 - **Horizon.** The plan covers the next **60 days**, capped at **100 scheduled notifications**. Android allows 500 alarms per app. If the app isn't opened for over 60 days, later reminders aren't scheduled. This is listed as risk R4.
 - **Inexact by default.** Reminders may arrive late, usually within an hour (PRD 7, E-012). That's Android's limit on Android 12 and higher, and Doze or battery saver can make it later. With "Exact reminders" on, the app asks for Android's alarm permission (`SCHEDULE_EXACT_ALARM`; Android 14 and higher deny it by default and send the user to a system screen) and uses exact scheduling (AT-058).
 - **Notification permission.** On Android 13 and higher, `POST_NOTIFICATIONS` is requested the first time the user sets something aside, never at launch (AT-055).
@@ -317,14 +325,15 @@ Each permission still needs the owner's approval when it's added, as with packag
 | Level | Tool | What it covers | Where it runs |
 |---|---|---|---|
 | **Unit** | `flutter test` | Engine rules, recurrence, presets, labels, notification planner, actions and repositories against an in-memory SQLite database, migrations | Every PR (CI) |
-| **Widget** | `flutter test` | Each screen with fake providers: cards, snackbar Undo, pickers, menus, accessibility labels, large fonts | Every PR (CI) |
+| **Widget** | `flutter test` | Each screen with fake providers: cards, snackbar Undo, pickers, menus, accessibility labels, large fonts. Every screen is checked at normal size and 200% text for labelled buttons, 48 dp tap targets and overflow (`a11y_screens_test.dart`, `m7_accessibility_test.dart`) | Every PR (CI) |
 | **Integration** | `integration_test` | Key flows on an emulator or phone: restart persistence, reorder, complete and undo | Before merging a milestone into `main`, and on demand |
 | **Real device (manual)** | Phone | Notifications with the app closed, restarts, widget, share sheet, backup restore, TalkBack, release checks | Listed in each PR; recorded in the AT sheet |
 
 - **Naming:** a test that covers an acceptance test starts with its ID, e.g. `test('AT-034 waking subtask takes its place back', …)`. Tests for PRD edits use the edit ID, e.g. `E-002 …`.
-- **Fake clock:** time tests set the clock to the AT sheet's dates (November 2026; Nov 1 is a Sunday) and advance it. Time-zone tests switch the `timezone` location in-process, e.g. Asia/Kolkata to Asia/Dubai (AT-081, AT-118).
+- **Fake clock:** time tests set the clock to the AT sheet's dates (November 2026; Nov 1 is a Sunday) and advance it. Times are stored as UTC moments, so time-zone tests compare the same moment written as UTC and as local time; a real zone switch, such as Asia/Kolkata to Asia/Dubai, is a check on the phone (AT-081, AT-118).
 - **Coverage report:** a small script in `tool/` lists the AT IDs found in test names and compares them with the matrix, so gaps show up in PRs.
-- **Performance:** a generator builds a 10,000-item tree. The engine benchmark runs on the development machine from **M2** as an early warning. The real check (AT-114) is on a mid-range phone with a profile build in M7.
+- **Performance:** a generator (`test/perf/at114_speed.dart`, M7) fills a throwaway database with a little over 10,000 items and times opening it to the first Summary frame and a recompute after completing an item. The M2 benchmark was never built, so this is the first. Run on a computer it reports times without checking them, since debug builds are much slower. The real check (AT-114) is a profile build on a mid-range phone: `flutter drive --profile --driver=test_driver/integration_test.dart --target=integration_test/speed_test.dart` (`flutter test` has no profile mode, and `flutter drive` doesn't uninstall the app), plus `adb shell am start -W` on the release build for Android's own start-up.
+- **Atomic writes:** AT-119 makes SQLite refuse the log write with a temporary trigger and checks that the change itself was rolled back.
 - **Bug fixes:** a failing test comes first (CLAUDE.md).
 
 The full mapping of all 124 tests is in [test-matrix.md](test-matrix.md).
