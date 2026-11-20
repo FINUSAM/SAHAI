@@ -26,3 +26,17 @@ enum DueReminder {
     orElse: () => DueReminder.onTheDay,
   );
 }
+
+/// The local moment a reminder [daysBefore] days before [dueOn] arrives,
+/// at the Reminder time setting (E-019).
+DateTime dueReminderAt(
+  DateTime dueOn,
+  int daysBefore, {
+  required int reminderMinutes,
+}) => DateTime(
+  dueOn.year,
+  dueOn.month,
+  dueOn.day - daysBefore,
+  0,
+  reminderMinutes,
+);
