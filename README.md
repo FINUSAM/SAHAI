@@ -6,14 +6,14 @@ Everything Sahai stores stays on your device. Version 1 has no internet access, 
 
 ## Status
 
-**M5 Groups and order shipped as v0.5.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set anything aside until later, with a reminder when it comes back; the Set-Aside page lists what's away. Stream items can repeat, with due labels, Skip, Stop repeating and reminders on the show day and the due day. Context groups made in Settings sort the Summary under headers, a card can be dragged to another place or group or moved with buttons in its sheet, and the order is kept. Capture is being built in M6. On `dev` so far: the Capture tab, where a thought or a whole list is saved in a box at the top, then edited, deleted with Undo, or made into a project, task, subtask or stream item, kept for more or removed; and a home-screen widget and sharing from other apps, which open a small capture dialog over whatever is on screen without opening the full app. What's left is checking it on the phone and the v0.6.0 release.
+**M6 Capture shipped as v0.6.0.** The app opens on the Summary: the next step of every project and stream, and nothing else. Tick a card to complete it (with 5 seconds to undo), tap it for its path and notes, or open it in the tree. The Explorer from M1 still holds the whole tree. Set anything aside until later, with a reminder when it comes back; the Set-Aside page lists what's away. Stream items can repeat, with due labels, Skip, Stop repeating and reminders on the show day and the due day. Context groups made in Settings sort the Summary under headers, a card can be dragged to another place or group or moved with buttons in its sheet, and the order is kept. The Capture tab is where a thought or a whole list is saved in a box at the top, then edited, deleted with Undo, or made into a project, task, subtask or stream item, kept for more or removed. A home-screen widget and sharing text from other apps open a small capture dialog over whatever is on screen without opening the full app. Polish and safety arrive in M7.
 
 | | |
 |---|---|
 | Platform | Android (iOS later) |
 | Framework | Flutter |
 | Application ID | `com.finusam.sahai` |
-| Current milestone | M6 Capture (v0.6.0, next) |
+| Current milestone | M7 Polish and safety (v0.7.0, next) |
 
 ## Roadmap
 
