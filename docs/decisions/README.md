@@ -26,3 +26,4 @@ A decision record captures a significant technical decision: what was decided, w
 | [0006](0006-no-group-setting.md) | Store "No group" as a fixed value in `nodes.group_id` | Accepted |
 | [0007](0007-capture-widget-and-share.md) | The capture dialog is a small Flutter screen; the widget and share target are plain Android | Accepted |
 | [0008](0008-onboarding-practice-copy.md) | The onboarding practice runs the real screens on a temporary in-memory copy | Accepted |
+| [0009](0009-compaction-keeps-reopenable-events.md) | Log compaction keeps the events Reopen still needs | Accepted |
