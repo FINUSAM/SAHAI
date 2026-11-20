@@ -344,6 +344,9 @@ abstract final class Strings {
   static String noLongerRepeats(String title) => '$title no longer repeats';
   static String notOnSummary(String title, String date) =>
       "$title is set aside until $date, so this isn't on the Summary.";
+  static const waitsForEarlier =
+      "This waits for an earlier step, so it isn't on the Summary.";
+  static const changeDueDate = 'Change due date';
 
   // Custom time (frame 6).
   static String enterTime(String date) => '$date · Enter time';

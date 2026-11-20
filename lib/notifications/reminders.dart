@@ -65,7 +65,8 @@ String? nodeIdOfPayload(String? payload) {
 /// Words the plan (frame 13): one item is "<title> is back" with its path;
 /// several are "3 items are back", expanding to list them. Recurring
 /// reminders read "<title> is due Nov 5" or "<title> is due today", and "2
-/// items are due today" (M4 frame 10). When a group's dates differ it says
+/// items are due today" (M4 frame 10); a one-off due date's early reminder
+/// gives the weekday, "<title> is due Fri, Nov 20" (M7 frame 25). When a group's dates differ it says
 /// "2 items are due", and each line gives its own date.
 List<ReminderMessage> messagesFor(
   Tree tree,
@@ -109,7 +110,7 @@ ReminderMessage _dueMessage(
       at: n.at,
       title: dueToday.contains(card.id)
           ? Strings.isDueToday(title)
-          : Strings.isDueOn(title, dueDate(card.node.dueOn!, n.at.toLocal())),
+          : Strings.isDueOn(title, _dateOf(card.node, n.at)),
       body: _pathOf(tree, card),
       lines: const [],
       nodeId: card.id,
@@ -124,7 +125,7 @@ ReminderMessage _dueMessage(
               displayTitle(tree, c.node),
               dueToday.contains(c.id)
                   ? Strings.dueToday
-                  : Strings.dueOn(dueDate(c.node.dueOn!, n.at.toLocal())),
+                  : Strings.dueOn(_dateOf(c.node, n.at)),
             ),
   ];
   return ReminderMessage(
@@ -138,6 +139,12 @@ ReminderMessage _dueMessage(
     nodeId: null,
   );
 }
+
+/// "Nov 5" for a bill (M4 frame 10), "Fri, Nov 20" for a one-off due date
+/// (M7 frame 25), with the year outside [at]'s year.
+String _dateOf(TreeNode node, DateTime at) => node.isRecurring
+    ? dueDate(node.dueOn!, at.toLocal())
+    : shortDueDate(node.dueOn!, at.toLocal());
 
 String _pathOf(Tree tree, SummaryCard card) =>
     card.path.map((a) => displayTitle(tree, a)).join(Strings.pathSeparator);

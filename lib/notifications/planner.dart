@@ -1,3 +1,4 @@
+import '../engine/due.dart';
 import '../engine/recurrence.dart';
 import '../engine/set_aside_list.dart';
 import '../engine/settings.dart';
@@ -13,7 +14,7 @@ const planHorizon = Duration(days: 60);
 const maxPlanned = 100;
 
 /// One notification: the items that come back onto the Summary at [at], or
-/// the recurring items reminded at [at]. One item is named; several share a
+/// the items whose due date is reminded at [at]. One item is named; several share a
 /// grouped notification (PRD 7).
 class PlannedNotification {
   const PlannedNotification({
@@ -26,8 +27,8 @@ class PlannedNotification {
   final DateTime at;
   final List<SummaryCard> cards;
 
-  /// For a recurring reminder, the ids of the [cards] due that day; the
-  /// others are on their show day. Null for "is back".
+  /// For a due-date reminder, the ids of the [cards] due that day; the
+  /// others are on their show day or an early reminder. Null for "is back".
   final Set<String>? dueToday;
 
   bool get grouped => cards.length > 1;
@@ -46,7 +47,7 @@ class PlannedNotification {
 ///   (AT-054);
 /// - nothing is planned when notifications are off in Settings (AT-056).
 ///
-/// Recurring items add their own reminders; see [_recurringReminders].
+/// Due dates add their own reminders; see [_dueReminders].
 List<PlannedNotification> planNotifications(
   Tree tree, {
   required DateTime now,
@@ -54,12 +55,7 @@ List<PlannedNotification> planNotifications(
 }) {
   if (!settings.notificationsEnabled) return const [];
   final end = now.add(planHorizon);
-  final recurring = _recurringReminders(
-    tree,
-    now: now,
-    end: end,
-    settings: settings,
-  );
+  final recurring = _dueReminders(tree, now: now, end: end, settings: settings);
   final remindedAt = {
     for (final n in recurring)
       n.at.millisecondsSinceEpoch: {for (final c in n.cards) c.id},
@@ -94,7 +90,7 @@ List<PlannedNotification> planNotifications(
 /// lose them (#77): Android can deliver inexact ones up to an hour late, or
 /// more, and [undelivered] holds the times it still hadn't reached.
 ///
-/// Only recurring reminders qualify, for items the Summary can't show. With
+/// Only due-date reminders qualify, for items the Summary can't show. With
 /// the app open a card on the Summary needs no reminder, which also rules
 /// out "is back": its item is on the Summary, or is hidden again and so
 /// doesn't notify (PRD 7). The reminders are worked out again from today's
@@ -116,7 +112,7 @@ List<PlannedNotification> lateReminders(
     settings: settings,
   ).visibleIds;
   final today = logicalDate(now, dayStartMinutes: settings.dayStartMinutes);
-  final reminders = _recurringReminders(
+  final reminders = _dueReminders(
     tree,
     // That function looks strictly after this time.
     now: earliest.subtract(const Duration(milliseconds: 1)),
@@ -160,7 +156,12 @@ bool _remindedAt(Tree tree, SummaryCard card, DateTime at) => [
 ///   item being set aside itself doesn't stop this one, by the owner's
 ///   choice.
 /// - With no lead, the two are the same day, so only the due one.
-List<PlannedNotification> _recurringReminders(
+///
+/// A one-off due date (E-019) is reminded on the day of its Remind me
+/// choice and again on the due day, or not at all with No reminder. Both
+/// get through set-aside ancestors and earlier steps: the reminder is the
+/// one thing that does, and the item stays off the Summary.
+List<PlannedNotification> _dueReminders(
   Tree tree, {
   required DateTime now,
   required DateTime end,
@@ -183,8 +184,25 @@ List<PlannedNotification> _recurringReminders(
 
   for (final node in inTreeOrder(tree)) {
     final due = node.dueOn;
-    // One-off due dates have their own reminders (E-019).
-    if (due == null || !node.isTodo || !node.isRecurring) continue;
+    if (due == null || !node.isTodo) continue;
+    if (!node.isRecurring) {
+      final days = node.dueReminder.daysBefore;
+      if (days == null) continue;
+      add(momentOf(due), node, isDueDay: true);
+      if (days > 0) {
+        add(
+          dueReminderAt(
+            due,
+            days,
+            reminderMinutes: settings.reminderMinutes,
+            dayStartMinutes: settings.dayStartMinutes,
+          ),
+          node,
+          isDueDay: false,
+        );
+      }
+      continue;
+    }
     final lead = node.leadDays ?? settings.defaultLeadDays;
     add(momentOf(due), node, isDueDay: true);
     if (lead <= 0) continue;
@@ -197,7 +215,7 @@ List<PlannedNotification> _recurringReminders(
     for (final MapEntry(key: at, value: nodes) in byMoment.entries)
       PlannedNotification(
         at: at,
-        cards: [for (final n in nodes) SummaryCard.ofRecurring(tree, n)],
+        cards: [for (final n in nodes) SummaryCard.ofItem(tree, n)],
         dueToday: dueToday[at] ?? const {},
       ),
   ];

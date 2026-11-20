@@ -373,4 +373,118 @@ void main() {
       expect((await app.actions.loadTree())[launch]!.dueOn, isNotNull);
     });
   });
+
+  group('reminders', () {
+    /// Biztras › Website relaunch: 1. Write the copy and 2. Send proposal to
+    /// Acme, due Fri, Nov 20, with Remind me [reminder].
+    Future<(TestApp, String)> acme(
+      DateTime at, {
+      DueReminder reminder = DueReminder.onTheDay,
+    }) async {
+      final app = await sample();
+      final website = (await app.actions.loadTree()).nodes
+          .singleWhere((n) => n.title == 'Website relaunch')
+          .id;
+      app.clock.now = DateTime(2026, 11, 9, 10);
+      final id = await app.actions.create(
+        type: NodeType.task,
+        parentId: website,
+        title: 'Send proposal to Acme',
+        dueOn: DateTime(2026, 11, 20),
+        dueReminder: reminder,
+      );
+      app.clock.now = at;
+      return (app, id);
+    }
+
+    Future<void> settle(WidgetTester tester) async {
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pumpAndSettle();
+    }
+
+    testSahai('AT-130 an early reminder and the one on the day are '
+        'scheduled; marking done cancels both, and Undo brings them back', (
+      tester,
+    ) async {
+      final (app, id) = await acme(
+        monday,
+        reminder: DueReminder.threeDaysBefore,
+      );
+      await pumpSahai(tester, app: app);
+      expect(app.reminders.scheduled.map((m) => (m.title, m.at)), [
+        (
+          '2. Send proposal to Acme is due Fri, Nov 20',
+          DateTime(2026, 11, 17, 9).toUtc(),
+        ),
+        (
+          '2. Send proposal to Acme is due today',
+          DateTime(2026, 11, 20, 9).toUtc(),
+        ),
+      ]);
+
+      await app.actions.markDone(
+        (await app.actions.loadTree()).nodes
+            .singleWhere((n) => n.title == 'Write the copy')
+            .id,
+      );
+      final token = await app.actions.markDone(id);
+      await tester.pumpAndSettle();
+      expect(app.reminders.scheduled, isEmpty);
+      await app.actions.undoComplete(token);
+      await tester.pumpAndSettle();
+      expect(app.reminders.scheduled, hasLength(2));
+    });
+
+    testSahai('AT-129 a tap inside a set-aside area opens a sheet that says '
+        'why, with Mark done, Change due date and Open in tree', (
+      tester,
+    ) async {
+      final (app, id) = await acme(DateTime(2026, 11, 20, 9));
+      final tree = await app.actions.loadTree();
+      final biztras = tree.nodes.singleWhere((n) => n.title == 'Biztras').id;
+      await app.actions.markDone(
+        tree.nodes.singleWhere((n) => n.title == 'Write the copy').id,
+      );
+      await app.actions.setAside(biztras, DateTime(2026, 11, 23, 8));
+      await pumpSahai(tester, app: app);
+      expect(find.text('2. Send proposal to Acme'), findsNothing);
+
+      app.reminders.tap(id);
+      await tester.pumpAndSettle();
+      expect(find.text('2. Send proposal to Acme'), findsOneWidget);
+      expect(find.text(Strings.dueToday), findsOneWidget);
+      expect(
+        find.text(Strings.notOnSummary('Biztras', 'Mon, Nov 23')),
+        findsOneWidget,
+      );
+      expect(find.text(Strings.markDone), findsOneWidget);
+      expect(find.text(Strings.changeDueDate), findsOneWidget);
+      expect(find.text(Strings.openInTree), findsOneWidget);
+      expect(find.text(Strings.setAsideTitle), findsNothing);
+      expect(find.text(Strings.skipOccurrence), findsNothing);
+
+      await choose(tester, Strings.markDone);
+      expect((await app.actions.loadTree())[id]!.isDone, isTrue);
+      await settle(tester);
+    });
+
+    testSahai('a locked task waiting behind an earlier step says so, with no '
+        'Mark done (E-007)', (tester) async {
+      final (app, id) = await acme(DateTime(2026, 11, 20, 9));
+      await pumpSahai(tester, app: app);
+      app.reminders.tap(id);
+      await tester.pumpAndSettle();
+      expect(find.text(Strings.waitsForEarlier), findsOneWidget);
+      expect(find.text(Strings.markDone), findsNothing);
+      expect(find.text(Strings.changeDueDate), findsOneWidget);
+      expect(find.text(Strings.openInTree), findsOneWidget);
+
+      // Change due date opens the edit form at the due date.
+      await choose(tester, Strings.changeDueDate);
+      expect(find.text('Fri, Nov 20'), findsOneWidget);
+      expect(find.text(Strings.addDueDate), findsNothing);
+      await tester.tap(find.byTooltip(Strings.close));
+      await tester.pumpAndSettle();
+    });
+  });
 }

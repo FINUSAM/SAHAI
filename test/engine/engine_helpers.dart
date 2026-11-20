@@ -1,3 +1,4 @@
+import 'package:sahai/engine/due.dart';
 import 'package:sahai/engine/node_type.dart';
 import 'package:sahai/engine/recurrence.dart';
 import 'package:sahai/engine/tree.dart';
@@ -17,6 +18,8 @@ class TreeBuilder {
     bool recurring = false,
     DateTime? dueOn,
     int? leadDays,
+    DateTime? oneOffDue,
+    DueReminder dueReminder = DueReminder.onTheDay,
   }) {
     final order = _nextOrder[parent] ?? 0;
     _nextOrder[parent] = order + 1;
@@ -34,8 +37,9 @@ class TreeBuilder {
         remindOnWake: remind,
         isRecurring: recurring || dueOn != null,
         schedule: dueOn == null ? null : Schedule.monthly(day: dueOn.day),
-        dueOn: dueOn,
+        dueOn: dueOn ?? oneOffDue,
         leadDays: leadDays,
+        dueReminder: dueReminder,
       ),
     );
     return id;

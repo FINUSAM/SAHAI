@@ -1,3 +1,5 @@
+import 'recurrence.dart';
+
 /// When a one-off item's due-date reminder arrives (E-019). Each reminder
 /// comes at the Reminder time setting; an early one is followed by one on
 /// the due day if the item still isn't done.
@@ -28,15 +30,14 @@ enum DueReminder {
 }
 
 /// The local moment a reminder [daysBefore] days before [dueOn] arrives,
-/// at the Reminder time setting (E-019).
+/// at the Reminder time setting, as a bill's does (E-019, PRD 7).
 DateTime dueReminderAt(
   DateTime dueOn,
   int daysBefore, {
   required int reminderMinutes,
-}) => DateTime(
-  dueOn.year,
-  dueOn.month,
-  dueOn.day - daysBefore,
-  0,
-  reminderMinutes,
+  required int dayStartMinutes,
+}) => reminderTime(
+  DateTime(dueOn.year, dueOn.month, dueOn.day - daysBefore),
+  reminderMinutes: reminderMinutes,
+  dayStartMinutes: dayStartMinutes,
 );

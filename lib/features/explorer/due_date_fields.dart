@@ -23,10 +23,16 @@ class DueDraft {
 /// When [reminder] for [dueOn] arrives, or null for No reminder.
 DateTime? reminderMoment(
   DateTime dueOn,
-  DueReminder reminder,
-  int reminderMinutes,
-) => switch (reminder.daysBefore) {
-  final days? => dueReminderAt(dueOn, days, reminderMinutes: reminderMinutes),
+  DueReminder reminder, {
+  required int reminderMinutes,
+  required int dayStartMinutes,
+}) => switch (reminder.daysBefore) {
+  final days? => dueReminderAt(
+    dueOn,
+    days,
+    reminderMinutes: reminderMinutes,
+    dayStartMinutes: dayStartMinutes,
+  ),
   null => null,
 };
 
@@ -40,6 +46,7 @@ class DueDateFields extends StatelessWidget {
     required this.today,
     required this.now,
     required this.reminderMinutes,
+    required this.dayStartMinutes,
     required this.onChanged,
   });
 
@@ -49,6 +56,7 @@ class DueDateFields extends StatelessWidget {
   final DateTime today;
   final DateTime now;
   final int reminderMinutes;
+  final int dayStartMinutes;
   final ValueChanged<DueDraft> onChanged;
 
   @override
@@ -112,7 +120,12 @@ class DueDateFields extends StatelessWidget {
 
   /// "3 days before · Tue, Nov 17, 9:00 AM", or "No reminder".
   String _reminderLine(DateTime dueOn) {
-    final at = reminderMoment(dueOn, draft.reminder, reminderMinutes);
+    final at = reminderMoment(
+      dueOn,
+      draft.reminder,
+      reminderMinutes: reminderMinutes,
+      dayStartMinutes: dayStartMinutes,
+    );
     final name = Strings.dueReminderName(draft.reminder);
     if (at == null) return name;
     return Strings.remindAt(
@@ -142,7 +155,12 @@ class DueDateFields extends StatelessWidget {
     final due = DateTime(picked.year, picked.month, picked.day);
     // An early reminder the new date has put in the past falls back to
     // On the day, which is never earlier than the date itself.
-    final at = reminderMoment(due, draft.reminder, reminderMinutes);
+    final at = reminderMoment(
+      due,
+      draft.reminder,
+      reminderMinutes: reminderMinutes,
+      dayStartMinutes: dayStartMinutes,
+    );
     final reminder =
         at != null && !at.isAfter(now) && draft.reminder.daysBefore! > 0
         ? DueReminder.onTheDay
@@ -158,6 +176,7 @@ class DueDateFields extends StatelessWidget {
       today: today,
       now: now,
       reminderMinutes: reminderMinutes,
+      dayStartMinutes: dayStartMinutes,
     );
     if (picked != null) onChanged(DueDraft(dueOn: dueOn, reminder: picked));
   }
@@ -172,6 +191,7 @@ Future<DueReminder?> showRemindMeSheet(
   required DateTime today,
   required DateTime now,
   required int reminderMinutes,
+  required int dayStartMinutes,
 }) => showModalBottomSheet<DueReminder>(
   context: context,
   isScrollControlled: true,
@@ -206,7 +226,12 @@ Future<DueReminder?> showRemindMeSheet(
               _choiceTile(
                 theme,
                 choice,
-                at: reminderMoment(dueOn, choice, reminderMinutes),
+                at: reminderMoment(
+                  dueOn,
+                  choice,
+                  reminderMinutes: reminderMinutes,
+                  dayStartMinutes: dayStartMinutes,
+                ),
                 today: today,
                 now: now,
                 selected: choice == current,

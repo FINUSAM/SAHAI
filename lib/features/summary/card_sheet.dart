@@ -21,6 +21,7 @@ enum CardChoice {
   skip,
   stopRepeating,
   contextGroup,
+  changeDueDate,
   openInTree,
 }
 
@@ -32,7 +33,9 @@ enum CardChoice {
 /// stays open between Move taps.
 ///
 /// [hiddenNote] says why an item opened from a reminder isn't on the Summary
-/// (M4 frame 11). The sheet then offers only what that frame shows.
+/// (M4 frame 11). The sheet then offers only what that frame shows; for a
+/// one-off due date, Mark done (not when locked, E-007), Change due date and
+/// Open in tree (M7 frame 26).
 Future<CardChoice?> showCardSheet(
   BuildContext context,
   Tree tree,
@@ -168,12 +171,20 @@ class _CardSheet extends ConsumerWidget {
             ),
           ],
           const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.check_circle_outline),
-            title: const Text(Strings.markDone),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-            onTap: () => pick(CardChoice.markDone),
-          ),
+          if (!tree.isLocked(node.id))
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: const Text(Strings.markDone),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+              onTap: () => pick(CardChoice.markDone),
+            ),
+          if (hiddenNote != null && node.hasOneOffDue)
+            ListTile(
+              leading: const Icon(Icons.edit_calendar_outlined),
+              title: const Text(Strings.changeDueDate),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+              onTap: () => pick(CardChoice.changeDueDate),
+            ),
           if (hiddenNote == null)
             ListTile(
               leading: const Icon(Icons.schedule),

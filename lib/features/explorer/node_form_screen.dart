@@ -199,6 +199,7 @@ class _NodeFormScreenState extends ConsumerState<NodeFormScreen> {
               today: _today,
               now: ref.read(clockProvider).now(),
               reminderMinutes: _settings.reminderMinutes,
+              dayStartMinutes: _settings.dayStartMinutes,
               onChanged: (d) => setState(() => _due = d),
             ),
             const Divider(height: 1),
