@@ -67,15 +67,18 @@ Measured in working sessions like the M6 ones (M6 took a spike, 2 code PRs and a
 
 **PR 1: onboarding and full Settings** (`feat/m7-onboarding-settings`, #54)
 
-5. [ ] Confirm the `settings` table is enough and the database stays at version 2
-6. [ ] Settings actions, each in one transaction: preset times, Day starts at (whole hours, 12 to 6 AM), Show before due, Reminder time. The engine, presets and notification planner pick up the change at once, and reminders are rescheduled. Injected clock throughout
-7. [ ] Full Settings screen (frames 10, 11, 12, 13), replacing the M3 placeholder rows. The Backup section waits for PR 2
-8. [ ] About (frame 15) with the licences page, and Send feedback (frame 17) through our own Kotlin `ACTION_SENDTO` platform channel, with a message if no email app is installed
-9. [ ] Onboarding (frames 1 to 9): the first-run check, steps that save through the existing node actions (their `created` events are real), Skip, Back, the practice step on a temporary copy, and Replay (frame 16)
+Approved by the owner's "Proceed" on 2026-11-20. No new package, permission or database change.
+
+5. [x] Confirm the `settings` table is enough and the database stays at version 2. It has `presets` (JSON, unused until now), `day_start_minutes`, `reminder_minutes`, `default_lead_days` and `onboarding_done`, and the row has been made on first launch since version 1
+6. [ ] Settings actions: preset times (only the times; names and days stay fixed) saved as JSON in `presets`, Reset to defaults, Day starts at (whole hours, 12 to 6 AM), the default Show before due, Reminder time. The set-aside picker uses the saved times. The Summary, presets and reminders react at once (the reminder sync already listens to settings). Settings changes aren't logged (PRD 9). Injected clock throughout
+7. [ ] Full Settings screen (frames 10, 11, 12, 13): Set aside, Recurring items, Reminders, Summary, Backup and Help, replacing the "coming later" note. The Backup rows wait for PR 2
+8. [ ] About (frame 15) with the version, where the data lives, what's coming, and Flutter's licences page. Send feedback (frame 17): our own Kotlin in `MainActivity` over a platform channel opens the email app (`ACTION_SENDTO`) with the address and "Sahai feedback (version)", empty body, and a message if no email app is installed. The same channel gives the app version, so no `package_info_plus`. The address is one constant in the code. No manifest change
+9. [ ] Onboarding (frames 1 to 5, 9 and 16): shown on first run only when there are no areas and onboarding isn't done; each step saves on Next through the existing node actions (their `created` events are real); Skip on every step keeps what was saved; Back changes what was made rather than making it again; Replay from Settings asks first and adds new items
 9a. [ ] #85: show the year on a due date outside the current year, everywhere a due date appears: the Summary card label, the Explorer repeat line, Next due on the Repeat form, the "Done. Next due…" and "Skipped. Next due…" messages, and reminder text
+9b. [ ] Practice step (frames 6 to 8) on an in-memory copy: only what onboarding made is copied into a temporary in-memory database, the real Summary and Set-Aside screens run on it with reminders switched off, and it's thrown away at the end. Nothing touches `sahai.sqlite`, the log included (AT-106). Banner, a dashed box for each move, Explorer and Capture dimmed. Decision record 0008
 10. [ ] Accessibility on the new screens: labels on every action, 48 dp targets, the largest font (frame 18)
-11. [ ] Unit and widget tests named by AT ID with the fake clock: AT-105 to AT-110 and AT-120 (fake platform channel), and #85's dates; an integration flow for onboarding through to the real Summary
-12. [ ] Update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #54; open PR 1
+11. [ ] Unit and widget tests named by AT ID with the fake clock: AT-105 to AT-110 and AT-120 (fake platform channel), #85's dates, and a test that the practice step leaves the real database as it was; an onboarding flow in `integration_test/app_test.dart`, run on the phone only after warning the owner and only with `--no-uninstall`. `flutter analyze`, `dart format` and `flutter test` clean before each commit
+12. [ ] Update `README.md`, `CHANGELOG.md`, tech plan (Settings, onboarding, the practice copy), the matrix if levels change, and this plan; tick #54 and #85; open PR 1 listing the device checks (AT-105 to AT-110, AT-120)
 
 **PR 2: Auto Backup rules, 20 MB warning, log retention** (`feat/m7-backup-retention`, #55)
 
