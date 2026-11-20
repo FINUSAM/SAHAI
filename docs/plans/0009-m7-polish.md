@@ -3,9 +3,9 @@
 - **Status:** In progress
 - **Approved by:** FINUSAM on 2026-11-20 (wireframes and their choices); each PR's steps by the owner's "Proceed"
 - **Branches / PRs:** plan and wireframes `docs/m7-plan` (#53, #103); #87 design `docs/m7-due-dates`; PR 1 `feat/m7-onboarding-settings` (#54, with #85); PR 2 `feat/m7-backup-retention` (#55, with #86); PR 3 `feat/m7-due-dates-a11y-speed` (#56, with #87); close-out (#58); release (#57)
-- **PRD sections:** 3, 4, 7, 8.1, 8.6, 9, 13, 14, 16 (plus E-004, E-006, E-012, E-018)
-- **Acceptance tests:** AT-105 to AT-120 and AT-125 to AT-127 (19 rows: 8 Must, 11 Should), plus the tests #87's design adds
-- **Wireframes:** [`docs/design/m7-polish/`](../design/m7-polish/) (approved 2026-11-20)
+- **PRD sections:** 3, 4, 7, 8.1, 8.6, 9, 10, 13, 14, 16 (plus E-004, E-006, E-007, E-012, E-018, E-019)
+- **Acceptance tests:** AT-105 to AT-120 and AT-125 to AT-133 (25 rows: 10 Must, 15 Should)
+- **Wireframes:** [`docs/design/m7-polish/`](../design/m7-polish/) (frames 1 to 18 approved 2026-11-20; frames 19 to 27, for #87, approved 2026-11-20)
 - **Test devices:** OnePlus Nord 5 (OxygenOS 16 / Android 16)
 
 ## Owner decisions for M7
@@ -24,15 +24,16 @@ Settled on 2026-11-20, with the wireframes. The full list is in the [design READ
 10. **#85 goes into PR 1:** due dates outside the current year show the year ("Due Mar 15, 2028").
 11. **#86 goes into M7 (PR 2):** Reopen last completion and Reopen last skip for repeating items, as designed in #86 and recorded in [E-018](../PRD_Edits.md#e-018-a-repeating-items-last-completion-or-skip-can-be-reopened). Tests AT-125 to AT-127.
 12. **#87 goes into M7 (PR 3):** due dates on one-off items. This is new scope (PRD 14 lists it as future scope), so it gets its own design step first: the owner's answers, frames on the M7 canvas, an E-019 entry and its acceptance tests (steps 4a to 4d).
+13. **#87's design** (2026-11-20): due dates on anything that can be ticked off, set on the forms and the capture's Create form, with the bill label and a per-item Remind me (On the day, 1 day, 3 days or 1 week before, or No reminder) that gets through a set-aside area or a waiting step. Not on the Summary. Logged as `due_changed`. Recorded in [E-019](../PRD_Edits.md#e-019-one-off-items-can-have-a-due-date-with-a-reminder), frames 19 to 27, tests AT-128 to AT-133.
 
 Also:
 
 - **No new packages or permissions are expected.** Send feedback uses a few lines of our own Kotlin through a platform channel (tech plan, Send feedback). The licences page is Flutter's own `showLicensePage`. The Auto Backup rules are manifest attributes and two XML files, with no permission. Every manifest change is listed for the owner in PR 2's checklist.
 - **PR 1 needs no database change.** The `settings` table has had `day_start_minutes`, `presets`, `reminder_minutes`, `default_lead_days` and `onboarding_done` since version 1. Step 5 confirms this before any code.
-- **PR 2 is database version 3.** It adds the `event_daily_summaries` table (E-004) and only adds: no existing table or row changes. It comes with migration tests from version 1 and 2, and the usual pre-migration copy.
+- **PR 2 is database version 3.** It adds the `event_daily_summaries` table (E-004) and a nullable column on `nodes` for #87's Remind me choice, and only adds: no existing table or row changes. It comes with migration tests from version 1 and 2, and the usual pre-migration copy.
 - **Compaction deletes raw events older than 12 months** after adding their counts to `event_daily_summaries`, in one transaction. That's the approved retention rule (PRD 9, E-004), not a migration, so CLAUDE.md's rule that migrations never destroy data isn't affected. With the app installed since October 2026, nothing is old enough to be compacted on a real phone until late 2027; the tests use the fake clock.
 - Three code PRs, matching #54, #55 and #56, so the rule of at most 3 PRs per milestone still holds. #85, #86 and #87 ride along with the PR whose work is closest: #85 with the screens in PR 1, #86 with the activity-log work in PR 2, and #87 in PR 3 before the accessibility pass, so that pass covers its screens too. Each PR leaves `dev` working.
-- **#87 probably needs no database change.** The `nodes` table already has a `due_on` column, used today only by repeating items. The design step confirms this.
+- **#87 needs one new column.** The due date itself uses the existing `nodes.due_on`, used today only by repeating items. The Remind me choice needs a nullable column, added in PR 2's version 3 migration so the database changes only once in M7.
 - **#80** (a new reminder replacing one in the shade) is a bug outside the milestone, so it gets its own fix PR whenever the owner wants it.
 
 ## Estimate
@@ -59,10 +60,10 @@ Measured in working sessions like the M6 ones (M6 took a spike, 2 code PRs and a
 
 **#87 design** (`docs/m7-due-dates`, before PR 3)
 
-4a. [ ] The owner's answers to the #87 questions, one at a time: which items, where it's set, how it looks, reminders, the Summary, logging
-4b. [ ] Frames for one-off due dates on the M7 canvas, approved by the owner; PNGs and choices in the design README
-4c. [ ] E-019 in `PRD_Edits.md` (PRD 4, 7, 9, 14) and its acceptance tests on the sheet, with the matrix regenerated
-4d. [ ] This plan's PR 3 steps updated to match; PR into `dev`
+4a. [x] The owner's answers to the #87 questions, one at a time: which items, where it's set, how it looks, reminders, the Summary, logging
+4b. [x] Frames for one-off due dates on the M7 canvas, approved by the owner; PNGs and choices in the design README
+4c. [x] E-019 in `PRD_Edits.md` (PRD 4, 7, 9, 10, 14) and its acceptance tests on the sheet, with the matrix regenerated
+4d. [x] This plan's PR 3 steps updated to match; PR into `dev`
 
 **PR 1: onboarding and full Settings** (`feat/m7-onboarding-settings`, #54)
 
@@ -80,7 +81,7 @@ Measured in working sessions like the M6 ones (M6 took a spike, 2 code PRs and a
 
 13. [ ] Auto Backup rules: `android:allowBackup="true"`, `android:fullBackupContent` (Android 11 and lower) and `android:dataExtractionRules` (12 and higher). Include `sahai.sqlite` and `sahai.sqlite-wal` and the preferences; exclude `sahai.sqlite-shm`, `pre-migration/`, caches and temp files (tech plan, Auto Backup). Checked against Android's documentation; owner approval for the manifest change
 14. [ ] Checkpoint the WAL when the app goes to the background (risk R5)
-15. [ ] Database version 3: add `event_daily_summaries` (E-004). Migration tests from versions 1 and 2; the pre-migration copy still runs
+15. [ ] Database version 3: add `event_daily_summaries` (E-004) and the nullable Remind me column on `nodes` (E-019; empty means On the day). Migration tests from versions 1 and 2; the pre-migration copy still runs
 16. [ ] Compaction: events older than 12 months, by the logical day in local time, become daily counts per domain, group and event type, and the raw rows go, in one transaction. Runs at app start, at most once a day. Never logs task content
 17. [ ] Backup section in Settings (frame 14): the size of the database and its WAL against 20 MB, and the warning above it
 17a. [ ] #86 (E-018): Reopen last completion and Reopen last skip on a repeating item, in the Explorer menu and as a shortcut on the Set-Aside page. It brings back the old due date, logs `reopened` naming the event it cancels, and is offered only for the latest completion or skip. In one transaction. Uses the existing design, with no new frames: the menu line and the Set-Aside shortcut follow the M3 and M4 patterns
@@ -89,7 +90,11 @@ Measured in working sessions like the M6 ones (M6 took a spike, 2 code PRs and a
 
 **PR 3: one-off due dates, accessibility pass and 10,000-item speed check** (`feat/m7-due-dates-a11y-speed`, #56)
 
-19a. [ ] #87 (E-019): due dates on one-off items, as designed in steps 4a to 4d, with its tests named by AT ID. This step is filled in when the design is approved
+19a. [ ] #87 (E-019) actions, each in one transaction with the injected clock: set, change or clear a due date and Remind me on projects, tasks, subtasks and one-off stream items, logging `due_changed` with the old and new dates and the reminder choice, never the text. Completing removes the label and Undo or Reopen brings it back. A stream item with Repeat on keeps using Next due; Stop repeating still clears the due date (AT-080)
+19b. [ ] Forms (frames 19 to 22 and 27): the Due date row on the create and edit forms and the capture's Create form, the picker with past days greyed, ✕ to clear, and the Remind me sheet with past choices greyed
+19c. [ ] Labels (frames 23 and 24): the bill label, with the year from #85, and a calendar mark on Summary cards and in the Explorer. The Summary's contents and order don't change
+19d. [ ] Reminders (frames 25 and 26): the notification planner schedules the chosen reminder and the follow-up on the day at the Reminder time, through set-aside ancestors and waiting steps; grouped when due together; cancelled when done; restored after a restart. Tapping opens the item, or the sheet that says why it's hidden (no Mark done when locked, E-007)
+19e. [ ] Tests named by AT ID with the fake clock: AT-128 to AT-133, and the migration test for the new column from PR 2. Device checks listed in the PR (AT-129, AT-130)
 20. [ ] TalkBack pass over every screen with fixes: every action announced, swipe and drag alternatives from M5 (AT-116)
 21. [ ] Largest font on every screen with fixes (AT-117)
 22. [ ] AT-118: set-aside times survive a time-zone change (fake clock and zones); AT-119: a failure in the middle of a completion leaves neither the change nor its event (rollback test)
@@ -98,13 +103,14 @@ Measured in working sessions like the M6 ones (M6 took a spike, 2 code PRs and a
 
 **Close-out and release**
 
-25. [ ] Owner: release build on the phone; the Founder rows AT-105 to AT-110, AT-115 to AT-118, AT-120, AT-125 to AT-127 and #87's rows, including a full airplane-mode pass (AT-115) and TalkBack (AT-116). AT-111 as agreed in the Notes. The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner, and never from an older version than the one installed
+25. [ ] Owner: release build on the phone; the Founder rows AT-105 to AT-110, AT-115 to AT-118, AT-120, AT-125 to AT-133, including a full airplane-mode pass (AT-115) and TalkBack (AT-116). AT-111 as agreed in the Notes. The on-phone suite runs only as `flutter test integration_test --no-uninstall`, after warning the owner, and never from an older version than the one installed
 26. [ ] Close-out docs PR (#58), once the check passes: results on the test sheet, this plan, `CLAUDE.md` status
 27. [ ] Owner: release PR `dev` → `main` (#57, merge commit), tag `v0.7.0`. Tick #57 and #58, and close #57 and the milestone by hand after tagging
 
 ## Changes to the plan
 
 - 2026-11-20 (approved by FINUSAM): the owner gave the feedback address and decided that #85, #86 and #87 are in M7. #85 joins PR 1, #86 joins PR 2 (E-018, AT-125 to AT-127), and #87 joins PR 3 after a design step of its own (4a to 4d). Still three code PRs. The estimate grows by about 3 sessions.
+- 2026-11-20 (approved by FINUSAM): #87's design was approved: frames 19 to 27, E-019 and AT-128 to AT-133. PR 3's #87 work is filled in as steps 19a to 19e, and the Remind me column joins PR 2's version 3 migration (step 15), so the database changes once in M7.
 
 ## Notes for whoever picks this up
 

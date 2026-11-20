@@ -17,6 +17,11 @@ followed by v1.0.0 for the public release.
 - PRD edit E-018 (a repeating item's last completion or skip can be reopened) and acceptance
   tests AT-125 to AT-127 for it. Due dates on one-off items (#87) are in M7 too, after a design
   step of their own.
+- Approved wireframes for due dates on one-off items (#87) in `docs/design/m7-polish/`
+  (frames 19 to 27): the Due date row, the date picker, the Remind me choices, due labels on
+  the Summary and in the Explorer, the reminders and the hidden-item sheet, and the capture's
+  Create form; the choices made with them; PRD edit E-019 and acceptance tests AT-128 to
+  AT-133. Plan 0009 now lists PR 3's #87 steps.
 
 ### Changed
 - `tool/generate_test_matrix.py` lists tests added later under their own milestone, counts the

@@ -396,3 +396,34 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - Using `reopened` keeps the event list short and matches its meaning: a deliberate reopen, not an Undo tap (E-001, E-011).
 
 **Affects:** new tests AT-125 (reopen the last completion), AT-126 (reopen the last skip) and AT-127 (only the latest can be reopened). AT-070 and AT-077 are unchanged.
+
+---
+
+## E-019: One-off items can have a due date, with a reminder
+
+- **PRD section:** 4 (Information Architecture), 7 (Actions & Lifecycle, Notifications), 9 (Activity Log), 10 (Data Model), 14 (Future scope)
+- **Type:** Change of scope (moves an item from future scope into v1)
+- **Decided by:** FINUSAM, 2026-11-20 (in v1, built in M7, in PRD question #87; the design and its wireframes, M7 frames 19 to 27)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- Anything that can be ticked off can have one optional due date: projects, tasks, subtasks and one-off stream items. Domains and streams never have one. PRD 4's "It is the only item with a due date in v1" no longer holds.
+- The due date is set on the create and edit forms and on the capture's Create form, and cleared with ✕. Days before today can't be picked.
+- The card label is the same as a recurring item's (PRD 7): "Due Nov 20", "Due today", "3 days overdue", with the year when the date isn't in the current year. One-off due dates have a calendar mark, and bills keep their repeat mark. Overdue is a label, not a status.
+- A due date doesn't change what the Summary shows or its order. It doesn't bring an item onto the Summary or wake it.
+- **Remind me:** each item with a due date picks one of On the day (the default), 1 day before, 3 days before, 1 week before, or No reminder. Choices already in the past can't be picked. Reminders arrive at the reminder time setting (default 9:00 AM), like a bill's.
+- An early reminder is followed by one on the due day if the item still isn't done. Completing the item removes its label and cancels its reminders. Undo or Reopen brings both back.
+- The reminder still arrives when the item is hidden, because an ancestor is set aside or because it is waiting behind an earlier step, as a bill's due-date reminder does (PRD 7). It is the only thing that breaks through: the item stays off the Summary.
+- Tapping a reminder opens the item. If it isn't on the Summary, a sheet says why, with Mark done, Change due date and Open in tree. A locked item's sheet has no Mark done (E-007). Reminders due at the same time share one notification, such as "3 items are due". Like other reminders they follow the Notifications setting, are restored after a restart, and may arrive late (E-012).
+- A stream item with Repeat on has no separate due date: its schedule's Next due is its due date, as before. Stop repeating still clears the due date (PRD 7, AT-080).
+- PRD 9 gains a `due_changed` event, logged when a due date is set, changed or cleared, or Remind me changes. Its payload holds the old and new due dates and the reminder choice, never the item's text.
+- PRD 10: `nodes.due_on` holds the date. A new nullable column holds the Remind me choice; it is added by a versioned migration that keeps all existing data.
+- PRD 14: "Due dates on one-off items and project tasks" moves out of future scope.
+
+**Reason**
+
+- Setting an item aside isn't a safe stand-in for a deadline. An item that wakes while its domain is still set aside stays hidden and doesn't notify (PRD 7), so a one-off deadline inside a paused domain could pass silently. Only bills got through (AT-079). The owner raised this while testing M4 (#87).
+- Letting each item choose when it is reminded covers deadlines that need notice days ahead, such as renewing a passport, while the on-the-day follow-up keeps an early reminder from being the only one.
+
+**Affects:** new tests AT-128 (set and clear a due date), AT-129 (the reminder gets through a set-aside area), AT-130 (an early reminder and the follow-up on the day), AT-131 (due labels, and completing removes them), AT-132 (a due date from a capture) and AT-133 (the `due_changed` event). AT-079 and AT-080 are unchanged.
