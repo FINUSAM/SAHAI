@@ -9,6 +9,12 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+### Added
+- Approved M7 Polish and safety wireframes in `docs/design/m7-polish/` (18 frames): onboarding
+  with a practice step that saves nothing, the full Settings screen, editable preset times,
+  Day starts at, the 20 MB backup warning, About, Replay onboarding, Send feedback and the
+  largest font; the choices made with them; the M7 plan in `docs/plans/0009-m7-polish.md`.
+
 ## [0.6.0] - 2026-11-20 (M6 Capture)
 
 ### Added
