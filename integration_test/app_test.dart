@@ -7,7 +7,8 @@
 // AT-097 (an edited capture persists) and the capture dialog that the
 // widget and the share sheet open (AT-099, AT-100; opening it from outside
 // the app is checked by hand), and the M7 Settings and onboarding flows,
-// including the practice step (AT-105 to AT-110, AT-120).
+// including the practice step (AT-105 to AT-110, AT-120), and the year on
+// due dates outside the current year (#85).
 //
 // Each test uses its own throwaway database (in memory, or a file in the
 // app's temporary folder), never the app's real `sahai.sqlite`.
@@ -30,6 +31,7 @@ import 'package:integration_test/integration_test.dart';
 import '../test/app/home_shell_test.dart' as home_shell;
 import '../test/features/capture_dialog_test.dart' as capture_dialog;
 import '../test/features/capture_test.dart' as capture;
+import '../test/features/due_year_test.dart' as due_year;
 import '../test/features/explorer/explorer_m2_test.dart' as explorer_m2;
 import '../test/features/explorer/explorer_screen_test.dart' as explorer;
 import '../test/features/groups_test.dart' as groups;
@@ -54,4 +56,5 @@ void main() {
   capture_dialog.main();
   settings.main();
   onboarding.main();
+  due_year.main();
 }

@@ -327,7 +327,7 @@ class _ScheduleFieldsState extends State<ScheduleFields> {
               labelText: Strings.nextDue,
               border: OutlineInputBorder(),
             ),
-            child: Text(shortDate(draft.dueOn)),
+            child: Text(shortDueDate(draft.dueOn, widget.today)),
           ),
         ),
         gap,
@@ -376,7 +376,7 @@ class _ScheduleFieldsState extends State<ScheduleFields> {
   String _appears(DateTime dueOn, int lead) {
     final show = DateTime(dueOn.year, dueOn.month, dueOn.day - lead);
     return show.isAfter(widget.today)
-        ? Strings.appears(shortDate(show))
+        ? Strings.appears(shortDueDate(show, widget.today))
         : Strings.appearsToday;
   }
 }

@@ -77,7 +77,10 @@ class _CardSheet extends ConsumerWidget {
     return Text(
       [
         dueLabel(dueOn, now, dayStartMinutes: start),
-        if (days < 0) Strings.dueOn(monthDay(dueOn)).toLowerCase(),
+        if (days < 0)
+          Strings.dueOn(
+            dueDate(dueOn, logicalDate(now, dayStartMinutes: start)),
+          ).toLowerCase(),
       ].join(Strings.separator),
       style: theme.textTheme.bodyMedium?.copyWith(
         fontWeight: days <= 0 ? FontWeight.bold : null,
@@ -183,7 +186,12 @@ class _CardSheet extends ConsumerWidget {
               leading: const Icon(Icons.skip_next_outlined),
               title: const Text(Strings.skipOccurrence),
               subtitle: Text(
-                Strings.nextDueOn(monthDay(schedule.nextDue(node.dueOn!))),
+                Strings.nextDueOn(
+                  dueDate(
+                    schedule.nextDue(node.dueOn!),
+                    logicalDate(now, dayStartMinutes: settings.dayStartMinutes),
+                  ),
+                ),
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 24),
               onTap: () => pick(CardChoice.skip),

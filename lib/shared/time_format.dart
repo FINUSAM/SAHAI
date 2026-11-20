@@ -11,6 +11,8 @@ final _time = DateFormat('h:mm a');
 final _weekday = DateFormat('EEE');
 final _date = DateFormat('EEE, MMM d');
 final _monthDay = DateFormat('MMM d');
+final _monthDayYear = DateFormat('MMM d, y');
+final _dateYear = DateFormat('EEE, MMM d, y');
 
 /// Which group of the Set-Aside page a wake time falls in (frame 8), by
 /// calendar day.
@@ -89,6 +91,16 @@ String capturedTime(DateTime at) =>
 /// "Nov 5".
 String monthDay(DateTime date) => _monthDay.format(date);
 
+/// A due date: "Nov 5", or "Mar 15, 2028" when it isn't in [today]'s
+/// year, so a date next year can't be mistaken for this year's (#85).
+String dueDate(DateTime date, DateTime today) => date.year == today.year
+    ? _monthDay.format(date)
+    : _monthDayYear.format(date);
+
+/// "Fri, Nov 20", or "Wed, Mar 15, 2028" outside [today]'s year (#85).
+String shortDueDate(DateTime date, DateTime today) =>
+    date.year == today.year ? _date.format(date) : _dateYear.format(date);
+
 /// A recurring card's label (PRD 7): "Due Nov 5", "Due today" or "3 days
 /// overdue". "Due today" lasts until the next day start (AT-062, AT-063).
 /// With [inSentence] it starts lower case: "Monthly · due Dec 5" (frame 8).
@@ -103,7 +115,7 @@ String dueLabel(
   final label = days == 0
       ? Strings.dueToday
       : days > 0
-      ? Strings.dueOn(monthDay(dueOn))
+      ? Strings.dueOn(dueDate(dueOn, today))
       : Strings.daysOverdue(-days);
   return inSentence ? label.replaceFirst('D', 'd') : label;
 }

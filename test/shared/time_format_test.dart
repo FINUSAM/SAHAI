@@ -54,4 +54,32 @@ void main() {
     expect(clockTime(now), '3:00 PM');
     expect(shortDate(now), 'Tue, Nov 3');
   });
+
+  group('#85 the year on due dates outside the current year', () {
+    final today = DateTime(2026, 12, 28);
+
+    test('a due date this year has no year, and another year has one', () {
+      expect(dueDate(DateTime(2026, 12, 31), today), 'Dec 31');
+      expect(dueDate(DateTime(2027, 1, 1), today), 'Jan 1, 2027');
+      expect(dueDate(DateTime(2028, 3, 15), today), 'Mar 15, 2028');
+      expect(dueDate(DateTime(2025, 12, 5), today), 'Dec 5, 2025');
+    });
+
+    test('the short date with the weekday does the same', () {
+      expect(shortDueDate(DateTime(2026, 12, 30), today), 'Wed, Dec 30');
+      expect(shortDueDate(DateTime(2028, 3, 15), today), 'Wed, Mar 15, 2028');
+    });
+
+    test('the card label shows the year only when needed', () {
+      final now = DateTime(2026, 12, 28, 15);
+      expect(dueLabel(DateTime(2026, 12, 31), now), 'Due Dec 31');
+      expect(dueLabel(DateTime(2027, 3, 15), now), 'Due Mar 15, 2027');
+      expect(
+        dueLabel(DateTime(2027, 3, 15), now, inSentence: true),
+        'due Mar 15, 2027',
+      );
+      // Overdue and today are counts, not dates, so they have no year.
+      expect(dueLabel(DateTime(2026, 12, 28), now), 'Due today');
+    });
+  });
 }

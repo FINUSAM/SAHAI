@@ -37,7 +37,7 @@ Future<void> completeWithUndo(
     context,
     next == null
         ? Strings.doneSnack(title)
-        : Strings.doneNextDue(monthDay(next)),
+        : Strings.doneNextDue(dueDate(next, actions.now.toLocal())),
     () => actions.undoComplete(token),
   );
 }
@@ -53,7 +53,9 @@ Future<void> skipWithUndo(
   if (token == null || !context.mounted) return;
   _showUndo(
     context,
-    Strings.skippedNextDue(monthDay(node.schedule!.nextDue(node.dueOn!))),
+    Strings.skippedNextDue(
+      dueDate(node.schedule!.nextDue(node.dueOn!), actions.now.toLocal()),
+    ),
     () => actions.undoSkip(token),
   );
 }

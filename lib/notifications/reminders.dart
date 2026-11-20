@@ -109,7 +109,7 @@ ReminderMessage _dueMessage(
       at: n.at,
       title: dueToday.contains(card.id)
           ? Strings.isDueToday(title)
-          : Strings.isDueOn(title, monthDay(card.node.dueOn!)),
+          : Strings.isDueOn(title, dueDate(card.node.dueOn!, n.at.toLocal())),
       body: _pathOf(tree, card),
       lines: const [],
       nodeId: card.id,
@@ -124,7 +124,7 @@ ReminderMessage _dueMessage(
               displayTitle(tree, c.node),
               dueToday.contains(c.id)
                   ? Strings.dueToday
-                  : Strings.dueOn(monthDay(c.node.dueOn!)),
+                  : Strings.dueOn(dueDate(c.node.dueOn!, n.at.toLocal())),
             ),
   ];
   return ReminderMessage(

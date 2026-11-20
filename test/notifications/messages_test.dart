@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sahai/engine/node_type.dart';
 import 'package:sahai/engine/settings.dart';
 import 'package:sahai/notifications/planner.dart';
 import 'package:sahai/notifications/reminders.dart';
@@ -41,5 +42,29 @@ void main() {
       'A': eightAm.add(const Duration(hours: 1)),
     });
     expect(ms.map((m) => m.id), [0, 1]);
+  });
+
+  test('#85 a reminder for a date next year names the year', () {
+    // HDFC due Jan 1, 2027, showing 3 days early: its reminder arrives on
+    // Dec 29, 2026.
+    final tree =
+        (TreeBuilder()
+              ..add(NodeType.domain, 'personal')
+              ..add(NodeType.stream, 'finance', parent: 'personal')
+              ..add(
+                NodeType.streamItem,
+                'HDFC',
+                parent: 'finance',
+                dueOn: DateTime(2027, 1, 1),
+                leadDays: 3,
+              ))
+            .build();
+    final plan = planNotifications(
+      tree,
+      now: DateTime(2026, 12, 20, 10),
+      settings: const AppSettings(),
+    );
+    final titles = messagesFor(tree, plan).map((m) => m.title).toList();
+    expect(titles, contains('HDFC is due Jan 1, 2027'));
   });
 }
