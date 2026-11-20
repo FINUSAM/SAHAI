@@ -41,6 +41,11 @@ class Nodes extends Table {
   /// time for the current occurrence (E-005).
   BoolColumn get snoozeOverridesShow =>
       boolean().withDefault(const Constant(false))();
+
+  /// When a one-off item's due-date reminder arrives (schema v3, E-019).
+  /// Null means On the day, the default; the other choices are set in M7
+  /// PR 3. Unused by repeating items, which keep their own reminders.
+  TextColumn get dueReminder => text().nullable()();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
@@ -111,6 +116,28 @@ class Events extends Table {
 
   @override
   Set<Column> get primaryKey => {eventId};
+}
+
+/// Daily counts of activity log events older than 12 months (schema v3,
+/// PRD 9 retention, E-004). Compaction adds to these and removes the raw
+/// events in the same transaction. Holds no task content.
+@DataClassName('EventDailySummaryRow')
+@TableIndex(name: 'event_daily_summaries_day', columns: {#day})
+class EventDailySummaries extends Table {
+  TextColumn get id => text()();
+
+  /// The logical day in local time, as 'YYYY-MM-DD' (PRD 7, Day starts at).
+  TextColumn get day => text()();
+  TextColumn get domainId => text().nullable()();
+  TextColumn get groupId => text().nullable()();
+  TextColumn get eventType => text()();
+  IntColumn get count => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 @DataClassName('CaptureRow')

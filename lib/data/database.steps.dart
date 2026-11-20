@@ -686,8 +686,295 @@ i1.GeneratedColumn<int> _column_41(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL',
     );
+
+final class Schema3 extends i0.VersionedSchema {
+  Schema3({required super.database}) : super(version: 3);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    nodes,
+    contextGroups,
+    summarySlots,
+    events,
+    captures,
+    settings,
+    summaryVisible,
+    eventDailySummaries,
+    nodesParentStatusDeleted,
+    nodesSnoozeUntil,
+    eventsOccurredAt,
+    eventDailySummariesDay,
+  ];
+  late final Shape7 nodes = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'nodes',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_42,
+        _column_17,
+        _column_18,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 contextGroups = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'context_groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_19,
+        _column_20,
+        _column_6,
+        _column_14,
+        _column_17,
+        _column_18,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 summarySlots = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'summary_slots',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(owner_id)'],
+      columns: [
+        _column_21,
+        _column_12,
+        _column_22,
+        _column_14,
+        _column_17,
+        _column_18,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 events = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'events',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(event_id)'],
+      columns: [
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_14,
+        _column_17,
+        _column_18,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 captures = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'captures',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_0, _column_31, _column_14, _column_17, _column_18],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape5 settings = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'settings',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_14,
+        _column_17,
+        _column_18,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 summaryVisible = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'summary_visible',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(node_id)'],
+      columns: [_column_40, _column_41, _column_14, _column_17, _column_18],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 eventDailySummaries = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'event_daily_summaries',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_43,
+        _column_27,
+        _column_12,
+        _column_24,
+        _column_44,
+        _column_14,
+        _column_17,
+        _column_18,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index nodesParentStatusDeleted = i1.Index(
+    'nodes_parent_status_deleted',
+    'CREATE INDEX nodes_parent_status_deleted ON nodes (parent_id, status, is_deleted)',
+  );
+  final i1.Index nodesSnoozeUntil = i1.Index(
+    'nodes_snooze_until',
+    'CREATE INDEX nodes_snooze_until ON nodes (snooze_until)',
+  );
+  final i1.Index eventsOccurredAt = i1.Index(
+    'events_occurred_at',
+    'CREATE INDEX events_occurred_at ON events (occurred_at)',
+  );
+  final i1.Index eventDailySummariesDay = i1.Index(
+    'event_daily_summaries_day',
+    'CREATE INDEX event_daily_summaries_day ON event_daily_summaries (day)',
+  );
+}
+
+class Shape7 extends i0.VersionedTable {
+  Shape7({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get parentId =>
+      columnsByName['parent_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get type =>
+      columnsByName['type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get title =>
+      columnsByName['title']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get notes =>
+      columnsByName['notes']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get status =>
+      columnsByName['status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get sortOrder =>
+      columnsByName['sort_order']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get snoozeUntil =>
+      columnsByName['snooze_until']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get remindOnWake =>
+      columnsByName['remind_on_wake']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get dueOn =>
+      columnsByName['due_on']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get recurrence =>
+      columnsByName['recurrence']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get leadDays =>
+      columnsByName['lead_days']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get groupId =>
+      columnsByName['group_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get completedAt =>
+      columnsByName['completed_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get isDeleted =>
+      columnsByName['is_deleted']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get deletedByEvent =>
+      columnsByName['deleted_by_event']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get snoozeOverridesShow =>
+      columnsByName['snooze_overrides_show']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get dueReminder =>
+      columnsByName['due_reminder']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_42(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'due_reminder',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+
+class Shape8 extends i0.VersionedTable {
+  Shape8({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get day =>
+      columnsByName['day']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get domainId =>
+      columnsByName['domain_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get groupId =>
+      columnsByName['group_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get eventType =>
+      columnsByName['event_type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get count =>
+      columnsByName['count']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get isDeleted =>
+      columnsByName['is_deleted']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_43(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'day',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_44(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'count',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -696,6 +983,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from1To2(migrator, schema);
         return 2;
+      case 2:
+        final schema = Schema3(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from2To3(migrator, schema);
+        return 3;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -704,6 +996,7 @@ i0.MigrationStepWithVersion migrationSteps({
 
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from1To2: from1To2),
+  step: migrationSteps(from1To2: from1To2, from2To3: from2To3),
 );

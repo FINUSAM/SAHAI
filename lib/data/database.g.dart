@@ -195,6 +195,17 @@ class $NodesTable extends Nodes with TableInfo<$NodesTable, NodeRow> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _dueReminderMeta = const VerificationMeta(
+    'dueReminder',
+  );
+  @override
+  late final GeneratedColumn<String> dueReminder = GeneratedColumn<String>(
+    'due_reminder',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -236,6 +247,7 @@ class $NodesTable extends Nodes with TableInfo<$NodesTable, NodeRow> {
     isDeleted,
     deletedByEvent,
     snoozeOverridesShow,
+    dueReminder,
     createdAt,
     updatedAt,
   ];
@@ -373,6 +385,15 @@ class $NodesTable extends Nodes with TableInfo<$NodesTable, NodeRow> {
         ),
       );
     }
+    if (data.containsKey('due_reminder')) {
+      context.handle(
+        _dueReminderMeta,
+        dueReminder.isAcceptableOrUnknown(
+          data['due_reminder']!,
+          _dueReminderMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -466,6 +487,10 @@ class $NodesTable extends Nodes with TableInfo<$NodesTable, NodeRow> {
         DriftSqlType.bool,
         data['${effectivePrefix}snooze_overrides_show'],
       )!,
+      dueReminder: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}due_reminder'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -511,6 +536,11 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
   /// When true, `snooze_until` replaces a recurring item's computed show
   /// time for the current occurrence (E-005).
   final bool snoozeOverridesShow;
+
+  /// When a one-off item's due-date reminder arrives (schema v3, E-019).
+  /// Null means On the day, the default; the other choices are set in M7
+  /// PR 3. Unused by repeating items, which keep their own reminders.
+  final String? dueReminder;
   final int createdAt;
   final int updatedAt;
   const NodeRow({
@@ -531,6 +561,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
     required this.isDeleted,
     this.deletedByEvent,
     required this.snoozeOverridesShow,
+    this.dueReminder,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -572,6 +603,9 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
       map['deleted_by_event'] = Variable<String>(deletedByEvent);
     }
     map['snooze_overrides_show'] = Variable<bool>(snoozeOverridesShow);
+    if (!nullToAbsent || dueReminder != null) {
+      map['due_reminder'] = Variable<String>(dueReminder);
+    }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
@@ -614,6 +648,9 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
           ? const Value.absent()
           : Value(deletedByEvent),
       snoozeOverridesShow: Value(snoozeOverridesShow),
+      dueReminder: dueReminder == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueReminder),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -644,6 +681,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
       snoozeOverridesShow: serializer.fromJson<bool>(
         json['snoozeOverridesShow'],
       ),
+      dueReminder: serializer.fromJson<String?>(json['dueReminder']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
@@ -669,6 +707,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'deletedByEvent': serializer.toJson<String?>(deletedByEvent),
       'snoozeOverridesShow': serializer.toJson<bool>(snoozeOverridesShow),
+      'dueReminder': serializer.toJson<String?>(dueReminder),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
@@ -692,6 +731,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
     bool? isDeleted,
     Value<String?> deletedByEvent = const Value.absent(),
     bool? snoozeOverridesShow,
+    Value<String?> dueReminder = const Value.absent(),
     int? createdAt,
     int? updatedAt,
   }) => NodeRow(
@@ -714,6 +754,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
         ? deletedByEvent.value
         : this.deletedByEvent,
     snoozeOverridesShow: snoozeOverridesShow ?? this.snoozeOverridesShow,
+    dueReminder: dueReminder.present ? dueReminder.value : this.dueReminder,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -748,6 +789,9 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
       snoozeOverridesShow: data.snoozeOverridesShow.present
           ? data.snoozeOverridesShow.value
           : this.snoozeOverridesShow,
+      dueReminder: data.dueReminder.present
+          ? data.dueReminder.value
+          : this.dueReminder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -773,6 +817,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('deletedByEvent: $deletedByEvent, ')
           ..write('snoozeOverridesShow: $snoozeOverridesShow, ')
+          ..write('dueReminder: $dueReminder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -798,6 +843,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
     isDeleted,
     deletedByEvent,
     snoozeOverridesShow,
+    dueReminder,
     createdAt,
     updatedAt,
   );
@@ -822,6 +868,7 @@ class NodeRow extends DataClass implements Insertable<NodeRow> {
           other.isDeleted == this.isDeleted &&
           other.deletedByEvent == this.deletedByEvent &&
           other.snoozeOverridesShow == this.snoozeOverridesShow &&
+          other.dueReminder == this.dueReminder &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -844,6 +891,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
   final Value<bool> isDeleted;
   final Value<String?> deletedByEvent;
   final Value<bool> snoozeOverridesShow;
+  final Value<String?> dueReminder;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<int> rowid;
@@ -865,6 +913,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
     this.isDeleted = const Value.absent(),
     this.deletedByEvent = const Value.absent(),
     this.snoozeOverridesShow = const Value.absent(),
+    this.dueReminder = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -887,6 +936,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
     this.isDeleted = const Value.absent(),
     this.deletedByEvent = const Value.absent(),
     this.snoozeOverridesShow = const Value.absent(),
+    this.dueReminder = const Value.absent(),
     required int createdAt,
     required int updatedAt,
     this.rowid = const Value.absent(),
@@ -914,6 +964,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
     Expression<bool>? isDeleted,
     Expression<String>? deletedByEvent,
     Expression<bool>? snoozeOverridesShow,
+    Expression<String>? dueReminder,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? rowid,
@@ -937,6 +988,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
       if (deletedByEvent != null) 'deleted_by_event': deletedByEvent,
       if (snoozeOverridesShow != null)
         'snooze_overrides_show': snoozeOverridesShow,
+      if (dueReminder != null) 'due_reminder': dueReminder,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -961,6 +1013,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
     Value<bool>? isDeleted,
     Value<String?>? deletedByEvent,
     Value<bool>? snoozeOverridesShow,
+    Value<String?>? dueReminder,
     Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<int>? rowid,
@@ -983,6 +1036,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
       isDeleted: isDeleted ?? this.isDeleted,
       deletedByEvent: deletedByEvent ?? this.deletedByEvent,
       snoozeOverridesShow: snoozeOverridesShow ?? this.snoozeOverridesShow,
+      dueReminder: dueReminder ?? this.dueReminder,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1043,6 +1097,9 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
     if (snoozeOverridesShow.present) {
       map['snooze_overrides_show'] = Variable<bool>(snoozeOverridesShow.value);
     }
+    if (dueReminder.present) {
+      map['due_reminder'] = Variable<String>(dueReminder.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -1075,6 +1132,7 @@ class NodesCompanion extends UpdateCompanion<NodeRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('deletedByEvent: $deletedByEvent, ')
           ..write('snoozeOverridesShow: $snoozeOverridesShow, ')
+          ..write('dueReminder: $dueReminder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -4079,6 +4137,569 @@ class SummaryVisibleCompanion extends UpdateCompanion<SummaryVisibleRow> {
   }
 }
 
+class $EventDailySummariesTable extends EventDailySummaries
+    with TableInfo<$EventDailySummariesTable, EventDailySummaryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EventDailySummariesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<String> day = GeneratedColumn<String>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _domainIdMeta = const VerificationMeta(
+    'domainId',
+  );
+  @override
+  late final GeneratedColumn<String> domainId = GeneratedColumn<String>(
+    'domain_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _eventTypeMeta = const VerificationMeta(
+    'eventType',
+  );
+  @override
+  late final GeneratedColumn<String> eventType = GeneratedColumn<String>(
+    'event_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countMeta = const VerificationMeta('count');
+  @override
+  late final GeneratedColumn<int> count = GeneratedColumn<int>(
+    'count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    day,
+    domainId,
+    groupId,
+    eventType,
+    count,
+    isDeleted,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'event_daily_summaries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EventDailySummaryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('domain_id')) {
+      context.handle(
+        _domainIdMeta,
+        domainId.isAcceptableOrUnknown(data['domain_id']!, _domainIdMeta),
+      );
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    }
+    if (data.containsKey('event_type')) {
+      context.handle(
+        _eventTypeMeta,
+        eventType.isAcceptableOrUnknown(data['event_type']!, _eventTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_eventTypeMeta);
+    }
+    if (data.containsKey('count')) {
+      context.handle(
+        _countMeta,
+        count.isAcceptableOrUnknown(data['count']!, _countMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_countMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EventDailySummaryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EventDailySummaryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}day'],
+      )!,
+      domainId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}domain_id'],
+      ),
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      ),
+      eventType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}event_type'],
+      )!,
+      count: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}count'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $EventDailySummariesTable createAlias(String alias) {
+    return $EventDailySummariesTable(attachedDatabase, alias);
+  }
+}
+
+class EventDailySummaryRow extends DataClass
+    implements Insertable<EventDailySummaryRow> {
+  final String id;
+
+  /// The logical day in local time, as 'YYYY-MM-DD' (PRD 7, Day starts at).
+  final String day;
+  final String? domainId;
+  final String? groupId;
+  final String eventType;
+  final int count;
+  final bool isDeleted;
+  final int createdAt;
+  final int updatedAt;
+  const EventDailySummaryRow({
+    required this.id,
+    required this.day,
+    this.domainId,
+    this.groupId,
+    required this.eventType,
+    required this.count,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['day'] = Variable<String>(day);
+    if (!nullToAbsent || domainId != null) {
+      map['domain_id'] = Variable<String>(domainId);
+    }
+    if (!nullToAbsent || groupId != null) {
+      map['group_id'] = Variable<String>(groupId);
+    }
+    map['event_type'] = Variable<String>(eventType);
+    map['count'] = Variable<int>(count);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  EventDailySummariesCompanion toCompanion(bool nullToAbsent) {
+    return EventDailySummariesCompanion(
+      id: Value(id),
+      day: Value(day),
+      domainId: domainId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(domainId),
+      groupId: groupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupId),
+      eventType: Value(eventType),
+      count: Value(count),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory EventDailySummaryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EventDailySummaryRow(
+      id: serializer.fromJson<String>(json['id']),
+      day: serializer.fromJson<String>(json['day']),
+      domainId: serializer.fromJson<String?>(json['domainId']),
+      groupId: serializer.fromJson<String?>(json['groupId']),
+      eventType: serializer.fromJson<String>(json['eventType']),
+      count: serializer.fromJson<int>(json['count']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'day': serializer.toJson<String>(day),
+      'domainId': serializer.toJson<String?>(domainId),
+      'groupId': serializer.toJson<String?>(groupId),
+      'eventType': serializer.toJson<String>(eventType),
+      'count': serializer.toJson<int>(count),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  EventDailySummaryRow copyWith({
+    String? id,
+    String? day,
+    Value<String?> domainId = const Value.absent(),
+    Value<String?> groupId = const Value.absent(),
+    String? eventType,
+    int? count,
+    bool? isDeleted,
+    int? createdAt,
+    int? updatedAt,
+  }) => EventDailySummaryRow(
+    id: id ?? this.id,
+    day: day ?? this.day,
+    domainId: domainId.present ? domainId.value : this.domainId,
+    groupId: groupId.present ? groupId.value : this.groupId,
+    eventType: eventType ?? this.eventType,
+    count: count ?? this.count,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  EventDailySummaryRow copyWithCompanion(EventDailySummariesCompanion data) {
+    return EventDailySummaryRow(
+      id: data.id.present ? data.id.value : this.id,
+      day: data.day.present ? data.day.value : this.day,
+      domainId: data.domainId.present ? data.domainId.value : this.domainId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      eventType: data.eventType.present ? data.eventType.value : this.eventType,
+      count: data.count.present ? data.count.value : this.count,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EventDailySummaryRow(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('domainId: $domainId, ')
+          ..write('groupId: $groupId, ')
+          ..write('eventType: $eventType, ')
+          ..write('count: $count, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    day,
+    domainId,
+    groupId,
+    eventType,
+    count,
+    isDeleted,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EventDailySummaryRow &&
+          other.id == this.id &&
+          other.day == this.day &&
+          other.domainId == this.domainId &&
+          other.groupId == this.groupId &&
+          other.eventType == this.eventType &&
+          other.count == this.count &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class EventDailySummariesCompanion
+    extends UpdateCompanion<EventDailySummaryRow> {
+  final Value<String> id;
+  final Value<String> day;
+  final Value<String?> domainId;
+  final Value<String?> groupId;
+  final Value<String> eventType;
+  final Value<int> count;
+  final Value<bool> isDeleted;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const EventDailySummariesCompanion({
+    this.id = const Value.absent(),
+    this.day = const Value.absent(),
+    this.domainId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.eventType = const Value.absent(),
+    this.count = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EventDailySummariesCompanion.insert({
+    required String id,
+    required String day,
+    this.domainId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    required String eventType,
+    required int count,
+    this.isDeleted = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       day = Value(day),
+       eventType = Value(eventType),
+       count = Value(count),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<EventDailySummaryRow> custom({
+    Expression<String>? id,
+    Expression<String>? day,
+    Expression<String>? domainId,
+    Expression<String>? groupId,
+    Expression<String>? eventType,
+    Expression<int>? count,
+    Expression<bool>? isDeleted,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (day != null) 'day': day,
+      if (domainId != null) 'domain_id': domainId,
+      if (groupId != null) 'group_id': groupId,
+      if (eventType != null) 'event_type': eventType,
+      if (count != null) 'count': count,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EventDailySummariesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? day,
+    Value<String?>? domainId,
+    Value<String?>? groupId,
+    Value<String>? eventType,
+    Value<int>? count,
+    Value<bool>? isDeleted,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return EventDailySummariesCompanion(
+      id: id ?? this.id,
+      day: day ?? this.day,
+      domainId: domainId ?? this.domainId,
+      groupId: groupId ?? this.groupId,
+      eventType: eventType ?? this.eventType,
+      count: count ?? this.count,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<String>(day.value);
+    }
+    if (domainId.present) {
+      map['domain_id'] = Variable<String>(domainId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (eventType.present) {
+      map['event_type'] = Variable<String>(eventType.value);
+    }
+    if (count.present) {
+      map['count'] = Variable<int>(count.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EventDailySummariesCompanion(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('domainId: $domainId, ')
+          ..write('groupId: $groupId, ')
+          ..write('eventType: $eventType, ')
+          ..write('count: $count, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SahaiDatabase extends GeneratedDatabase {
   _$SahaiDatabase(QueryExecutor e) : super(e);
   $SahaiDatabaseManager get managers => $SahaiDatabaseManager(this);
@@ -4089,6 +4710,8 @@ abstract class _$SahaiDatabase extends GeneratedDatabase {
   late final $CapturesTable captures = $CapturesTable(this);
   late final $SettingsTableTable settingsTable = $SettingsTableTable(this);
   late final $SummaryVisibleTable summaryVisible = $SummaryVisibleTable(this);
+  late final $EventDailySummariesTable eventDailySummaries =
+      $EventDailySummariesTable(this);
   late final Index nodesParentStatusDeleted = Index(
     'nodes_parent_status_deleted',
     'CREATE INDEX nodes_parent_status_deleted ON nodes (parent_id, status, is_deleted)',
@@ -4100,6 +4723,10 @@ abstract class _$SahaiDatabase extends GeneratedDatabase {
   late final Index eventsOccurredAt = Index(
     'events_occurred_at',
     'CREATE INDEX events_occurred_at ON events (occurred_at)',
+  );
+  late final Index eventDailySummariesDay = Index(
+    'event_daily_summaries_day',
+    'CREATE INDEX event_daily_summaries_day ON event_daily_summaries (day)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -4113,9 +4740,11 @@ abstract class _$SahaiDatabase extends GeneratedDatabase {
     captures,
     settingsTable,
     summaryVisible,
+    eventDailySummaries,
     nodesParentStatusDeleted,
     nodesSnoozeUntil,
     eventsOccurredAt,
+    eventDailySummariesDay,
   ];
 }
 
@@ -4137,6 +4766,7 @@ typedef $$NodesTableCreateCompanionBuilder = NodesCompanion Function({
   Value<bool> isDeleted,
   Value<String?> deletedByEvent,
   Value<bool> snoozeOverridesShow,
+  Value<String?> dueReminder,
   required int createdAt,
   required int updatedAt,
   Value<int> rowid,
@@ -4159,6 +4789,7 @@ typedef $$NodesTableUpdateCompanionBuilder = NodesCompanion Function({
   Value<bool> isDeleted,
   Value<String?> deletedByEvent,
   Value<bool> snoozeOverridesShow,
+  Value<String?> dueReminder,
   Value<int> createdAt,
   Value<int> updatedAt,
   Value<int> rowid,
@@ -4255,6 +4886,11 @@ class $$NodesTableFilterComposer
 
   ColumnFilters<bool> get snoozeOverridesShow => $composableBuilder(
     column: $table.snoozeOverridesShow,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dueReminder => $composableBuilder(
+    column: $table.dueReminder,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4363,6 +4999,11 @@ class $$NodesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get dueReminder => $composableBuilder(
+    column: $table.dueReminder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4446,6 +5087,11 @@ class $$NodesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get dueReminder => $composableBuilder(
+    column: $table.dueReminder,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -4498,6 +5144,7 @@ class $$NodesTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<String?> deletedByEvent = const Value.absent(),
                 Value<bool> snoozeOverridesShow = const Value.absent(),
+                Value<String?> dueReminder = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4519,6 +5166,7 @@ class $$NodesTableTableManager
                 isDeleted: isDeleted,
                 deletedByEvent: deletedByEvent,
                 snoozeOverridesShow: snoozeOverridesShow,
+                dueReminder: dueReminder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -4542,6 +5190,7 @@ class $$NodesTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<String?> deletedByEvent = const Value.absent(),
                 Value<bool> snoozeOverridesShow = const Value.absent(),
+                Value<String?> dueReminder = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -4563,6 +5212,7 @@ class $$NodesTableTableManager
                 isDeleted: isDeleted,
                 deletedByEvent: deletedByEvent,
                 snoozeOverridesShow: snoozeOverridesShow,
+                dueReminder: dueReminder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -6173,6 +6823,309 @@ typedef $$SummaryVisibleTableProcessedTableManager =
       SummaryVisibleRow,
       PrefetchHooks Function()
     >;
+typedef $$EventDailySummariesTableCreateCompanionBuilder =
+    EventDailySummariesCompanion Function({
+      required String id,
+      required String day,
+      Value<String?> domainId,
+      Value<String?> groupId,
+      required String eventType,
+      required int count,
+      Value<bool> isDeleted,
+      required int createdAt,
+      required int updatedAt,
+      Value<int> rowid,
+    });
+typedef $$EventDailySummariesTableUpdateCompanionBuilder =
+    EventDailySummariesCompanion Function({
+      Value<String> id,
+      Value<String> day,
+      Value<String?> domainId,
+      Value<String?> groupId,
+      Value<String> eventType,
+      Value<int> count,
+      Value<bool> isDeleted,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$EventDailySummariesTableFilterComposer
+    extends Composer<_$SahaiDatabase, $EventDailySummariesTable> {
+  $$EventDailySummariesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get domainId => $composableBuilder(
+    column: $table.domainId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EventDailySummariesTableOrderingComposer
+    extends Composer<_$SahaiDatabase, $EventDailySummariesTable> {
+  $$EventDailySummariesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get domainId => $composableBuilder(
+    column: $table.domainId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EventDailySummariesTableAnnotationComposer
+    extends Composer<_$SahaiDatabase, $EventDailySummariesTable> {
+  $$EventDailySummariesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<String> get domainId =>
+      $composableBuilder(column: $table.domainId, builder: (column) => column);
+
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get eventType =>
+      $composableBuilder(column: $table.eventType, builder: (column) => column);
+
+  GeneratedColumn<int> get count =>
+      $composableBuilder(column: $table.count, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$EventDailySummariesTableTableManager
+    extends
+        RootTableManager<
+          _$SahaiDatabase,
+          $EventDailySummariesTable,
+          EventDailySummaryRow,
+          $$EventDailySummariesTableFilterComposer,
+          $$EventDailySummariesTableOrderingComposer,
+          $$EventDailySummariesTableAnnotationComposer,
+          $$EventDailySummariesTableCreateCompanionBuilder,
+          $$EventDailySummariesTableUpdateCompanionBuilder,
+          (
+            EventDailySummaryRow,
+            BaseReferences<
+              _$SahaiDatabase,
+              $EventDailySummariesTable,
+              EventDailySummaryRow
+            >,
+          ),
+          EventDailySummaryRow,
+          PrefetchHooks Function()
+        > {
+  $$EventDailySummariesTableTableManager(
+    _$SahaiDatabase db,
+    $EventDailySummariesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EventDailySummariesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EventDailySummariesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$EventDailySummariesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> day = const Value.absent(),
+                Value<String?> domainId = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+                Value<String> eventType = const Value.absent(),
+                Value<int> count = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EventDailySummariesCompanion(
+                id: id,
+                day: day,
+                domainId: domainId,
+                groupId: groupId,
+                eventType: eventType,
+                count: count,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String day,
+                Value<String?> domainId = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+                required String eventType,
+                required int count,
+                Value<bool> isDeleted = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => EventDailySummariesCompanion.insert(
+                id: id,
+                day: day,
+                domainId: domainId,
+                groupId: groupId,
+                eventType: eventType,
+                count: count,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EventDailySummariesTable, EventDailySummaryRow>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$SahaiDatabase,
+                    $EventDailySummariesTable,
+                    EventDailySummaryRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EventDailySummariesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SahaiDatabase,
+      $EventDailySummariesTable,
+      EventDailySummaryRow,
+      $$EventDailySummariesTableFilterComposer,
+      $$EventDailySummariesTableOrderingComposer,
+      $$EventDailySummariesTableAnnotationComposer,
+      $$EventDailySummariesTableCreateCompanionBuilder,
+      $$EventDailySummariesTableUpdateCompanionBuilder,
+      (
+        EventDailySummaryRow,
+        BaseReferences<
+          _$SahaiDatabase,
+          $EventDailySummariesTable,
+          EventDailySummaryRow
+        >,
+      ),
+      EventDailySummaryRow,
+      PrefetchHooks Function()
+    >;
 
 class $SahaiDatabaseManager {
   final _$SahaiDatabase _db;
@@ -6191,4 +7144,6 @@ class $SahaiDatabaseManager {
       $$SettingsTableTableTableManager(_db, _db.settingsTable);
   $$SummaryVisibleTableTableManager get summaryVisible =>
       $$SummaryVisibleTableTableManager(_db, _db.summaryVisible);
+  $$EventDailySummariesTableTableManager get eventDailySummaries =>
+      $$EventDailySummariesTableTableManager(_db, _db.eventDailySummaries);
 }

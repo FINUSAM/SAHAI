@@ -57,6 +57,8 @@ void main() {
       Strings.recurringSection,
       Strings.remindersSection,
       Strings.summarySection,
+      Strings.backupSection,
+      Strings.helpSection,
     ]) {
       await tester.scrollUntilVisible(
         find.text(section.toUpperCase()),
@@ -202,12 +204,68 @@ void main() {
     expect(app.reminders.scheduled.map((m) => m.at).toSet(), isNot(before));
   });
 
+  Future<void> showBackup(WidgetTester tester, int bytes) async {
+    final app = TestApp(clock: TestClock(DateTime(2026, 11, 3, 15)))
+      ..dataSizeBytes = bytes;
+    await pumpSahai(tester, app: app);
+    await openSettings(tester);
+    await tester.scrollUntilVisible(
+      find.text(Strings.dataOnPhone),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testSahai('Backup shows the size of the data and what Android does with '
+      'it', (tester) async {
+    await showBackup(tester, 1468006); // 1.4 MB
+    expect(find.text('1.4 MB'), findsOneWidget);
+    expect(find.text(Strings.backupExplained), findsOneWidget);
+    expect(find.textContaining(Strings.backupWarningTitle), findsNothing);
+    final bar = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(bar.value, closeTo(0.07, 0.01));
+  });
+
+  testSahai('AT-112 above 20 MB Settings warns that backup may stop', (
+    tester,
+  ) async {
+    await showBackup(tester, 22334669); // 21.3 MB
+    expect(find.text('21.3 MB'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.textContaining(Strings.backupWarningTitle),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining(Strings.backupWarningTitle), findsOneWidget);
+    expect(
+      find.textContaining('Old activity is already shrunk'),
+      findsOneWidget,
+    );
+    expect(find.text(Strings.backupExplained), findsNothing);
+    final bar = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(bar.value, 1);
+  });
+
+  testSahai('exactly 20 MB does not warn yet', (tester) async {
+    await showBackup(tester, 20 * 1024 * 1024);
+    expect(find.text('20.0 MB'), findsOneWidget);
+    expect(find.textContaining(Strings.backupWarningTitle), findsNothing);
+  });
+
   Future<void> openHelpRow(WidgetTester tester, String title) async {
     await tester.scrollUntilVisible(
       find.text(title),
       200,
       scrollable: find.byType(Scrollable).first,
     );
+    // The whole row, not just its edge, so the tap lands on it.
+    await tester.ensureVisible(find.text(title));
+    await tester.pumpAndSettle();
     await tester.tap(find.text(title));
     await tester.pumpAndSettle();
   }

@@ -18,6 +18,7 @@ part 'database.g.dart';
     Captures,
     SettingsTable,
     SummaryVisible,
+    EventDailySummaries,
   ],
 )
 class SahaiDatabase extends _$SahaiDatabase {
@@ -29,7 +30,7 @@ class SahaiDatabase extends _$SahaiDatabase {
   static const keptBackups = 2;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -55,6 +56,13 @@ class SahaiDatabase extends _$SahaiDatabase {
       await stepByStep(
         // v2 (M2): the Summary's current card set, for surfaced events.
         from1To2: (m, schema) => m.createTable(schema.summaryVisible),
+        // v3 (M7): daily totals for the compacted log (E-004), and when a
+        // one-off item's due-date reminder arrives (E-019).
+        from2To3: (m, schema) async {
+          await m.createTable(schema.eventDailySummaries);
+          await m.createIndex(schema.eventDailySummariesDay);
+          await m.addColumn(schema.nodes, schema.nodes.dueReminder);
+        },
       )(m, from, to);
     },
     beforeOpen: (details) async {
@@ -80,6 +88,20 @@ class SahaiDatabase extends _$SahaiDatabase {
     // VACUUM INTO writes a consistent copy even while the database is open.
     await customStatement('VACUUM INTO ?', [target]);
     await _pruneBackups(dir);
+  }
+
+  /// The size of the database file and its write-ahead log in bytes: the
+  /// files Auto Backup copies (PRD 3, 8.6). The `-shm` file isn't backed up
+  /// and isn't counted. 0 for an in-memory database.
+  Future<int> fileSizeBytes() async {
+    final mainFile = await _mainDatabaseFile();
+    if (mainFile == null) return 0;
+    var total = 0;
+    for (final path in [mainFile, '$mainFile-wal']) {
+      final file = File(path);
+      if (await file.exists()) total += await file.length();
+    }
+    return total;
   }
 
   /// Folds the write-ahead log back into the main file.

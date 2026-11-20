@@ -55,6 +55,12 @@ final appPlatformProvider = Provider<AppPlatform>(
   (ref) => const ChannelAppPlatform(),
 );
 
+/// The size of the data Auto Backup copies, read each time Settings opens
+/// (PRD 8.6, AT-112).
+final dataSizeProvider = FutureProvider.autoDispose<int>(
+  (ref) => ref.watch(databaseProvider).fileSizeBytes(),
+);
+
 /// The installed version, such as "0.7.0"; null if Android can't say.
 final appVersionProvider = FutureProvider<String?>(
   (ref) => ref.watch(appPlatformProvider).version(),

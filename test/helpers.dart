@@ -113,6 +113,10 @@ class TestApp {
   final TestClock clock;
   final reminders = FakeReminders();
   final platform = FakeAppPlatform();
+
+  /// A pretend size for Settings' Backup section (AT-112); null reads the
+  /// real database, which is 0 bytes in memory.
+  int? dataSizeBytes;
   late final SahaiDatabase db;
   late final NodeActions actions;
 

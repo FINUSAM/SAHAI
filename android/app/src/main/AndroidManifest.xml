@@ -6,10 +6,16 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- Only used when Exact reminders is on; Android asks the user (AT-058). -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- Auto Backup (PRD 3, M7, approved 2026-11-20): the database and its
+         WAL go to the user's own Google account; the rule files say which
+         files. No permission is needed. -->
     <application
         android:label="Sahai"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -91,6 +91,14 @@ abstract final class Strings {
   static const edit = 'Edit';
   static const markDone = 'Mark done';
   static const reopen = 'Reopen';
+
+  // Reopen a repeating item's last completion or skip (E-018).
+  static const reopenLastCompletion = 'Reopen last completion';
+  static const reopenLastSkip = 'Reopen last skip';
+  static String reopenDone(String on, String due) => 'Done $on, was due $due';
+  static String reopenSkipped(String on, String due) =>
+      'Skipped $on, was due $due';
+  static String reopenedDue(String due) => 'Reopened. Due $due';
   static String moveToAnother(NodeType parentType) =>
       'Move to another ${_typeNoun(parentType)}…';
   static const moveUp = 'Move up';
@@ -504,6 +512,21 @@ abstract final class Strings {
   static const reminderTimeHint =
       'When recurring items remind you on the day they show';
   static const helpSection = 'Help';
+
+  // Backup (PRD 3, 8.6, M7 frames 10 and 14).
+  static const backupSection = 'Backup';
+  static const dataOnPhone = 'Data on this phone';
+  static String megabytes(String amount) => '$amount MB';
+  static const backupExplained =
+      'Android copies it to your Google account when the phone is idle, '
+      'charging and on Wi-Fi, and brings it back when you reinstall Sahai or '
+      'set up a new phone. Only you can reach that copy.';
+  static const backupWarningTitle = 'Backup may stop soon.';
+  static const backupWarningBody =
+      ' Android backs up at most 25 MB for each app, and stops without '
+      'telling you when an app goes over. Sahai keeps working, but a new '
+      'phone might not get your data back. Old activity is already shrunk '
+      'to daily totals to save space.';
   static const replayOnboarding = 'Replay onboarding';
   static const replayOnboardingHint = 'Walk through the first steps again';
   static const aboutSahai = 'About Sahai';
@@ -668,6 +691,7 @@ abstract final class Strings {
   static const cantRepeat = 'Only stream items that are not done can repeat.';
   static const notRecurring = 'That item does not repeat.';
   static const staleUndo = 'That item has already moved on.';
+  static const nothingToReopen = 'There is nothing to reopen.';
   static const noSuchGroup = 'That group no longer exists.';
   static const cardNotShowing = 'That item is not on the Summary right now.';
 }

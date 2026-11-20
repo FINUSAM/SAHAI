@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup rules for Android 11 and lower (PRD 3, tech plan, Auto
+     Backup). Android 12 and higher use data_extraction_rules.xml, which must
+     list the same files.
+
+     Once any <include> is present Android backs up only what is included, so
+     everything else is left out: the database's -shm file (a cache SQLite
+     rebuilds), the pre-migration/ copies (kept small for the 25 MB limit),
+     and the rest of app_flutter/. Caches and no_backup/ are never backed up.
+
+     drift_flutter keeps the database in the app documents folder,
+     app_flutter/ in the app's private storage, which is the "root" domain.
+     The -wal file holds changes not yet checkpointed into the main file, so
+     both go together; Android stops the app before copying, so the pair is
+     consistent. -->
+<full-backup-content>
+    <include domain="root" path="app_flutter/sahai.sqlite" />
+    <include domain="root" path="app_flutter/sahai.sqlite-wal" />
+    <include domain="sharedpref" path="." />
+</full-backup-content>
