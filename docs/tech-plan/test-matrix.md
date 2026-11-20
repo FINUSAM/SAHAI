@@ -16,7 +16,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 
 ## Totals
 
-124 tests. Tests that include each level: U 97 · W 52 · I 6 · CI 1 · D 28. Tests that need **only** a real device: 10.
+127 tests. Tests that include each level: U 100 · W 57 · I 6 · CI 1 · D 28. Tests that need **only** a real device: 8.
 
 ## Extra tests from PRD edits
 
@@ -190,6 +190,9 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | AT-118 | Set-aside times survive a time-zone change | 13 | Should | Founder | U, D |  |
 | AT-119 | No half-finished changes | 13 | Should | Developer | U | Transaction rollback test |
 | AT-120 | Send feedback | 8.6 | Should | Founder | W, D | Fake platform channel; real email app on device |
+| AT-125 | Reopen the last completion | 7, 9 | Must | Founder | U, W | Fake clock; checks the reopened event (E-018) |
+| AT-126 | Reopen the last skip | 7, 9 | Should | Founder | U, W | Fake clock; checks the reopened event (E-018) |
+| AT-127 | Only the latest can be reopened | 7 | Should | Founder | U, W | Fake clock; only the latest completion or skip is offered (E-018) |
 
 ## M8 Release prep
 
