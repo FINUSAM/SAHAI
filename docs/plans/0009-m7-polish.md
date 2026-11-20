@@ -92,7 +92,7 @@ Approved by the owner's "Proceed" on 2026-11-20, with three choices: (A) the bra
 17a. [x] #86 (E-018): Reopen last completion and Reopen last skip, with their dates ("Done Nov 7, was due Nov 5"), in the Explorer menu and as a shortcut on the Set-Aside page, never on the Summary. Offered only for the latest completion or skip that isn't cancelled, while the due date hasn't moved on since. Restores the occurrence as it was before the tick, logs `reopened` with the event it cancels and the restored due date, in one transaction. Follows the M3 and M4 patterns, no new frames
 18. [x] Tests named by AT ID with the fake clock: AT-112 (fake size), AT-113 (13 months of generated events; counts correct, log under 10 MB), AT-125 to AT-127 (with the log event and the limits), the migration tests, and compaction keeping reopenable events. Added to `integration_test/app_test.dart`, not run. AT-111 waits for the close-out, as agreed with the owner (see Notes)
 18a. [x] `flutter analyze`, `dart format` and `flutter test` clean; debug APK builds
-19. [ ] Update `README.md`, `CHANGELOG.md`, tech plan (Auto Backup, compaction, Reopen), matrix, this plan and decision 0009; tick #55 (not its device restore task) and #86's last two tasks; once #106 merges, merge `dev` in and open PR 2 listing the device checks (AT-111, AT-125 to AT-127)
+19. [x] Update `README.md`, `CHANGELOG.md`, tech plan (Auto Backup, compaction, Reopen), matrix, this plan and decision 0009; tick #55 (not its device restore task) and #86's last two tasks; once #106 merges, merge `dev` in and open PR 2 listing the device checks (AT-111, AT-125 to AT-127). Opened as #107
 
 **PR 3: one-off due dates, accessibility pass and 10,000-item speed check** (`feat/m7-due-dates-a11y-speed`, #56)
 
