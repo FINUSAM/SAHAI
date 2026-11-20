@@ -50,9 +50,9 @@ L = {  # id: (levels, note)
 77:("U, W",""),78:("U, D","Planner uses reminder time, not day start"),79:("U, D","Due reminder ignores set-aside ancestors"),
 80:("U",""),81:("U, D","Time-zone switch in-process; real switch on device"),82:("U",""),
 83:("U, W",""),84:("U, W",""),85:("U",""),86:("U",""),87:("U, W",""),88:("U, W",""),89:("U",""),
-90:("U",""),91:("U",""),92:("U","Slots never touch sort_order"),93:("I","Arrangement survives restart"),94:("U",""),
-95:("U, W, D","Airplane mode on device"),96:("U, W",""),97:("U, I","Edit survives restart"),98:("W",""),
-99:("D","Home-screen widget"),100:("D","Share sheet from Chrome / WhatsApp"),101:("U, W",""),102:("W",""),
+90:("U",""),91:("U",""),92:("U","Slots never touch sort_order"),93:("I","Arrangement survives restart; `groups_test.dart` restarts on a database file and runs in the phone suite"),94:("U",""),
+95:("U, W, D","Airplane mode on device"),96:("U, W",""),97:("U, I","Edit survives restart; `capture_test.dart` restarts on a database file and runs in the phone suite"),98:("W",""),
+99:("W, D","Home-screen widget; `capture_dialog_test.dart` covers the dialog and its save, the phone covers the widget opening it"),100:("W, D","Share sheet from Chrome / WhatsApp; `capture_dialog_test.dart` covers the shared text filled in and saved as a share"),101:("U, W",""),102:("W",""),
 103:("W",""),104:("U",""),
 105:("W, I",""),106:("U, W","Practice step leaves no changes"),107:("W",""),108:("W",""),109:("U, W",""),
 110:("U","Fake clock 3:30 AM, day start 3 AM"),111:("D","adb bmgr backup, reinstall, restore"),
@@ -62,9 +62,13 @@ L = {  # id: (levels, note)
 117:("W, D","Largest text scale on every screen"),118:("U, D",""),119:("U","Transaction rollback test"),
 120:("W, D","Fake platform channel; real email app on device"),
 121:("D","Play testing track"),122:("D","Play Console and About screen"),123:("D","Data safety form review"),124:("D","Launcher and store listing"),
+125:("U, W","Fake clock; checks the reopened event (E-018)"),126:("U, W","Fake clock; checks the reopened event (E-018)"),
+127:("U, W","Fake clock; only the latest completion or skip is offered (E-018)"),
 }
 ws = openpyxl.load_workbook(src, data_only=True)['Tests']
 rows = [r for r in ws.iter_rows(min_row=2, values_only=True) if r[0]]
+# Tests added later keep their next free ID but are listed under their milestone.
+rows.sort(key=lambda r: (int(r[1][1:]), int(r[0][3:])))
 missing = [r[0] for r in rows if int(r[0][3:]) not in L]
 assert not missing, f'Add levels for {missing} to L'
 names = {"M1":"Foundations","M2":"Core loop","M3":"Set aside","M4":"Recurring items","M5":"Groups and order","M6":"Capture","M7":"Polish and safety","M8":"Release prep"}
@@ -85,7 +89,7 @@ for r in rows:
     for k in [x.strip() for x in lv.split(',')]:
         cnt[k] = cnt.get(k,0)+1
 o.append("## Totals\n")
-o.append(f"124 tests. Tests that include each level: U {cnt.get('U',0)} · W {cnt.get('W',0)} · I {cnt.get('I',0)} · CI {cnt.get('CI',0)} · D {cnt.get('D',0)}. Tests that need **only** a real device: {sum(1 for r in rows if L[int(r[0][3:])][0]=='D')}.\n")
+o.append(f"{len(rows)} tests. Tests that include each level: U {cnt.get('U',0)} · W {cnt.get('W',0)} · I {cnt.get('I',0)} · CI {cnt.get('CI',0)} · D {cnt.get('D',0)}. Tests that need **only** a real device: {sum(1 for r in rows if L[int(r[0][3:])][0]=='D')}.\n")
 o.append("## Extra tests from PRD edits\n")
 o.append("| ID | Milestone | Level | Test |\n|---|---|---|---|")
 o.append("| E-001 | M2 | U | Undo of a completion writes `completion_undone` linking the `completed` event; the restored card gets no new `surfaced` event |")
@@ -95,7 +99,11 @@ o.append("| E-003 | M1 | U | Undo of a project delete restores only rows flagged
 o.append("| E-004 | M7 | U | Compaction moves events older than 12 months into `event_daily_summaries` with correct counts, in one transaction |")
 o.append("| E-005 | M4 | U, W | A paid bill is listed on the Set-Aside page until its show date; Wake now shows it with its real due label and leaves the schedule unchanged |")
 o.append("| E-007 | M1 | U, W | A locked task offers no checkmark or Mark done action until the task before it is done |")
-o.append("| E-011 | M4 | U | Stopping repeating writes `repeat_stopped`; Undo of a skip or a stop writes `skip_undone` or `repeat_restored` linking the event it cancels, and the card gets no new `surfaced` event |\n")
+o.append("| E-011 | M4 | U | Stopping repeating writes `repeat_stopped`; Undo of a skip or a stop writes `skip_undone` or `repeat_restored` linking the event it cancels, and the card gets no new `surfaced` event |")
+o.append('| E-013 | M5 | U | "No group" on a node puts its cards in the default list whatever its ancestors have; nodes below follow it; with no group above it is stored as unset |')
+o.append("| E-014 | M5 | U | Deleting a group writes no events; its items follow the next group up or go to the default list, at the end; Undo restores the group and every card's place |")
+o.append('| E-015 | M5 | U | Explorer reorder, Move up, Move down and the Reorder screen log `reordered` for each item moved, with the group unchanged |')
+o.append('| E-016 | M4 | U, W | Repeating from completion: monthly and yearly count from the finish day (Nov 5 gives Dec 5); the next due date is always after the one finished, for every schedule; the form hides the day and month for these schedules (#84) |\n')
 cur = None
 for r in rows:
     tid, m, area, sec, scen, prio, by = r[0], r[1], r[2], r[3], r[4], r[8], r[9]

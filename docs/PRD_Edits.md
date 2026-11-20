@@ -372,3 +372,27 @@ Changes and clarifications to [`PRD.md`](PRD.md) that the owner has approved but
 - Shared text often carries more than the thought, such as a page title and a link. Saving it unseen would fill Capture with clutter, while one extra tap on Save lets the user keep only what matters. It's the same dialog as the widget's, so there's one way to capture from outside the app.
 
 **Affects:** AT-100 (the text lands in Capture after Save in the dialog).
+
+---
+
+## E-018: A repeating item's last completion or skip can be reopened
+
+- **PRD section:** 7 (Complete, Recurring items), 9 (Activity Log)
+- **Type:** Addition
+- **Decided by:** FINUSAM, 2026-11-07 (the design, in PRD question #86) and 2026-11-20 (in v1, built in M7)
+- **Status:** Approved, not yet in PRD.md
+
+**Change**
+
+- A repeating item gets a **Reopen last completion** action, shown with its dates, such as "Done Nov 7, was due Nov 5". Skips get the same action as **Reopen last skip**.
+- It's in the Explorer item menu, where normal DONE items are reopened, with a shortcut on the Set-Aside page next to Wake now and Change time. It's not on the Summary. It only appears when there is a completion or skip that can still be reopened.
+- Reopening brings back the old due date, so the item shows again with its real due label (for example "2 days overdue"). The next due date is worked out again when the item is really finished.
+- Only the latest completion or skip can be reopened, and only until the next occurrence is completed or skipped. There's no time limit.
+- The original `completed` or `skipped` event stays in the log. Reopening adds a `reopened` event, the type PRD 9 already uses for a deliberate reopen. Its payload holds the `event_id` of the event it cancels and the due date that was restored. Like every multi-step change, it runs in one transaction.
+
+**Reason**
+
+- PRD 7 says every action can be reversed, but a repeating item never becomes DONE (AT-077), so once the 5-second Undo has passed, a mistaken tick on a bill can't be taken back. Editing Next due doesn't fix it: past dates can't be picked, and the `completed` event would stay uncancelled.
+- Using `reopened` keeps the event list short and matches its meaning: a deliberate reopen, not an Undo tap (E-001, E-011).
+
+**Affects:** new tests AT-125 (reopen the last completion), AT-126 (reopen the last skip) and AT-127 (only the latest can be reopened). AT-070 and AT-077 are unchanged.

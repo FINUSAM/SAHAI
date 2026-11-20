@@ -9,6 +9,20 @@ followed by v1.0.0 for the public release.
 
 ## [Unreleased]
 
+### Added
+- Approved M7 Polish and safety wireframes in `docs/design/m7-polish/` (18 frames): onboarding
+  with a practice step that saves nothing, the full Settings screen, editable preset times,
+  Day starts at, the 20 MB backup warning, About, Replay onboarding, Send feedback and the
+  largest font; the choices made with them; the M7 plan in `docs/plans/0009-m7-polish.md`.
+- PRD edit E-018 (a repeating item's last completion or skip can be reopened) and acceptance
+  tests AT-125 to AT-127 for it. Due dates on one-off items (#87) are in M7 too, after a design
+  step of their own.
+
+### Changed
+- `tool/generate_test_matrix.py` lists tests added later under their own milestone, counts the
+  total itself, and now includes the notes and PRD-edit rows that had been added to the matrix
+  by hand, so regenerating no longer loses them. The matrix totals are corrected.
+
 ## [0.6.0] - 2026-11-20 (M6 Capture)
 
 ### Added

@@ -15,6 +15,7 @@ Wireframes for each milestone's screens. PRD 16 makes approved wireframes a gate
 | M4 Recurring items | Due labels, schedule form, Skip and Stop repeating, waiting bills, recurring reminders (11 frames) | **Approved** by FINUSAM, 2026-11-06 | [`m4-recurring/`](m4-recurring/) | [Sahai wireframes: M4 Recurring items](https://claude.ai/artifact/JqARsT6vEsGqa2uMZZEunt) (private to the owner until shared) |
 | M5 Groups and order | Grouped Summary, drag and button moves, group picker, Explorer groups, Context groups settings (14 frames) | **Approved** by FINUSAM, 2026-11-07 | [`m5-groups/`](m5-groups/) | [Sahai wireframes: M5 Groups and order](https://claude.ai/artifact/SA1DfAVLoFVkS1njswWto5) (private to the owner until shared) |
 | M6 Capture | Capture tab, edit and delete, create from a capture, Remove or Keep, home-screen widget, share target (17 frames) | **Approved** by FINUSAM, 2026-11-15 | [`m6-capture/`](m6-capture/) | [Sahai wireframes: M6 Capture](https://claude.ai/artifact/Syp64TDuh6QAMzxx4bgr69) (private to the owner until shared) |
+| M7 Polish and safety | Onboarding with the practice step, full Settings, presets, Day starts at, backup warning, About, Replay, Send feedback, largest font (18 frames) | **Approved** by FINUSAM, 2026-11-20 | [`m7-polish/`](m7-polish/) | [Sahai wireframes: M7 Polish and safety](https://claude.ai/artifact/Ro6sSXNPPUcXdScF6F9GJe) (private to the owner until shared) |
 
 ## Brand
 
@@ -257,3 +258,50 @@ The PRD doesn't specify these. The owner approved them along with the wireframes
 - **Widget:** one "Capture a thought" bar. Tapping it opens the small dialog over whatever is on screen, and Save closes it without opening the app (E-009).
 - **Share target:** shared text opens the same dialog, filled in, so it can be trimmed before Save (E-017). Both dialogs end with a short "Saved to Sahai Capture" message.
 - **Where a capture came from:** the `captured` event records the app, the widget or a share. It never records the text (tech plan, logging).
+
+## M7 Polish and safety
+
+Same style and sample tree as M1 to M6. Unless a frame says otherwise it is 3:00 PM on Tuesday, Nov 3, the moment M3 used, so the presets show the same times. The onboarding frames use a fresh install: the areas, project, task and subtasks in them are what the user typed, not sample data. Frame 17 is the phone's own email app, sketched, not designed.
+
+| # | Frame | Shows | Acceptance tests |
+|---|---|---|---|
+| 1 | [Welcome](m7-polish/01-welcome.png) | First run only: what Sahai is for, Get started, and Skip | AT-105, AT-107 |
+| 2 | [Step 1: name your areas](m7-polish/02-areas.png) | One or two domains, with examples; Skip on every step | AT-105, AT-107 |
+| 3 | [Step 2: a project and its first task](m7-polish/03-project.png) | Which area (when there are two), the project and its first task | AT-105 |
+| 4 | [Step 2: two subtasks](m7-polish/04-subtasks.png) | Two subtasks in order, and the path being made | AT-105 |
+| 5 | [Step 3: Summary reveal](m7-polish/05-reveal.png) | Only the first subtask, and why | AT-105 |
+| 6 | [Step 4: tick off, then Undo](m7-polish/06-practice-done.png) | Practice banner; the next subtask takes the place; Undo | AT-106 |
+| 7 | [Step 4: set aside](m7-polish/07-practice-set-aside.png) | Set aside with a preset; the second subtask shows | AT-106 |
+| 8 | [Step 4: Wake now](m7-polish/08-practice-wake.png) | The Set-Aside page; Wake now brings the first subtask back | AT-106 |
+| 9 | [Done: sign-off note](m7-polish/09-finish.png) | The task comes back for sign-off; the practice was undone | AT-105, AT-106 |
+| 10 | [Settings, full screen](m7-polish/10-settings.png) | Set aside, Recurring items, Reminders, Summary, Backup, Help | AT-108, AT-109, AT-110, AT-112, AT-120 |
+| 11 | [Set-aside presets](m7-polish/11-presets.png) | The four presets and their times; Reset to defaults | AT-109 |
+| 12 | [Change Tonight to 9 PM](m7-polish/12-preset-time.png) | Android's time picker in typing mode | AT-109 |
+| 13 | [Day starts at](m7-polish/13-day-start.png) | Whole hours from midnight to 6 AM, and what the setting means | AT-110 |
+| 14 | [Backup: 20 MB warning](m7-polish/14-backup-warning.png) | Size over 20 MB, and what it means for Android's backup | AT-112 |
+| 15 | [About Sahai](m7-polish/15-about.png) | Version, where the data lives, what's coming, licences; privacy policy in M8 | AT-122 (M8) |
+| 16 | [Replay onboarding?](m7-polish/16-replay.png) | Replay adds new items next to the existing ones | AT-108 |
+| 17 | [Send feedback: email draft](m7-polish/17-feedback.png) | The email app, with only the address and subject filled in | AT-120 |
+| 18 | [Settings at the largest font](m7-polish/18-large-font.png) | Rows wrap and values move below their labels; nothing is cut off | AT-117 |
+
+AT-111 (backup restore), AT-113 (log retention), AT-114 (speed), AT-115 (offline), AT-116 (TalkBack), AT-118 (time-zone change) and AT-119 (no half-finished changes) have no frame: they are about behaviour, not screens. AT-116's buttons were drawn in M5; frame 18 covers AT-117.
+
+### Choices approved with these wireframes
+
+The PRD doesn't specify these. The owner approved them along with the wireframes on 2026-11-20. None changes PRD behaviour, so there's no PRD edit.
+
+- **When onboarding shows:** on first run, when there are no areas yet. An install that already has data, such as one updated from 0.6.0, goes straight to the Summary and never sees it uninvited. It can still be replayed from Settings.
+- **Each step saves when you tap Next,** and Skip, on every step, keeps what was saved so far (AT-107). Back returns to an earlier step to change what it made, rather than making it again.
+- **Steps 1 and 2:** one area is needed and a second is optional; the project, its first task and both subtasks are needed (PRD 8.1). With two areas, step 2 asks which one the project goes in.
+- **Practice step:** runs on a temporary copy of what the user just made, with a "Practice: nothing here is saved" banner. Nothing in it is written to the database or the activity log, so AT-106 holds and the Phase 2 planner never learns from practice. Explorer and Capture are dimmed during practice. A dashed box gives each of the three moves in turn.
+- **Finish:** explains the sign-off (PRD 8.1), says the practice was undone, and opens the real Summary with the first subtask on it.
+- **Replay onboarding:** asks first, then runs the same steps. What is made is added next to the existing data; nothing existing changes.
+- **Settings** is one scrolling screen with six sections: Set aside, Recurring items, Reminders, Summary, Backup and Help. Each row says what it does in a line.
+- **Presets:** only the times can be changed; the names and days (tomorrow, 3 days, next Monday) stay fixed. Reset to defaults puts back the PRD times. A new time applies to the next set aside; items already set aside keep their time.
+- **Day starts at:** whole hours from midnight to 6 AM, default 4 AM.
+- **Show before due and Reminder time:** the defaults for new recurring items and the time their reminders arrive (PRD 7, 8.6). Each item can still change its own Show before due.
+- **Backup:** Settings shows the size of the data on the phone against 20 MB. Above 20 MB a warning says that Android stops backing up an app over 25 MB without saying so. It doesn't suggest deleting things, because deleted items are kept (soft delete) and wouldn't free space; manual export is Phase 2.
+- **Log retention has no setting.** Raw events are kept for 12 months and then compacted into daily totals (PRD 9, E-004), with nothing to configure.
+- **About:** the version, where the data lives, what's coming in Phase 2 and Phase 3 in plain words, and the open-source licences. The privacy policy link comes in M8 (AT-122).
+- **Send feedback:** opens the phone's email app with the feedback address and the subject "Sahai feedback (0.7.0)". The body is left empty, so nothing about the user's tasks goes in. Sahai sends nothing itself, and the email app sends nothing until the user taps Send.
+- **Largest font:** rows wrap rather than cutting text off, and at the largest sizes a row's value moves below its label.
