@@ -94,18 +94,21 @@ Approved by the owner's "Proceed" on 2026-11-20, with three choices: (A) the bra
 18a. [x] `flutter analyze`, `dart format` and `flutter test` clean; debug APK builds
 19. [x] Update `README.md`, `CHANGELOG.md`, tech plan (Auto Backup, compaction, Reopen), matrix, this plan and decision 0009; tick #55 (not its device restore task) and #86's last two tasks; once #106 merges, merge `dev` in and open PR 2 listing the device checks (AT-111, AT-125 to AT-127). Opened as #107
 
-**PR 3: one-off due dates, accessibility pass and 10,000-item speed check** (`feat/m7-due-dates-a11y-speed`, #56)
+**PR 3: one-off due dates, accessibility pass and 10,000-item speed check** (`feat/m7-due-dates-a11y-speed`, #56, with #87)
 
-19a. [ ] #87 (E-019) actions, each in one transaction with the injected clock: set, change or clear a due date and Remind me on projects, tasks, subtasks and one-off stream items, logging `due_changed` with the old and new dates and the reminder choice, never the text. Completing removes the label and Undo or Reopen brings it back. A stream item with Repeat on keeps using Next due; Stop repeating still clears the due date (AT-080)
-19b. [ ] Forms (frames 19 to 22 and 27): the Due date row on the create and edit forms and the capture's Create form, the picker with past days greyed, ✕ to clear, and the Remind me sheet with past choices greyed
-19c. [ ] Labels (frames 23 and 24): the bill label, with the year from #85, and a calendar mark on Summary cards and in the Explorer. The Summary's contents and order don't change
-19d. [ ] Reminders (frames 25 and 26): the notification planner schedules the chosen reminder and the follow-up on the day at the Reminder time, through set-aside ancestors and waiting steps; grouped when due together; cancelled when done; restored after a restart. Tapping opens the item, or the sheet that says why it's hidden (no Mark done when locked, E-007)
-19e. [ ] Tests named by AT ID with the fake clock: AT-128 to AT-133, and the migration test for the new column from PR 2. Device checks listed in the PR (AT-129, AT-130)
-20. [ ] TalkBack pass over every screen with fixes: every action announced, swipe and drag alternatives from M5 (AT-116)
-21. [ ] Largest font on every screen with fixes (AT-117)
-22. [ ] AT-118: set-aside times survive a time-zone change (fake clock and zones); AT-119: a failure in the middle of a completion leaves neither the change nor its event (rollback test)
-23. [ ] AT-114: a profile build on the phone with 10,000 generated items, measuring cold start (< 2 s) and recompute (< 50 ms). How to do this without touching the real data is agreed with the owner first (see Notes)
-24. [ ] Version 0.7.0+7 for the phone; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #56; open PR 3
+Approved by the owner's "Proceed" on 2026-11-20, with three choices: (A) the branch starts from PR 2's branch, which adds the `due_reminder` column, while #107 is open; `dev` is merged in once #107 merges and PR 3 opens after that; (B) AT-114 is a profile-mode integration test that fills its own temporary database in the app's cache folder (never `sahai.sqlite`), run with the close-out phone checks after warning the owner, with `--no-uninstall` and the release build reinstalled with `adb install -r` afterwards; cold start is the in-app time from opening the database to the first Summary frame plus Android's process start from `adb shell am start -W` on the release build; (C) a due date set when an item is created also logs `due_changed` (from none). No new package, permission, database change or PRD edit.
+
+19a. [ ] #87 (E-019) actions, each in one transaction with the injected clock: set, change or clear a due date and Remind me (On the day stored as empty, 1 day, 3 days or 1 week before, or No reminder) on projects, tasks, subtasks and one-off stream items; domains, streams and repeating items are refused. Logs `due_changed` with the old and new dates and the reminder choice, never the text, including when an item is created with a due date (choice C). A stream item with Repeat on keeps using Next due; Stop repeating still clears the due date (AT-080)
+19b. [ ] Engine: only repeating items wait for a show date, so a one-off due date never hides an item, brings it onto the Summary, or changes the Summary's contents or order
+19c. [ ] Forms (frames 19 to 22): the Due date row on the create and edit forms, the picker with past days greyed, ✕ to clear, and the Remind me sheet with each choice's date, past choices greyed, and the tip about the reminder on the day; hidden while Repeat is on. The capture's Create form gets the same rows (frame 27, AT-132)
+19d. [ ] Labels (frames 23 and 24): "Due Nov 20", "Due today", "3 days overdue" with a calendar mark on Summary cards, in the Explorer and in the card sheet, with the year from #85; bills keep the repeat mark. A DONE item shows no label; Undo or Reopen brings it back
+19e. [ ] Reminders (frames 25 and 26): the chosen early reminder and the one on the due day at the Reminder time, through set-aside ancestors and earlier steps; grouped when due together; none once done; restored after a restart. Tapping opens the item, or a sheet that says why it's hidden, with Mark done (not when locked, E-007), Change due date and Open in tree
+20. [ ] Accessibility pass (AT-116, AT-117): automated tap-target and labelled-button checks on every screen, at normal size and the largest font, with fixes; every swipe and drag has a button alternative. TalkBack itself is checked by the owner on the phone
+21. [ ] (merged into 20)
+22. [ ] AT-118: set-aside times are stored and compared as moments, tested across offsets (a real zone switch is the owner's phone check); AT-119: a failure forced in the middle of a completion leaves neither the change nor its event
+23. [ ] AT-114: the profile-mode speed test from choice B, added but not run
+23a. [ ] Tests named by AT ID with the fake clock: AT-128 to AT-133, AT-116 to AT-119, the engine fix; new screen tests added to `integration_test/app_test.dart`, not run
+24. [ ] Version 0.7.0+7; `flutter analyze`, `dart format`, `flutter test` clean and the debug APK builds; update `README.md`, `CHANGELOG.md`, tech plan, matrix and this plan; tick #56 and #87 (not the phone tasks); once #107 merges, merge `dev` in and open PR 3 listing the device checks (AT-114 to AT-118, AT-129, AT-130)
 
 **Close-out and release**
 
