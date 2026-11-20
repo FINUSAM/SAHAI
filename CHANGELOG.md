@@ -32,6 +32,24 @@ followed by v1.0.0 for the public release.
 - Reopen last completion and Reopen last skip for repeating items, in the Explorer menu and the
   Set-Aside page's sheet, with their dates ("Done Nov 7, was due Nov 5"). The old due date
   comes back and the log records a `reopened` event (E-018, AT-125 to AT-127, #86).
+- Due dates on one-off items (E-019, #87): projects, tasks, subtasks and one-off stream items get
+  a Due date row on the create and edit forms and the capture's Create form, with a date
+  picker (days before today greyed, ✕ to clear) and Remind me: On the day, 1 day, 3 days or
+  1 week before, or No reminder, each with its date (M7 frames 19 to 22, 27). The label reads
+  "Due Nov 20", "Due today" or "3 days overdue" with a calendar mark on the Summary and in
+  the Explorer, and goes when the item is done (frames 23, 24). A due date never hides an item
+  or brings one onto the Summary. Every change logs `due_changed`, without the text
+  (AT-128, AT-131 to AT-133).
+- Due-date reminders at the Reminder time: the early one chosen and one on the due day, which get
+  through a set-aside area or an earlier step, share a notification when due together and stop
+  once done. Tapping one for an item the Summary hides opens a sheet that says why, with Mark
+  done (not when locked), Change due date and Open in tree (frames 25, 26, AT-129, AT-130).
+- An accessibility pass over every screen at normal size and the largest font: labelled buttons,
+  48 dp tap targets and nothing cut off, all passing without changes (AT-116, AT-117). Both drag
+  gestures have button alternatives.
+- Tests for set-aside times across time zones (AT-118) and for a change and its log event being
+  saved together or not at all (AT-119), and the AT-114 speed check with 10,000 items, which runs
+  on the phone in profile mode at close-out.
 - Approved M7 Polish and safety wireframes in `docs/design/m7-polish/` (18 frames): onboarding
   with a practice step that saves nothing, the full Settings screen, editable preset times,
   Day starts at, the 20 MB backup warning, About, Replay onboarding, Send feedback and the
@@ -52,6 +70,7 @@ followed by v1.0.0 for the public release.
 - Due dates outside the current year show the year, such as "Due Mar 15, 2028", on cards, in
   the Explorer, on the Repeat form, in the Done and Skipped messages and in reminders (#85).
 - The Exact reminders hint now says reminders can arrive up to about an hour late (E-012).
+- The version is 0.7.0+7.
 - `tool/generate_test_matrix.py` lists tests added later under their own milestone, counts the
   total itself, and now includes the notes and PRD-edit rows that had been added to the matrix
   by hand, so regenerating no longer loses them. The matrix totals are corrected.
