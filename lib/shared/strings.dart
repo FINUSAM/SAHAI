@@ -360,11 +360,10 @@ abstract final class Strings {
       'Tell me when something I set aside comes back, or a recurring item is '
       'due';
   static const exactReminders = 'Exact reminders';
+  // E-012: inexact reminders can be up to about an hour late.
   static const exactRemindersHint =
-      'Arrive on the minute instead of a few minutes late. Android asks '
-      'for permission to set alarms.';
-  static const laterSettings =
-      'Day start, preset times, backup and more come in M7.';
+      'Reminders can arrive late, usually within an hour. Turn on to ask '
+      'Android for exact alarms.';
 
   // Context groups on the Summary (M5 frames 1 to 6).
   static const noGroup = 'No group';
@@ -478,6 +477,52 @@ abstract final class Strings {
   static const savedToCapture = 'Saved to Sahai Capture';
   static const captureSaveFailed =
       "Couldn't save. Your text is still here, so try again.";
+
+  // The full Settings screen (M7 frames 10 to 13).
+  static const setAsideSection = 'Set aside';
+  static const setAsidePresets = 'Set-aside presets';
+  static const dayStartsAt = 'Day starts at';
+  static const dayStartsAtHint =
+      'Until then, it still counts as the night '
+      'before';
+  static const dayStartsAtBody =
+      'Before this hour, Sahai still counts it as the night before. At '
+      '1:30 AM, Tomorrow morning means later this morning, and Due today '
+      "still means yesterday's date.";
+  static String dayStartChoice(String time, int minutes) => switch (minutes) {
+    0 => '$time (midnight)',
+    240 => '$time (default)',
+    _ => time,
+  };
+  static const recurringSection = 'Recurring items';
+  static const showBeforeDueSetting = 'Show before due';
+  static const showBeforeDueSettingHint =
+      'For new recurring items. Each item can change its own.';
+  static String daysCount(int n) => n == 1 ? '1 day' : '$n days';
+  static const daysLabel = 'Days';
+  static const reminderTime = 'Reminder time';
+  static const reminderTimeHint =
+      'When recurring items remind you on the day they show';
+  static const helpSection = 'Help';
+
+  // Set-aside presets (M7 frames 11 and 12).
+  static const presetsIntro =
+      'The times offered in Set aside. Tap one to change it.';
+  static String presetHint(Preset preset) => switch (preset) {
+    Preset.tonight => 'Hidden once this time has passed',
+    Preset.tomorrowMorning => 'The next day, counted from Day starts at',
+    Preset.threeDaysLater => 'Three days from today',
+    Preset.nextWeek => 'Next Monday',
+  };
+  static String presetSummary(Preset preset, String time) =>
+      preset == Preset.nextWeek
+      ? '${presetName(preset)} Mon $time'
+      : '${presetName(preset)} $time';
+  static const presetsNote =
+      'A new time applies the next time you set something aside. Items '
+      'already set aside keep their time.';
+  static const resetToDefaults = 'Reset to defaults';
+  static String changePresetTime(String preset) => 'Time for $preset';
 
   // Refusals (ActionRejected reasons).
   static const notFound = 'That item no longer exists.';

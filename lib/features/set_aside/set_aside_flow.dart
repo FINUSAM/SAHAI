@@ -28,6 +28,7 @@ Future<void> setAsideWithPicker(
     node: node,
     clock: clock,
     dayStartMinutes: _dayStart(ref),
+    presetTimes: _settings(ref).presetTimes,
     withScope: withScope,
   );
   if (choice == null || !context.mounted) return;
@@ -86,6 +87,7 @@ Future<void> changeTimeWithPicker(
     node: node,
     clock: clock,
     dayStartMinutes: _dayStart(ref),
+    presetTimes: _settings(ref).presetTimes,
     changeTime: true,
   );
   if (choice == null || !context.mounted) return;

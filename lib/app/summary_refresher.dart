@@ -32,6 +32,12 @@ class _SummaryRefresherState extends ConsumerState<SummaryRefresher> {
       (_, next) => _schedule(next.value?.nextChangeAt),
       fireImmediately: true,
     );
+    // A new Day starts at or Show before due can make items appear or
+    // wake, so their events are logged straight away (M7). The first value
+    // is the one loaded at start, which the refresh below already covers.
+    ref.listenManual(settingsProvider, (previous, next) {
+      if (previous?.value != null && next.value != null) unawaited(_refresh());
+    });
     // Items may have woken while the app was closed.
     unawaited(_refresh());
   }

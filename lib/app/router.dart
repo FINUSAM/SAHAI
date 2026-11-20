@@ -12,6 +12,7 @@ import '../features/explorer/reorder_screen.dart';
 import '../features/groups/group_form_screen.dart';
 import '../features/groups/groups_screen.dart';
 import '../features/set_aside/set_aside_screen.dart';
+import '../features/settings/presets_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/summary/summary_screen.dart';
 import 'home_shell.dart';
@@ -23,6 +24,7 @@ abstract final class Routes {
   static const explorer = '/explorer';
   static const capture = '/capture';
   static const settings = '/settings';
+  static const presets = '/settings/presets';
   static const groups = '/settings/groups';
   static const newGroup = '/settings/groups/new';
   static String editGroup(String id) => '/settings/groups/$id';
@@ -94,6 +96,11 @@ GoRouter buildRouter() {
         path: Routes.settings,
         parentNavigatorKey: rootKey,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: Routes.presets,
+        parentNavigatorKey: rootKey,
+        builder: (context, state) => const PresetsScreen(),
       ),
       GoRoute(
         path: Routes.groups,

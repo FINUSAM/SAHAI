@@ -70,6 +70,15 @@ String timeRemaining(DateTime wakeAt, DateTime now) {
 /// "3:00 PM".
 String clockTime(DateTime at) => _time.format(at.toLocal());
 
+/// "8:00 PM" for a time of day given in minutes after midnight.
+String minutesClock(int minutes) =>
+    _time.format(DateTime(2000, 1, 1, 0, minutes));
+
+/// "8 PM", or "8:30 PM" when it isn't on the hour (M7 frame 10).
+String minutesClockShort(int minutes) => minutes % 60 == 0
+    ? DateFormat('h a').format(DateTime(2000, 1, 1, 0, minutes))
+    : minutesClock(minutes);
+
 /// "Tue, Nov 3".
 String shortDate(DateTime at) => _date.format(at.toLocal());
 
