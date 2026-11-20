@@ -183,7 +183,8 @@ List<PlannedNotification> _recurringReminders(
 
   for (final node in inTreeOrder(tree)) {
     final due = node.dueOn;
-    if (due == null || !node.isTodo) continue;
+    // One-off due dates have their own reminders (E-019).
+    if (due == null || !node.isTodo || !node.isRecurring) continue;
     final lead = node.leadDays ?? settings.defaultLeadDays;
     add(momentOf(due), node, isDueDay: true);
     if (lead <= 0) continue;

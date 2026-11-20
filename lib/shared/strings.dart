@@ -692,6 +692,9 @@ abstract final class Strings {
   static const notRecurring = 'That item does not repeat.';
   static const staleUndo = 'That item has already moved on.';
   static const nothingToReopen = 'There is nothing to reopen.';
+  static const cantHaveDueDate =
+      'Only items you can tick off can have a due date.';
+  static const pastDueDate = 'Pick today or a later day.';
   static const noSuchGroup = 'That group no longer exists.';
   static const cardNotShowing = 'That item is not on the Summary right now.';
 }

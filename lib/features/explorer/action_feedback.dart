@@ -171,4 +171,6 @@ String rejectMessage(RejectReason reason) => switch (reason) {
   RejectReason.notOnSummary => Strings.cardNotShowing,
   RejectReason.emptyCapture => Strings.emptyCaptureError,
   RejectReason.nothingToReopen => Strings.nothingToReopen,
+  RejectReason.cantHaveDueDate => Strings.cantHaveDueDate,
+  RejectReason.pastDueDate => Strings.pastDueDate,
 };

@@ -1,3 +1,4 @@
+import 'due.dart';
 import 'groups.dart';
 import 'node_type.dart';
 import 'recurrence.dart';
@@ -21,6 +22,7 @@ class TreeNode {
     this.dueOn,
     this.leadDays,
     this.snoozeOverridesShow = false,
+    this.dueReminder = DueReminder.onTheDay,
   });
 
   final String id;
@@ -45,8 +47,17 @@ class TreeNode {
   final bool isRecurring;
   final Schedule? schedule;
 
-  /// The current occurrence's due date, as local midnight (AT-081).
+  /// A repeating item's current occurrence's due date (AT-081), or a
+  /// one-off item's due date (E-019), as local midnight.
   final DateTime? dueOn;
+
+  /// When a one-off item's due-date reminder arrives (E-019). Unused by
+  /// repeating items, which have their own reminders.
+  final DueReminder dueReminder;
+
+  /// A one-off item with a due date (E-019): a label and reminders, but no
+  /// show date, so it never hides or surfaces because of it.
+  bool get hasOneOffDue => dueOn != null && !isRecurring;
 
   /// How many days early it shows; null means the Settings default.
   final int? leadDays;
@@ -60,10 +71,13 @@ class TreeNode {
 
   /// The moment this node comes back, which may already have passed, or
   /// null when nothing holds it. A recurring item waits for the later of
-  /// its show time and any set aside (AT-072).
+  /// its show time and any set aside (AT-072). A one-off due date has no
+  /// show time (E-019).
   DateTime? wakeAt(AppSettings settings) {
     final due = dueOn;
-    if (due == null || snoozeOverridesShow) return snoozeUntil;
+    if (due == null || !isRecurring || snoozeOverridesShow) {
+      return snoozeUntil;
+    }
     final show = showTime(
       due,
       leadDays: leadDays ?? settings.defaultLeadDays,
