@@ -59,6 +59,8 @@ Future<TestApp> pumpSahai(
         nodeActionsProvider.overrideWithValue(testApp.actions),
         remindersProvider.overrideWithValue(testApp.reminders),
         appPlatformProvider.overrideWithValue(testApp.platform),
+        if (testApp.dataSizeBytes case final size?)
+          dataSizeProvider.overrideWith((ref) async => size),
       ],
       child: const SahaiApp(),
     ),

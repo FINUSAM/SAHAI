@@ -40,6 +40,20 @@ void main() {
     expect(mode.read<String>('journal_mode'), 'wal');
   });
 
+  test(
+    'the backed-up size counts the database and its WAL, not -shm',
+    () async {
+      final db = SahaiDatabase(NativeDatabase(file));
+      addTearDown(db.close);
+      await db.customStatement('CREATE TABLE padding (x TEXT)');
+      await db.customStatement("INSERT INTO padding VALUES (zeroblob(100000))");
+      final wal = File('${file.path}-wal');
+      expect(wal.lengthSync(), greaterThan(0));
+      expect(await db.fileSizeBytes(), file.lengthSync() + wal.lengthSync());
+      expect(await TestApp().db.fileSizeBytes(), 0);
+    },
+  );
+
   group('AT-012 schema migration keeps data', () {
     test('upgrading copies the database first and keeps every row', () async {
       // A real v1 database file, built from the exported v1 schema.

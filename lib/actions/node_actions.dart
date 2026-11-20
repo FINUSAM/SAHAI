@@ -4,6 +4,7 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
 import '../data/database.dart';
+import '../data/occurrences.dart';
 import '../data/settings.dart';
 import '../engine/groups.dart';
 import '../engine/node_type.dart';
@@ -121,6 +122,10 @@ enum RejectReason {
 
   /// A capture with no text.
   emptyCapture,
+
+  /// Reopen last completion or skip with nothing that can be reopened
+  /// (E-018).
+  nothingToReopen,
 }
 
 class ActionRejected implements Exception {
@@ -848,6 +853,84 @@ class NodeActions {
       payload: {'reopened_ancestors': reopened.skip(1).toList()},
     );
     await _syncSummary();
+  });
+
+  /// The completion or skip each repeating item can reopen, by node id
+  /// (E-018): only its latest, only if nothing has cancelled it, and only
+  /// while its due date hasn't moved on since, for example through an
+  /// edit to Next due.
+  Future<Map<String, ReopenableOccurrence>> reopenableOccurrences() async {
+    final latest = await latestOccurrenceEvents(_db);
+    if (latest.isEmpty) return {};
+    final tree = await loadTree();
+    final cancelled = await cancelledEventIds(
+      _db,
+      latest.map((e) => e.eventId),
+    );
+    final settings = await _settings();
+    return {
+      for (final event in latest)
+        if (_reopenable(tree, event, cancelled) case final node?)
+          node.id: ReopenableOccurrence(
+            eventId: event.eventId,
+            skipped: event.eventType == EventTypes.skipped,
+            on: logicalDate(
+              DateTime.fromMillisecondsSinceEpoch(
+                event.occurredAt,
+                isUtc: true,
+              ),
+              dayStartMinutes: settings.dayStartMinutes,
+            ),
+            dueOn: parseDueOn(_payloadOf(event)[_dueOnKey]! as String),
+          ),
+    };
+  }
+
+  /// [event]'s node, if [event] can still be reopened.
+  TreeNode? _reopenable(Tree tree, EventRow event, Set<String> cancelled) {
+    final node = tree[event.nodeId!];
+    if (node == null || !node.isRecurring || node.dueOn == null) return null;
+    if (cancelled.contains(event.eventId)) return null;
+    final payload = _payloadOf(event);
+    if (payload[_dueOnKey] is! String) return null;
+    return payload[_nextDueOnKey] == formatDueOn(node.dueOn!) ? node : null;
+  }
+
+  Map<String, Object?> _payloadOf(EventRow event) =>
+      jsonDecode(event.payload) as Map<String, Object?>;
+
+  /// Reopen last completion or Reopen last skip on a repeating item
+  /// (E-018, AT-125 to AT-127): the occurrence comes back as it was before
+  /// the tick, with its old due date. The `completed` or `skipped` event
+  /// stays, and a `reopened` event names it. Unlike Undo this is a
+  /// deliberate return, so the card surfaces again if it shows. Returns
+  /// what was reopened.
+  Future<ReopenableOccurrence> reopenOccurrence(String id) => _write(() async {
+    final reopenable = (await reopenableOccurrences())[id];
+    if (reopenable == null) {
+      throw const ActionRejected(RejectReason.nothingToReopen);
+    }
+    final event = await _requireEvent(
+      reopenable.eventId,
+      reopenable.skipped ? EventTypes.skipped : EventTypes.completed,
+    );
+    final tree = await loadTree();
+    final node = tree[id]!;
+    final occurrence = _payloadOf(event);
+    await _restoreOccurrence(occurrence, node);
+    await _log(
+      EventTypes.reopened,
+      nodeId: id,
+      nodeType: node.type,
+      domainId: tree.domainOf(id)?.id,
+      groupId: tree.effectiveGroupOf(id),
+      payload: {
+        'undoes_event_id': event.eventId,
+        _dueOnKey: occurrence[_dueOnKey],
+      },
+    );
+    await _syncSummary();
+    return reopenable;
   });
 
   /// Reopens [nodeId] and its DONE ancestors, because a TODO child was just

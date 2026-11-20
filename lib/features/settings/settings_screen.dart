@@ -12,10 +12,11 @@ import '../../shared/strings.dart';
 import '../../shared/time.dart';
 import '../../shared/time_format.dart';
 import '../explorer/action_feedback.dart';
+import 'backup_section.dart';
 import 'setting_widgets.dart';
 
 /// Settings (PRD 8.6, M7 frame 10): one scrolling screen in sections. Each
-/// row says what it does in a line. The Backup section comes in M7 PR 2.
+/// row says what it does in a line.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -128,6 +129,7 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(Routes.groups),
           ),
+          const BackupSection(),
           const SettingsSection(Strings.helpSection),
           ListTile(
             title: const Text(Strings.replayOnboarding),

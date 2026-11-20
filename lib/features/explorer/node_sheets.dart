@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/occurrences.dart';
 import '../../engine/groups.dart';
 import '../../engine/node_type.dart';
 import '../../engine/set_aside_list.dart';
@@ -8,6 +9,7 @@ import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
 import '../groups/group_picker.dart';
+import 'action_feedback.dart';
 import 'explorer_rows.dart';
 import 'node_icons.dart';
 
@@ -17,6 +19,7 @@ enum NodeChoice {
   add,
   markDone,
   reopen,
+  reopenOccurrence,
   setAside,
   wakeNow,
   changeTime,
@@ -33,7 +36,8 @@ enum NodeChoice {
 /// types that can hold children (AT-002). A set-aside node offers Wake now
 /// and Change set-aside time; any other TODO node or container offers Set
 /// aside… (M3 frame 12, AT-041). Every node has a Context group line saying
-/// where its group comes from (M5 frame 10).
+/// where its group comes from (M5 frame 10). A repeating item with a
+/// completion or skip it can reopen offers that too (E-018).
 Future<NodeChoice?> showNodeActions(
   BuildContext context,
   Tree tree,
@@ -41,6 +45,7 @@ Future<NodeChoice?> showNodeActions(
   required DateTime now,
   required AppSettings settings,
   List<ContextGroup> groups = const [],
+  ReopenableOccurrence? reopenable,
 }) => showModalBottomSheet<NodeChoice>(
   context: context,
   isScrollControlled: true,
@@ -52,6 +57,7 @@ Future<NodeChoice?> showNodeActions(
     now: now,
     settings: settings,
     groups: groups,
+    reopenable: reopenable,
   ),
 );
 
@@ -62,6 +68,7 @@ class _NodeActionsSheet extends StatelessWidget {
     required this.now,
     required this.settings,
     required this.groups,
+    this.reopenable,
   });
 
   final Tree tree;
@@ -69,6 +76,7 @@ class _NodeActionsSheet extends StatelessWidget {
   final DateTime now;
   final AppSettings settings;
   final List<ContextGroup> groups;
+  final ReopenableOccurrence? reopenable;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +144,13 @@ class _NodeActionsSheet extends StatelessWidget {
               subtitle: reopensWith.isEmpty
                   ? null
                   : Strings.alsoReopens(reopensWith),
+            ),
+          if (reopenable case final occurrence?)
+            _item(
+              Icons.undo,
+              reopenTitle(occurrence),
+              () => pick(NodeChoice.reopenOccurrence),
+              subtitle: reopenLine(occurrence, now),
             ),
           if (wakeAt != null) ...[
             _item(

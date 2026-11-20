@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../actions/node_actions.dart';
+import '../../data/occurrences.dart';
 import '../../engine/tree.dart';
 import '../../shared/strings.dart';
 import '../../shared/time_format.dart';
@@ -17,6 +18,35 @@ Future<T?> runAction<T>(
     if (context.mounted) showMessage(context, rejectMessage(e.reason));
     return null;
   }
+}
+
+/// "Done Nov 7, was due Nov 5" or "Skipped Nov 7, was due Nov 5", with the
+/// year outside [now]'s (E-018, #85).
+String reopenLine(ReopenableOccurrence occurrence, DateTime now) {
+  final on = dueDate(occurrence.on, now);
+  final due = dueDate(occurrence.dueOn, now);
+  return occurrence.skipped
+      ? Strings.reopenSkipped(on, due)
+      : Strings.reopenDone(on, due);
+}
+
+/// "Reopen last completion" or "Reopen last skip".
+String reopenTitle(ReopenableOccurrence occurrence) =>
+    occurrence.skipped ? Strings.reopenLastSkip : Strings.reopenLastCompletion;
+
+/// Reopens a repeating item's last completion or skip (E-018) and says
+/// which due date is back.
+Future<void> reopenOccurrence(
+  BuildContext context,
+  NodeActions actions,
+  String id,
+) async {
+  final reopened = await runAction(context, () => actions.reopenOccurrence(id));
+  if (reopened == null || !context.mounted) return;
+  showMessage(
+    context,
+    Strings.reopenedDue(dueDate(reopened.dueOn, actions.now)),
+  );
 }
 
 /// Marks [id] done and offers Undo for 5 seconds (PRD 7, AT-025, AT-026).
@@ -140,4 +170,5 @@ String rejectMessage(RejectReason reason) => switch (reason) {
   RejectReason.noSuchGroup => Strings.noSuchGroup,
   RejectReason.notOnSummary => Strings.cardNotShowing,
   RejectReason.emptyCapture => Strings.emptyCaptureError,
+  RejectReason.nothingToReopen => Strings.nothingToReopen,
 };

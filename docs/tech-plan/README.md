@@ -120,6 +120,7 @@ The cost is O(n log n), because sibling lists are sorted. The engine also return
 - **On the Set-Aside page** ([E-005](../PRD_Edits.md#e-005-recurring-items-waiting-for-their-show-date-are-listed-on-the-set-aside-page)). Waiting recurring items are listed at their effective wake time: the later of the show time and any `snooze_until`. **Wake now** and **Change time** on one store the chosen time in `snooze_until` and set `snooze_overrides_show = true`, so that time replaces the computed show time for this occurrence only. Completing or skipping the occurrence clears both, so the due date and schedule are never touched.
 - **Completion.** Write a `completed` event that includes the due date (AT-082), advance `due_on`, keep status TODO (AT-077), and clear `snooze_until`. All of this happens in one transaction, with an undo token that restores the old `due_on` (AT-070, E-001).
 - **Skip and Stop repeating.** Skip logs `skipped` and advances `due_on` from the due date. Stop repeating clears the schedule and due date and logs `repeat_stopped`. Each has an undo token, and Undo logs `skip_undone` or `repeat_restored` ([E-011](../PRD_Edits.md#e-011-skip-and-stop-repeating-have-undo-and-the-log-records-them)). An Undo that arrives after the occurrence moved on is refused.
+- **Reopen last completion or skip** ([E-018](../PRD_Edits.md#e-018-a-repeating-items-last-completion-or-skip-can-be-reopened), M7). The `completed` or `skipped` event's payload already holds what Undo needs (`due_on`, `next_due_on`, any set-aside), so reopening reuses it. It's offered only for an item's latest completion or skip, only if no `completion_undone`, `skip_undone` or `reopened` event names it, and only while `due_on` still equals its `next_due_on` (so an edit to Next due ends it). Reopening restores the occurrence as it was before the tick, logs `reopened` with `undoes_event_id` and the restored `due_on`, and lets the card surface again (it's a deliberate return, not an Undo), in one transaction. It's in the Explorer menu and the Set-Aside page's sheet, never on the Summary.
 - **One wake rule.** `TreeNode.wakeAt` returns when a node comes back, so the Summary, `nextChangeAt`, the Set-Aside list and Wake now agree. Because a show time isn't stored, the catch-up before each write compares the Summary whenever any item has a due date. A bill reaching its show date gets `surfaced` dated at that time (E-002), and no `woke`.
 - **Due labels.** "Due Nov 5", "Due today", "N days overdue", measured in logical days (AT-062, AT-063). While one shows, `nextChangeAt` includes the next day start.
 
@@ -178,20 +179,20 @@ See [decision 0002](../decisions/0002-database-drift-sqlite.md).
 
 - **Engine:** **drift** on SQLite, opened with `drift_flutter`. Since `sqlite3` 3.x, SQLite is bundled automatically; the old `sqlite3_flutter_libs` package is end-of-life and not used.
 - **Threading:** the database runs on a background isolate (a separate Dart thread) so queries never block the UI (PRD 13).
-- **File:** `sahai.sqlite` in the app's private files directory.
+- **File:** `sahai.sqlite` in the app's private storage, in `app_flutter/`, the documents folder `drift_flutter` uses.
 - **Journal mode:** WAL (write-ahead log). Recent changes sit in `sahai.sqlite-wal` until a checkpoint copies them into the main file. Android Auto Backup therefore includes **both** `sahai.sqlite` and `sahai.sqlite-wal` (section 8), so a backup is complete even if the app was killed before it could checkpoint. A full checkpoint each time the app goes to the background is kept as a second layer; it keeps the WAL small and usually empty. (Changed 2026-11-04; the plan originally backed up the main file only.)
 
 ### Tables (PRD 10)
 
 | Table | Notes |
 |---|---|
-| `nodes` | All six node types in one table, as in PRD 10. `id` is a UUID v4 string. `status` is null for domains and streams. `due_on` is `TEXT YYYY-MM-DD`; `recurrence` is JSON text. Two additions: `deleted_by_event` ([E-003](../PRD_Edits.md#e-003-deleting-a-node-soft-deletes-everything-under-it-and-undo-restores-exactly-that)) and `snooze_overrides_show` (§4.4, E-005). Indexes: `(parent_id, status, is_deleted)` and `(snooze_until)`. |
+| `nodes` | All six node types in one table, as in PRD 10. `id` is a UUID v4 string. `status` is null for domains and streams. `due_on` is `TEXT YYYY-MM-DD`; `recurrence` is JSON text. Three additions: `deleted_by_event` ([E-003](../PRD_Edits.md#e-003-deleting-a-node-soft-deletes-everything-under-it-and-undo-restores-exactly-that)), `snooze_overrides_show` (§4.4, E-005) and, from schema v3, `due_reminder` (when a one-off item's due-date reminder arrives; null means On the day, [E-019](../PRD_Edits.md#e-019-one-off-items-can-have-a-due-date-with-a-reminder)). Indexes: `(parent_id, status, is_deleted)` and `(snooze_until)`. |
 | `context_groups` | As PRD 10. |
 | `summary_slots` | As PRD 10. Primary key `owner_id`. |
-| `events` | As PRD 9. Append-only: rows are never updated or deleted, except by retention compaction (M7). |
+| `events` | As PRD 9. Append-only: rows are never updated or deleted, except by retention compaction (M7, see Log retention below). |
 | `captures` | As PRD 10. |
 | `settings` | A single row, with typed columns per setting plus `updated_at`. |
-| `event_daily_summaries` | Seventh table ([E-004](../PRD_Edits.md#e-004-compacted-activity-log-summaries-live-in-their-own-table)): `day`, `domain_id`, `group_id`, `event_type`, `count`. Filled by log compaction (M7). |
+| `event_daily_summaries` | Seventh table ([E-004](../PRD_Edits.md#e-004-compacted-activity-log-summaries-live-in-their-own-table)), schema v3 (M7): `id`, `day` (the logical day as `YYYY-MM-DD`), `domain_id`, `group_id`, `event_type`, `count`. Filled by log compaction. Index on `day`. |
 | `summary_visible` | Schema v2 (M2): `node_id`, `surfaced_at`. The cards currently on the Summary, kept in step with the `surfaced` events (§4.5). Not user data: it is rebuilt from the tree, and its only job is to make the surfaced diff survive a restart. |
 
 Every table has `created_at`/`updated_at` in UTC ms and `is_deleted`. Every write sets `updated_at` (AT-010).
@@ -203,6 +204,13 @@ Deleting a node flags it and every node under it with `is_deleted = true` and `d
 ### Transactions and undo
 
 Each action (complete, undo, set aside, wake, delete, restore, reopen, move, reorder, convert a capture) is **one transaction**: change rows, write the event, commit. A force-close mid-way leaves either all of it or none of it (AT-119). The action returns an undo token; the snackbar holds it for 5 seconds (AT-025, AT-026), and Undo runs the reverse action, also as one transaction.
+
+### Log retention (PRD 9, M7)
+
+- `compactEventLog` (`lib/data/log_retention.dart`) runs once at each app start, after the first frame, so the Summary never waits for it. The `events_occurred_at` index keeps the search cheap when there's nothing to do.
+- Events whose logical day is more than 12 months before today become counts per logical day, domain, group and event type, and the raw rows are deleted, in one transaction. The logical day uses the event's own `tz_offset_minutes` and the current Day starts at, so travel doesn't move an event to another day.
+- It keeps the latest `completed` or `skipped` event of each repeating item, because Reopen still needs it ([decision 0009](../decisions/0009-compaction-keeps-reopenable-events.md)).
+- It reads only ids, types and times, never task content, and logs nothing.
 
 ### Migrations
 
@@ -289,10 +297,12 @@ Each permission still needs the owner's approval when it's added, as with packag
 
 ### Auto Backup (PRD 3, M7)
 
-- `android:allowBackup="true"`, with `fullBackupContent` (Android 11 and lower) and `dataExtractionRules` (Android 12 and higher) pointing to rule files.
-- The rules **include** `sahai.sqlite` and `sahai.sqlite-wal`, and **exclude** `sahai.sqlite-shm` (a cache SQLite rebuilds), `pre-migration/`, caches and temp files. Android stops the app's process before copying files, so the pair is consistent; this is confirmed against the Android documentation when the rules are written in M7.
+- `android:allowBackup="true"`, with `fullBackupContent="@xml/backup_rules"` (Android 11 and lower) and `dataExtractionRules="@xml/data_extraction_rules"` (Android 12 and higher, with the same rules for `<cloud-backup>` and `<device-transfer>`). No permission is needed.
+- The rules **include** `app_flutter/sahai.sqlite` and `app_flutter/sahai.sqlite-wal` in the `root` domain (the app's private storage) and the shared preferences. Once any rule includes something, Android backs up only what's included, so `sahai.sqlite-shm` (a cache SQLite rebuilds), `pre-migration/` and the rest of `app_flutter/` stay out. Caches and `no_backup/` are never backed up. A unit test reads both rule files so a rule can't go missing.
+- Checked against Android's documentation on 2026-11-20: Android shuts the app down before backing it up, so the database and its WAL are copied as a consistent pair. Apps targeting Android 12 or higher need `dataExtractionRules` for phone-to-phone transfer, and `fullBackupContent` still covers Android 11 and lower.
+- The WAL is checkpointed each time the app goes to the background (`DataUpkeep`), as a second layer.
 - The restore test (AT-111) is run with uncheckpointed changes in the WAL, to prove the backup carries the latest edits.
-- The database size is shown in Settings, with a warning above 20 MB (AT-112).
+- The database size (the main file and its WAL, the files that are backed up) is shown in Settings against 20 MB, with a warning above it (AT-112).
 - Restore is tested on a real device with `adb shell bmgr` (AT-111).
 
 ### Signing and release (M8)

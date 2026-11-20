@@ -10,6 +10,7 @@ import 'package:sahai/data/database.dart';
 import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
+import 'generated/schema_v3.dart' as v3;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -184,6 +185,148 @@ void main() {
         expect(await newDb.select(newDb.events).get(), expectedEvents);
         expect(await newDb.select(newDb.settings).get(), [expectedSettings]);
         expect(await newDb.select(newDb.summaryVisible).get(), isEmpty);
+      },
+    );
+  });
+
+  // Version 3 (M7) only adds a table and a column (E-004, E-019): every row
+  // comes through unchanged, the new column is empty (On the day) and the
+  // new table is empty.
+  const t = 1793746101000;
+  final v2Nodes = [
+    const v2.NodesData(
+      id: 'd1',
+      type: 'domain',
+      title: 'Personal',
+      notes: '',
+      sortOrder: 0,
+      remindOnWake: 1,
+      isDeleted: 0,
+      snoozeOverridesShow: 0,
+      createdAt: t,
+      updatedAt: t,
+    ),
+    const v2.NodesData(
+      id: 'i1',
+      parentId: 'd1',
+      type: 'stream_item',
+      title: 'Pay HDFC card',
+      notes: '',
+      status: 'todo',
+      sortOrder: 0,
+      snoozeUntil: t + 1000,
+      remindOnWake: 1,
+      dueOn: '2026-12-05',
+      recurrence: '{"frequency":"monthly","interval":1,"day":5}',
+      leadDays: 3,
+      isDeleted: 0,
+      snoozeOverridesShow: 1,
+      createdAt: t,
+      updatedAt: t,
+    ),
+  ];
+  final v2Events = [
+    const v2.EventsData(
+      eventId: 'e1',
+      eventType: 'completed',
+      nodeId: 'i1',
+      nodeType: 'stream_item',
+      domainId: 'd1',
+      occurredAt: t,
+      tzOffsetMinutes: 330,
+      payload: '{"due_on":"2026-11-05","next_due_on":"2026-12-05"}',
+      isDeleted: 0,
+      createdAt: t,
+      updatedAt: t,
+    ),
+  ];
+  const v2Settings = v2.SettingsData(
+    id: 1,
+    dayStartMinutes: 180,
+    presets: '{"tonight":1260}',
+    notificationsEnabled: 0,
+    exactReminders: 1,
+    reminderMinutes: 600,
+    defaultLeadDays: 5,
+    onboardingDone: 1,
+    isDeleted: 0,
+    createdAt: t,
+    updatedAt: t,
+  );
+  const v2Visible = v2.SummaryVisibleData(
+    nodeId: 'i1',
+    surfacedAt: t,
+    isDeleted: 0,
+    createdAt: t,
+    updatedAt: t,
+  );
+
+  test('AT-012 migration from v2 to v3 keeps every row', () async {
+    await verifier.testWithDataIntegrity(
+      oldVersion: 2,
+      newVersion: 3,
+      createOld: v2.DatabaseAtV2.new,
+      createNew: v3.DatabaseAtV3.new,
+      openTestedDatabase: SahaiDatabase.new,
+      createItems: (batch, oldDb) {
+        batch.insertAll(oldDb.nodes, v2Nodes);
+        batch.insertAll(oldDb.events, v2Events);
+        batch.insertAll(oldDb.settings, [v2Settings]);
+        batch.insertAll(oldDb.summaryVisible, [v2Visible]);
+      },
+      validateItems: (newDb) async {
+        expect(await newDb.select(newDb.nodes).get(), [
+          for (final n in v2Nodes) v3.NodesData.fromJson(n.toJson()),
+        ]);
+        expect(
+          (await newDb.select(newDb.nodes).get()).map((n) => n.dueReminder),
+          [null, null],
+        );
+        expect(await newDb.select(newDb.events).get(), [
+          for (final e in v2Events) v3.EventsData.fromJson(e.toJson()),
+        ]);
+        expect(await newDb.select(newDb.settings).get(), [
+          v3.SettingsData.fromJson(v2Settings.toJson()),
+        ]);
+        expect(await newDb.select(newDb.summaryVisible).get(), [
+          v3.SummaryVisibleData.fromJson(v2Visible.toJson()),
+        ]);
+        expect(await newDb.select(newDb.eventDailySummaries).get(), isEmpty);
+      },
+    );
+  });
+
+  test('AT-012 migration from v1 straight to v3 keeps every row', () async {
+    final v1Nodes = [
+      for (final n in v2Nodes) v1.NodesData.fromJson(n.toJson()),
+    ];
+    final v1Events = [
+      for (final e in v2Events) v1.EventsData.fromJson(e.toJson()),
+    ];
+    final v1Settings = v1.SettingsData.fromJson(v2Settings.toJson());
+    await verifier.testWithDataIntegrity(
+      oldVersion: 1,
+      newVersion: 3,
+      createOld: v1.DatabaseAtV1.new,
+      createNew: v3.DatabaseAtV3.new,
+      openTestedDatabase: SahaiDatabase.new,
+      createItems: (batch, oldDb) {
+        batch.insertAll(oldDb.nodes, v1Nodes);
+        batch.insertAll(oldDb.events, v1Events);
+        batch.insertAll(oldDb.settings, [v1Settings]);
+      },
+      validateItems: (newDb) async {
+        expect(await newDb.select(newDb.nodes).get(), [
+          for (final n in v2Nodes) v3.NodesData.fromJson(n.toJson()),
+        ]);
+        expect(await newDb.select(newDb.events).get(), [
+          for (final e in v2Events) v3.EventsData.fromJson(e.toJson()),
+        ]);
+        expect(await newDb.select(newDb.settings).get(), [
+          v3.SettingsData.fromJson(v2Settings.toJson()),
+        ]);
+        expect(await newDb.select(newDb.summaryVisible).get(), isEmpty);
+        expect(await newDb.select(newDb.eventDailySummaries).get(), isEmpty);
       },
     );
   });

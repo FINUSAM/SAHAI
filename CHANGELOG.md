@@ -20,6 +20,18 @@ followed by v1.0.0 for the public release.
   for recurring items. The Summary, presets and reminders pick up a change at once.
 - About Sahai (version, where the data lives, what's coming, open-source licences) and Send
   feedback, which opens the email app with only the address and subject filled in.
+- Android Auto Backup: the database and its write-ahead log go to your own Google account and
+  come back on a reinstall or a new phone; caches, the pre-migration copies and SQLite's `-shm`
+  file are left out. The log is folded into the database each time the app goes to the
+  background.
+- Settings' Backup section (M7 frames 10 and 14) shows the size of the data on the phone
+  against 20 MB, and above 20 MB warns that Android's backup may stop (AT-112).
+- Log retention: activity older than 12 months becomes daily totals in the new
+  `event_daily_summaries` table at app start (PRD 9, E-004, AT-113). The latest completion or
+  skip of each repeating item is kept so it can still be reopened (decision 0009).
+- Reopen last completion and Reopen last skip for repeating items, in the Explorer menu and the
+  Set-Aside page's sheet, with their dates ("Done Nov 7, was due Nov 5"). The old due date
+  comes back and the log records a `reopened` event (E-018, AT-125 to AT-127, #86).
 - Approved M7 Polish and safety wireframes in `docs/design/m7-polish/` (18 frames): onboarding
   with a practice step that saves nothing, the full Settings screen, editable preset times,
   Day starts at, the 20 MB backup warning, About, Replay onboarding, Send feedback and the
@@ -34,6 +46,9 @@ followed by v1.0.0 for the public release.
   AT-133. Plan 0009 now lists PR 3's #87 steps.
 
 ### Changed
+- Database version 3 adds the `event_daily_summaries` table and a `due_reminder` column on
+  `nodes` for #87. It only adds: every existing row is kept, and the database is copied first
+  as before.
 - Due dates outside the current year show the year, such as "Due Mar 15, 2028", on cards, in
   the Explorer, on the Repeat form, in the Done and Skipped messages and in reminders (#85).
 - The Exact reminders hint now says reminders can arrive up to about an hour late (E-012).

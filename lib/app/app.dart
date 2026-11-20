@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../data/onboarding.dart';
 import '../shared/strings.dart';
+import 'data_upkeep.dart';
 import 'providers.dart';
 import 'reminder_sync.dart';
 import 'router.dart';
@@ -66,8 +67,10 @@ class _SahaiAppState extends ConsumerState<SahaiApp> {
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       routerConfig: router,
-      builder: (context, child) => SummaryRefresher(
-        child: ReminderSync(onOpen: _openFromNotification, child: child!),
+      builder: (context, child) => DataUpkeep(
+        child: SummaryRefresher(
+          child: ReminderSync(onOpen: _openFromNotification, child: child!),
+        ),
       ),
     );
   }
