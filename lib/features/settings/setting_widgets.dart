@@ -63,9 +63,13 @@ class SettingValueRow extends StatelessWidget {
               children: [
                 if (subtitle != null) Text(subtitle!),
                 const SizedBox(height: 4),
-                DefaultTextStyle.merge(
-                  style: TextStyle(color: theme.colorScheme.onSurface),
-                  child: valueText,
+                // Bold on its own line (M7 frame 18).
+                Text(
+                  value,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             )
