@@ -108,7 +108,7 @@ The cost is O(n log n), because sibling lists are sorted. The engine also return
 
 - **Clock.** Everything gets the time from an injected `Clock` (`package:clock`). Tests use a fixed or advancing fake clock. Nothing calls `DateTime.now()` directly. There's no standard lint rule for this, so a CI step searches `lib/` for it and fails outside the one clock file.
 - **Logical day.** `logicalDate(instant, dayStartHour)` returns the calendar date a moment belongs to. Before the day-start hour (default 4:00 AM), it's still the previous day. This one function drives presets (AT-043, AT-110), due labels (AT-062, AT-063) and recurring show dates (AT-061).
-- **Presets.** Computed from the logical day: Tonight = 8 PM, Tomorrow morning = next logical day 8 AM, 3 days later = logical day + 3 at 8 AM, Next week = next Monday 8 AM. Presets in the past are hidden (AT-044). The times are user-editable (M7).
+- **Presets.** Computed from the logical day: Tonight = 8 PM, Tomorrow morning = next logical day 8 AM, 3 days later = logical day + 3 at 8 AM, Next week = next Monday 8 AM. Presets in the past are hidden (AT-044). Only the times are user-editable (M7, AT-109): they're stored as JSON in `settings.presets`, with null meaning the PRD times. A Tonight time earlier than the day start, such as 12:30 AM, falls after midnight that night.
 - **Where (M3).** `logicalDate` and the presets are in `lib/engine/time.dart`, the set-aside scope in `lib/engine/scope.dart`. They read wall-clock rules in the phone's local zone (`toLocal()`) and return local times; actions store them as UTC.
 - **Storage.** Instants (`snooze_until`, `created_at`, `updated_at`, `completed_at`, event times) are stored as UTC milliseconds. A set-aside time is an absolute moment, so it survives a time-zone change (AT-118). Due dates are stored as local calendar dates (`YYYY-MM-DD`) and read in the phone's *current* time zone (AT-081).
 
@@ -227,7 +227,13 @@ See [decision 0003](../decisions/0003-state-management-and-navigation.md).
 - on app resume (`AppLifecycleListener`), which also re-reads the time zone
 - when `nextChangeAt` arrives (a single `Timer`)
 
-The last three live in `SummaryRefresher` (`lib/app/summary_refresher.dart`, M3). It calls `recompute()`, which logs the wakes, then bumps a tick that `summaryProvider` watches.
+The last three live in `SummaryRefresher` (`lib/app/summary_refresher.dart`, M3). It calls `recompute()`, which logs the wakes, then bumps a tick that `summaryProvider` watches. A settings change (M7) also recomputes, since a new Day starts at or Show before due can make items appear.
+
+### First run and onboarding (PRD 8.1, M7)
+
+- `SahaiApp` opens the database, then builds the router on `/onboarding` only when onboarding was never finished or skipped and there are no areas (`needsOnboarding` in `lib/data/onboarding.dart`). An install with data goes straight to the Summary.
+- Each step saves on Next through `NodeActions`, so their `created` events are real. Skip and Go to my Summary set `settings.onboarding_done`.
+- The practice step runs the real Summary and Set-Aside screens in their own `ProviderContainer`, on an in-memory copy of what onboarding made ([decision 0008](../decisions/0008-onboarding-practice-copy.md)). `PracticeScope` hides the ways out of the copy: the Settings button and Open in tree.
 
 ---
 
@@ -339,7 +345,7 @@ Notes:
 
 - **Logging.** One small `log` helper that accepts IDs, types and counts only. There's no way to pass task or capture text, and `avoid_print` is on. Release builds log nothing to the console.
 - **No network code.** No HTTP client package is a dependency, and the CI permission check backs this up.
-- **Send feedback** (M7) opens the user's email app with an Android `ACTION_SENDTO` intent, using a few lines of our own Kotlin through a platform channel (a bridge from Dart to Android code). Sahai itself sends nothing.
+- **Send feedback** (M7) opens the user's email app with an Android `ACTION_SENDTO` intent, using a few lines of our own Kotlin in `MainActivity` through the `sahai/app` platform channel (a bridge from Dart to Android code). Only the address and the subject "Sahai feedback (version)" are filled in; the body is empty. The same channel gives the version for About, so no package is needed. Sahai itself sends nothing, and no manifest change was needed.
 
 ---
 

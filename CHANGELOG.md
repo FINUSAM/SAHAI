@@ -10,6 +10,16 @@ followed by v1.0.0 for the public release.
 ## [Unreleased]
 
 ### Added
+- Onboarding on first install (M7 frames 1 to 9): name one or two areas, add a real project
+  with its first task and two subtasks, see the Summary show only the first, then practise
+  ticking off with Undo, setting aside and Wake now on a temporary copy that is thrown away, so
+  nothing is saved (decision 0008). Skip on every step keeps what was made. Replay onboarding in
+  Settings adds new items next to the existing ones.
+- The full Settings screen (M7 frames 10 to 13): editable set-aside preset times with Reset to
+  defaults, Day starts at (midnight to 6 AM), the default Show before due and the Reminder time
+  for recurring items. The Summary, presets and reminders pick up a change at once.
+- About Sahai (version, where the data lives, what's coming, open-source licences) and Send
+  feedback, which opens the email app with only the address and subject filled in.
 - Approved M7 Polish and safety wireframes in `docs/design/m7-polish/` (18 frames): onboarding
   with a practice step that saves nothing, the full Settings screen, editable preset times,
   Day starts at, the 20 MB backup warning, About, Replay onboarding, Send feedback and the
@@ -24,6 +34,9 @@ followed by v1.0.0 for the public release.
   AT-133. Plan 0009 now lists PR 3's #87 steps.
 
 ### Changed
+- Due dates outside the current year show the year, such as "Due Mar 15, 2028", on cards, in
+  the Explorer, on the Repeat form, in the Done and Skipped messages and in reminders (#85).
+- The Exact reminders hint now says reminders can arrive up to about an hour late (E-012).
 - `tool/generate_test_matrix.py` lists tests added later under their own milestone, counts the
   total itself, and now includes the notes and PRD-edit rows that had been added to the matrix
   by hand, so regenerating no longer loses them. The matrix totals are corrected.
