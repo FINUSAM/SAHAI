@@ -7,8 +7,10 @@
 // AT-097 (an edited capture persists) and the capture dialog that the
 // widget and the share sheet open (AT-099, AT-100; opening it from outside
 // the app is checked by hand), and the M7 Settings and onboarding flows,
-// including the practice step (AT-105 to AT-110, AT-120), and the year on
-// due dates outside the current year (#85).
+// including the practice step (AT-105 to AT-110, AT-120), the year on
+// due dates outside the current year (#85), one-off due dates and their
+// reminders (AT-128 to AT-132) and the accessibility pass over every screen
+// (AT-116, AT-117). The AT-114 speed check is its own file, speed_test.dart.
 //
 // Each test uses its own throwaway database (in memory, or a file in the
 // app's temporary folder), never the app's real `sahai.sqlite`.
@@ -30,7 +32,9 @@ import 'package:integration_test/integration_test.dart';
 
 import '../test/app/home_shell_test.dart' as home_shell;
 import '../test/features/capture_dialog_test.dart' as capture_dialog;
+import '../test/features/a11y_screens_test.dart' as a11y_screens;
 import '../test/features/capture_test.dart' as capture;
+import '../test/features/due_dates_test.dart' as due_dates;
 import '../test/features/due_year_test.dart' as due_year;
 import '../test/features/explorer/explorer_m2_test.dart' as explorer_m2;
 import '../test/features/explorer/explorer_screen_test.dart' as explorer;
@@ -61,4 +65,6 @@ void main() {
   due_year.main();
   m7_accessibility.main();
   reopen_occurrence.main();
+  due_dates.main();
+  a11y_screens.main();
 }
