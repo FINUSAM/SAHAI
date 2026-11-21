@@ -158,8 +158,27 @@ class SampleTree {
   }
 }
 
-/// Scrolls [finder] into view, then taps it.
+/// On a phone the keyboard slides in after a form opens, and Android
+/// reports its height a little later still. Waits until that height has
+/// stopped changing, so a scroll measures the space that is really left.
+/// Widget tests have no keyboard, so it returns at once there.
+Future<void> waitForKeyboard(WidgetTester tester) async {
+  if (tester.binding is! LiveTestWidgetsFlutterBinding) return;
+  var last = tester.view.viewInsets.bottom;
+  var steady = 0;
+  for (var i = 0; i < 30 && steady < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+    final inset = tester.view.viewInsets.bottom;
+    steady = inset == last ? steady + 1 : 0;
+    last = inset;
+  }
+  await tester.pumpAndSettle();
+}
+
+/// Scrolls [finder] into view, then taps it. On a phone it first waits for
+/// the keyboard, which would otherwise cover the row after the scroll.
 Future<void> tapInView(WidgetTester tester, Finder finder) async {
+  await waitForKeyboard(tester);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   await tester.tap(finder);
