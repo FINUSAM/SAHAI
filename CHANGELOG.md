@@ -82,7 +82,9 @@ followed by v1.0.0 for the public release.
   real data comes after `adb shell bmgr backupnow com.finusam.sahai`.
 - Four tests that failed on the phone: rows under the real keyboard are now scrolled into view
   before they're tapped (AT-090, AT-130, AT-132), and the time picker helper works when the
-  phone uses the 24-hour clock (AT-109).
+  phone uses the 24-hour clock (AT-109). On a phone the tests also wait for the keyboard to
+  finish sliding in before they scroll, and AT-132 scrolls back to the Remind me line after the
+  keyboard returns; the full on-phone suite then passes 212 of 212.
 - The tech plan and plan 0009 wrongly said the M2 engine benchmark was never built;
   `tool/benchmark.dart` has existed since M2.
 

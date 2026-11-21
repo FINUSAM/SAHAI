@@ -210,7 +210,9 @@ void main() {
     await tester.tap(find.byTooltip('Next month'));
     await tester.pumpAndSettle();
     await pickDay(tester, 14);
-    // Below the fold, and on a phone under the keyboard too.
+    // Below the fold, and on a phone under the keyboard too, which comes
+    // back once the date picker closes.
+    await waitForKeyboard(tester);
     await tester.scrollUntilVisible(
       find.text(Strings.remindMe),
       100,
@@ -221,7 +223,16 @@ void main() {
       find.text(Strings.dueReminderName(DueReminder.weekBefore)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('1 week before · Mon, Dec 7, 9:00 AM'), findsOneWidget);
+    // On a phone the keyboard comes back for the title when the sheet
+    // closes and scrolls the form up to it, so scroll back down to the line.
+    const chosen = '1 week before · Mon, Dec 7, 9:00 AM';
+    await waitForKeyboard(tester);
+    await tester.scrollUntilVisible(
+      find.text(chosen),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text(chosen), findsOneWidget);
 
     await saveAndAnswer(tester, Strings.keep);
     final item = (await app.actions.loadTree()).nodes.singleWhere(
