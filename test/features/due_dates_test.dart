@@ -107,8 +107,8 @@ void main() {
       await tester.pumpAndSettle();
       // Due Fri, Nov 13: a week before (Nov 6) is already past.
       await pickDay(tester, 13);
-      await tester.tap(find.text(Strings.remindMe));
-      await tester.pumpAndSettle();
+      // On a phone the keyboard covers the lower rows, so scroll it into view.
+      await tapInView(tester, find.text(Strings.remindMe));
       expect(find.text('Due Fri, Nov 13'), findsOneWidget);
       for (final choice in DueReminder.values) {
         expect(find.text(Strings.dueReminderName(choice)), findsOneWidget);
@@ -210,8 +210,13 @@ void main() {
     await tester.tap(find.byTooltip('Next month'));
     await tester.pumpAndSettle();
     await pickDay(tester, 14);
-    await tester.tap(find.text(Strings.remindMe));
-    await tester.pumpAndSettle();
+    // Below the fold, and on a phone under the keyboard too.
+    await tester.scrollUntilVisible(
+      find.text(Strings.remindMe),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tapInView(tester, find.text(Strings.remindMe));
     await tester.tap(
       find.text(Strings.dueReminderName(DueReminder.weekBefore)),
     );

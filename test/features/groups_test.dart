@@ -345,8 +345,8 @@ void main() {
     await openActions(tester, 'Client admin');
     await choose(tester, Strings.addChild([NodeType.streamItem]));
     expect(find.text(Strings.contextGroup), findsOneWidget);
-    await tester.tap(find.text(Strings.contextGroup));
-    await tester.pumpAndSettle();
+    // On a phone the keyboard covers the lower rows, so scroll it into view.
+    await tapInView(tester, find.text(Strings.contextGroup));
     await tester.tap(inSheet(find.text('At laptop')));
     await tester.pumpAndSettle();
     expect(find.text(Strings.cardsAppearHere('At laptop')), findsOneWidget);
@@ -360,8 +360,8 @@ void main() {
     await openActions(tester, 'Website relaunch');
     await choose(tester, Strings.edit);
     expect(find.text(Strings.noGroup), findsOneWidget);
-    await tester.tap(find.text(Strings.contextGroup));
-    await tester.pumpAndSettle();
+    // On a phone the keyboard covers the lower rows, so scroll it into view.
+    await tapInView(tester, find.text(Strings.contextGroup));
     await tester.tap(inSheet(find.text('At laptop')));
     await tester.pumpAndSettle();
     await tester.tap(find.text(Strings.save));

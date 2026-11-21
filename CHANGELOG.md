@@ -75,6 +75,17 @@ followed by v1.0.0 for the public release.
   total itself, and now includes the notes and PRD-edit rows that had been added to the matrix
   by hand, so regenerating no longer loses them. The matrix totals are corrected.
 
+### Fixed
+- The docs and `integration_test/speed_test.dart` said `flutter drive` doesn't uninstall the
+  app. It does, which deleted the owner's recent items on the phone. The profile-mode speed
+  check now runs only on a spare phone or an emulator, and any test install on a phone with
+  real data comes after `adb shell bmgr backupnow com.finusam.sahai`.
+- Four tests that failed on the phone: rows under the real keyboard are now scrolled into view
+  before they're tapped (AT-090, AT-130, AT-132), and the time picker helper works when the
+  phone uses the 24-hour clock (AT-109).
+- The tech plan and plan 0009 wrongly said the M2 engine benchmark was never built;
+  `tool/benchmark.dart` has existed since M2.
+
 ## [0.6.0] - 2026-11-20 (M6 Capture)
 
 ### Added

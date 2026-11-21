@@ -57,7 +57,7 @@ L = {  # id: (levels, note)
 105:("W, I",""),106:("U, W","Practice step leaves no changes"),107:("W",""),108:("W",""),109:("U, W",""),
 110:("U","Fake clock 3:30 AM, day start 3 AM"),111:("D","adb bmgr backup, reinstall, restore"),
 112:("U, W","Fake database size"),113:("U","Compaction into event_daily_summaries (E-004)"),
-114:("U, D","test/perf/at114_speed.dart reports times on a computer; profile build on a mid-range phone via flutter drive"),
+114:("U, D","test/perf/at114_speed.dart reports times on a computer; profile build via flutter drive on a spare phone, never the owner's (it uninstalls the app)"),
 115:("D","Every feature in airplane mode"),116:("W, D","Labelled buttons, 48 dp targets and button alternatives on every screen; TalkBack pass on device"),
 117:("W, D","Every screen at 200% text in widget tests; on device too"),118:("U, D","Stored and compared as UTC moments; a real zone switch on device"),119:("U","A SQLite trigger refuses the log write; nothing is saved"),
 120:("W, D","Fake platform channel; real email app on device"),

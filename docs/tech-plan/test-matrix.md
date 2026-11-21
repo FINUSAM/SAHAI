@@ -183,7 +183,7 @@ Every automated test that covers an acceptance test is named with its ID, e.g. `
 | AT-111 | Auto Backup restores data | 3 | Must | Developer | D | adb bmgr backup, reinstall, restore |
 | AT-112 | Database size warning | 3, 8.6 | Should | Developer | U, W | Fake database size |
 | AT-113 | Log retention | 9 | Should | Developer | U | Compaction into event_daily_summaries (E-004) |
-| AT-114 | Fast with 10,000 items | 13 | Must | Developer | U, D | test/perf/at114_speed.dart reports times on a computer; profile build on a mid-range phone via flutter drive |
+| AT-114 | Fast with 10,000 items | 13 | Must | Developer | U, D | test/perf/at114_speed.dart reports times on a computer; profile build via flutter drive on a spare phone, never the owner's (it uninstalls the app) |
 | AT-115 | Everything works offline | 13 | Must | Founder | D | Every feature in airplane mode |
 | AT-116 | TalkBack support | 13 | Must | Founder | W, D | Labelled buttons, 48 dp targets and button alternatives on every screen; TalkBack pass on device |
 | AT-117 | Large system font | 13 | Should | Founder | W, D | Every screen at 200% text in widget tests; on device too |

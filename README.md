@@ -81,6 +81,8 @@ Run these from the repo root.
 - Without `--no-uninstall`, the run uninstalls the app when it finishes, which deletes its data on the phone.
 - The tests use throwaway databases, but the test build still replaces the installed app. Reinstall the release build afterwards with `adb install -r build\app\outputs\flutter-apk\app-release.apk`.
 - Check this again in M8. Once the app has its own signing key, a test build won't install over the release build, and that could trigger an uninstall.
+- Never run `flutter drive` on a phone whose data matters. The profile-mode speed check (`integration_test/speed_test.dart`) needs it, and it uninstalls the app when it finishes, deleting the data; it has no `--no-uninstall`. Use a spare phone or an emulator.
+- Before installing any test build on a phone with real data, run `adb shell bmgr backupnow com.finusam.sahai` and check that it reports success, so a fresh Google backup exists if something goes wrong.
 
 ### Changing the database
 
