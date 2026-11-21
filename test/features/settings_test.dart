@@ -36,12 +36,23 @@ void main() {
 
   /// Types [hour]:[minute] into Android's time picker in typing mode and
   /// keeps its AM or PM as it is.
+  /// Types [hour] (0 to 23) and [minute] into the time picker. A phone set
+  /// to the 24-hour clock takes the hour as it is; otherwise the picker
+  /// takes 1 to 12 and keeps the AM or PM it already shows.
   Future<void> typeTime(WidgetTester tester, int hour, int minute) async {
+    final dialog = find.byType(Dialog);
     final fields = find.descendant(
-      of: find.byType(Dialog),
+      of: dialog,
       matching: find.byType(TextField),
     );
-    await tester.enterText(fields.at(0), '$hour');
+    final twentyFourHour = MediaQuery.alwaysUse24HourFormatOf(
+      tester.element(dialog),
+    );
+    final hourOfPeriod = hour % 12 == 0 ? 12 : hour % 12;
+    await tester.enterText(
+      fields.at(0),
+      '${twentyFourHour ? hour : hourOfPeriod}',
+    );
     await tester.enterText(fields.at(1), minute.toString().padLeft(2, '0'));
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
@@ -93,7 +104,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(Strings.presetName(Preset.tonight)));
     await tester.pumpAndSettle();
-    await typeTime(tester, 9, 0);
+    await typeTime(tester, 21, 0);
     expect(find.text('9:00 PM'), findsOneWidget);
     expect((await readSettings(app.db)).presetTimes.tonight, 21 * 60);
 
